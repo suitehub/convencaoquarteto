@@ -292,7 +292,7 @@ export default function ParticipantArea({ currentUser, schedule, onLogout, onNav
                   <div className="flex space-x-3 items-start">
                     <div className="w-1.5 h-1.5 rounded-full bg-app-gold mt-2 shrink-0" />
                     <p className="text-xs text-slate-600 font-light leading-relaxed">
-                      <strong>Horário do Credenciamento:</strong> Os portões se abrirão às 18:00 na sexta-feira. Recomendamos chegar com pelo menos 45 minutos de antecedência para evitar filas de credenciamento.
+                      <strong>Acomodação por Ordem de Chegada:</strong> Os portões se abrirão às 17h30 no Sábado (17/10/2026). Como os assentos não serão reservados e a acomodação se dará exclusivamente por ordem de chegada, planeje-se para entrar cedo e pegar os melhores lugares no auditório!
                     </p>
                   </div>
                 </div>
@@ -358,7 +358,7 @@ export default function ParticipantArea({ currentUser, schedule, onLogout, onNav
               {/* Informações complementares de alteração */}
               <div className="mt-8 pt-6 border-t border-slate-100 bg-slate-50 p-4 rounded-2xl text-xs text-slate-500 leading-relaxed font-light">
                 <span className="font-bold text-slate-700 block mb-1 uppercase tracking-wider text-[9px] font-mono">Como alterar seus dados?</span>
-                Caso precise realizar qualquer correção em seu e-mail, telefone ou nome, entre em contato diretamente com a equipe organizadora no guichê de credenciamento ou envie uma mensagem para <strong>suporte@convencaodequartetos.com.br</strong> portando o código de reserva.
+                Caso precise realizar qualquer correção em seu e-mail, telefone ou nome, entre em contato diretamente com a equipe organizadora no guichê de credenciamento ou envie uma mensagem para <strong>(11) 99544-9821 (Bruno Camilo)</strong> portando o código de reserva.
               </div>
 
               {/* Back button */}
@@ -529,7 +529,7 @@ export default function ParticipantArea({ currentUser, schedule, onLogout, onNav
             <ul className="space-y-3 text-xs text-slate-600 font-light leading-relaxed">
               <li className="flex items-start space-x-2">
                 <div className="w-1.5 h-1.5 rounded-full bg-app-gold mt-1.5 shrink-0" />
-                <p><strong>Abertura dos Portões:</strong> O credenciamento inicia-se às 18h de sexta-feira. Chegue cedo para garantir seu lugar e pulseira.</p>
+                <p><strong>Acomodação por Ordem de Chegada:</strong> O credenciamento e os portões iniciam-se às 17h30 de Sábado (17 de Outubro). Os assentos não são reservados e serão ocupados por ordem de chegada, por isso planeje-se para entrar cedo e pegar os melhores lugares.</p>
               </li>
               <li className="flex items-start space-x-2">
                 <div className="w-1.5 h-1.5 rounded-full bg-app-gold mt-1.5 shrink-0" />
@@ -563,6 +563,9 @@ export default function ParticipantArea({ currentUser, schedule, onLogout, onNav
           9ª CONVENÇÃO MUNICIPAL DE QUARTETOS • SÃO PAULO - SP
         </div>
         <span className="text-xs text-app-medium font-bold font-mono mt-1">#CuidandoDePessoas</span>
+        <span className="text-[9px] text-slate-500 font-mono mt-2 uppercase tracking-wide text-center">
+          Fundamentado na Lei Municipal nº 16.894, de 14 de maio de 2018 • Realização e Apoio Institucional: Secretaria Municipal de Cultura
+        </span>
       </div>
     </div>
   </>

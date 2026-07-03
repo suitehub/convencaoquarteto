@@ -64,15 +64,15 @@ export default function Login({
 
       setLoading(false);
       if (match) {
-        // Validate password (default to '1234' for existing mock data if they don't have one set)
+        // Validate password
         const expectedPassword = match.password || '1234';
         if (partPassword === expectedPassword) {
           onLoginSuccess(match);
         } else {
-          setPartError('Senha de acesso incorreta. Para participantes de demonstração, use "1234".');
+          setPartError('Senha de acesso incorreta. Verifique sua senha e tente novamente.');
         }
       } else {
-        setPartError('Inscrição não localizada. Verifique as informações ou use os botões de Preenchimento Rápido!');
+        setPartError('Inscrição não localizada. Verifique os dados fornecidos ou realize o seu cadastro.');
       }
     }, 1000);
   };
@@ -261,34 +261,8 @@ export default function Login({
                 </button>
               </form>
 
-              {/* Quick Fill Box (Aesthetic demo helper) */}
-              <div className="mt-8 border-t border-slate-100 pt-6">
-                <span className="flex items-center space-x-1.5 text-[10px] font-bold text-app-medium uppercase tracking-widest mb-3 font-mono">
-                  <Sparkles className="w-3.5 h-3.5 text-app-medium animate-pulse" />
-                  <span>Preenchimento Rápido para Teste</span>
-                </span>
-                
-                <div className="space-y-2 max-h-[140px] overflow-y-auto pr-1">
-                  {sampleParticipants.map((p) => (
-                    <button
-                      key={p.id}
-                      onClick={() => handleQuickAutofill(p)}
-                      className="w-full text-left p-3 rounded-xl bg-app-light border border-slate-200 hover:border-slate-300 text-xs text-slate-600 flex justify-between items-center transition-all cursor-pointer"
-                    >
-                      <div>
-                        <p className="font-bold text-app-deep">{p.name}</p>
-                        <p className="text-slate-500 text-[10px] mt-0.5">{p.email} • {p.registrationType || 'Público'}</p>
-                      </div>
-                      <span className="px-2 py-0.5 rounded-full bg-app-gold/20 text-app-deep text-[9px] font-mono font-bold uppercase shrink-0">
-                        Autofill
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
               {/* Footer link */}
-              <div className="mt-6 text-center text-xs text-slate-500">
+              <div className="mt-8 text-center text-xs text-slate-500">
                 Ainda não tem ingresso reservado?{' '}
                 <button
                   onClick={() => onNavigate('cadastro')}

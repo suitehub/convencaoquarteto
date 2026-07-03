@@ -83,7 +83,7 @@ export default function Splash({ onComplete }: SplashProps) {
             />
           </div>
           <div className="mt-3 flex justify-between items-center text-xs text-slate-500 font-mono">
-            <span>CARREGANDO PROTÓTIPO...</span>
+            <span>CARREGANDO SISTEMA...</span>
             <span className="font-semibold text-app-gold">{progress}%</span>
           </div>
         </div>

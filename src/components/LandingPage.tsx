@@ -141,8 +141,8 @@ export default function LandingPage({ eventConfig, onNavigate, participantsCount
               </div>
               <div>
                 <span className="text-[10px] font-bold text-app-medium uppercase tracking-widest font-mono">Data do Evento</span>
-                <p className="text-app-deep text-sm font-bold mt-1 font-display">24 a 26 de Julho de 2026</p>
-                <p className="text-slate-500 text-xs mt-0.5 font-light">Sexta, Sábado e Domingo</p>
+                <p className="text-app-deep text-sm font-bold mt-1 font-display">17 de Outubro de 2026</p>
+                <p className="text-slate-500 text-xs mt-0.5 font-light">Sábado</p>
               </div>
             </div>
 
@@ -153,8 +153,8 @@ export default function LandingPage({ eventConfig, onNavigate, participantsCount
               </div>
               <div>
                 <span className="text-[10px] font-bold text-app-gold uppercase tracking-widest font-mono">Horário Oficial</span>
-                <p className="text-app-deep text-sm font-bold mt-1 font-display">A partir das 19:00</p>
-                <p className="text-slate-500 text-xs mt-0.5 font-light">Abertura dos portões às 18:00</p>
+                <p className="text-app-deep text-sm font-bold mt-1 font-display">18h00</p>
+                <p className="text-slate-500 text-xs mt-0.5 font-light">Recepção a partir das 17h30</p>
               </div>
             </div>
 
@@ -171,6 +171,36 @@ export default function LandingPage({ eventConfig, onNavigate, participantsCount
                   São Paulo - SP, 04013-040
                 </p>
               </div>
+            </div>
+          </div>
+
+          {/* Institutional Reference - Free elegant layout, no borders, no block container */}
+          <div className="w-full max-w-4xl mt-16 flex flex-col md:flex-row items-center gap-6 sm:gap-8 text-center md:text-left relative z-10">
+            <img 
+              src="/SECRETARIA DA CULTURA_VERTICAL_MONOCROM_BRANCO.png" 
+              alt="Secretaria Municipal de Cultura" 
+              className="h-24 w-auto opacity-95 shrink-0 hover:scale-105 transition-transform duration-300"
+              onError={(e) => {
+                const img = e.currentTarget;
+                if (img.src.includes('SECRETARIA%20DA%20CULTURA_VERTICAL_MONOCROM_BRANCO.png') || img.src.includes('SECRETARIA DA CULTURA_VERTICAL_MONOCROM_BRANCO.png')) {
+                  img.src = '/SECRETARIA_DA_CULTURA_VERTICAL_MONOCROM_BRANCO.png';
+                } else {
+                  img.style.display = 'none';
+                }
+              }}
+            />
+            <div className="space-y-3">
+              <span className="text-[11px] font-extrabold text-app-gold uppercase tracking-widest font-mono block">
+                Patrimônio e Amparo Oficial
+              </span>
+              <p className="text-white text-base sm:text-lg font-medium leading-relaxed font-sans">
+                A <span className="text-app-gold font-bold">Convenção Municipal de Quartetos</span> é um marco cultural oficializado! 
+                Este evento é amparado e realizado com pleno fundamento na{' '}
+                <span className="text-app-gold font-bold underline decoration-app-gold/40 underline-offset-4">
+                  Lei Municipal nº 16.894, de 14 de maio de 2018
+                </span>
+                , integrando oficialmente a agenda cultural e de fomento artístico do município de São Paulo.
+              </p>
             </div>
           </div>
         </section>
@@ -383,7 +413,7 @@ export default function LandingPage({ eventConfig, onNavigate, participantsCount
                 </h2>
                 
                 <p className="text-slate-600 text-xs sm:text-sm font-light mt-3 leading-relaxed">
-                  A Convenção Municipal de Quartetos é um projeto voluntário. Sua contribuição de qualquer valor nos apoia com custos de transporte, logística técnica, estrutura física da IASD Nova Semente, e possibilita trazer grupos talentosos de várias partes do estado.
+                  A Convenção Municipal de Quartetos é um projeto voluntário. Sua contribuição de qualquer valor nos apoia com custos de transporte, logística técnica, e possibilita trazer grupos talentosos de várias partes do estado.
                 </p>
                 
                 <motion.p 
@@ -436,7 +466,7 @@ export default function LandingPage({ eventConfig, onNavigate, participantsCount
 
       {/* Footer */}
       <footer className="bg-app-deep border-t border-app-medium/30 py-12 px-6 text-white/90">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
           <div>
             <div className="flex items-center space-x-2 text-white mb-4">
               <Music className="w-6 h-6 text-app-gold" />
@@ -448,56 +478,57 @@ export default function LandingPage({ eventConfig, onNavigate, participantsCount
           </div>
 
           <div>
-            <h4 className="text-xs font-bold text-app-gold uppercase tracking-wider mb-4 font-mono">Inscrições</h4>
-            <ul className="space-y-2 text-xs text-slate-200">
-              <li>
-                <button onClick={() => onNavigate('cadastro')} className="hover:text-app-gold cursor-pointer transition-colors text-left">
-                  Reserva de Ingresso (Público)
-                </button>
-              </li>
-              <li>
-                <button onClick={() => onNavigate('cadastro-quarteto')} className="hover:text-app-gold cursor-pointer transition-colors text-left flex items-center space-x-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-app-gold animate-ping" />
-                  <span>Inscrição de Quarteto Participante</span>
-                </button>
-              </li>
-            </ul>
-          </div>
-
-          <div>
-            <h4 className="text-xs font-bold text-app-gold uppercase tracking-wider mb-4 font-mono">Portais Internos</h4>
-            <ul className="space-y-2 text-xs text-slate-200">
-              <li>
-                <button onClick={() => onNavigate('login')} className="hover:text-app-gold cursor-pointer transition-colors text-left">
-                  Painel do Participante / Grupo
-                </button>
-              </li>
-              <li>
-                <button onClick={() => onNavigate('login', 'reception')} className="hover:text-app-gold cursor-pointer transition-colors text-left">
-                  Recepção / Credenciamento (Staff)
-                </button>
-              </li>
-              <li>
-                <button onClick={() => onNavigate('dashboard', 'organizer')} className="hover:text-app-gold cursor-pointer transition-colors text-left">
-                  Painel do Organizador (Admin)
-                </button>
-              </li>
-            </ul>
-          </div>
-
-          <div>
-            <h4 className="text-xs font-bold text-app-gold uppercase tracking-wider mb-4 font-mono">Apoio Comercial</h4>
+            <h4 className="text-xs font-bold text-app-gold uppercase tracking-wider mb-4 font-mono">Acomodação Livre</h4>
             <div className="bg-app-medium/20 p-4 rounded-xl border border-app-medium/30 text-xs">
               <p className="text-slate-200 font-light leading-relaxed">
-                Este é um <strong className="text-app-gold font-bold">Protótipo de Alta Fidelidade</strong> para fins comerciais e de captação de recursos. Use a navegação ou os preenchimentos rápidos de demonstração.
+                Lembramos que <strong className="text-app-gold font-bold">não haverá poltronas reservadas</strong>. O acesso ao auditório é gratuito e a ocupação dos assentos dar-se-á por ordem de chegada.
               </p>
             </div>
           </div>
         </div>
 
-        <div className="max-w-7xl mx-auto pt-8 border-t border-app-medium/20 flex flex-col sm:flex-row justify-between items-center text-xs text-slate-400 font-mono">
-          <span>© 2026 9ª Convenção Municipal de Quartetos. Todos os direitos reservados.</span>
-          <span className="mt-2 sm:mt-0 uppercase tracking-widest text-app-gold">#CuidandoDePessoas</span>
+        {/* Institutional Support Row */}
+        <div className="max-w-7xl mx-auto pt-6 pb-2 border-t border-app-medium/10 flex flex-col md:flex-row items-center justify-between gap-4 mt-6">
+          <div className="text-center md:text-left">
+            <h5 className="text-[10px] font-bold text-app-gold uppercase tracking-widest font-mono">Apoio Institucional e Fomento</h5>
+            <p className="text-[11px] text-slate-300 font-light mt-0.5 max-w-xl leading-relaxed">
+              Incentivo cultural e divulgação amparados pela <strong className="text-white font-semibold">Lei Municipal nº 16.894/2018</strong>. Órgãos relacionados ao desenvolvimento e difusão da legislação oficial.
+            </p>
+          </div>
+          <div className="shrink-0 flex items-center justify-center bg-white/5 py-2 px-4 rounded-xl border border-white/5 shadow-inner">
+            <img 
+              src="/SECRETARIA_DA_CULTURA_HORIZONTAL_MONOCROM_BRANCO.png" 
+              alt="Secretaria Municipal de Cultura" 
+              className="h-8 sm:h-9 w-auto opacity-80 hover:opacity-100 transition-opacity object-contain"
+              onError={(e) => {
+                const img = e.currentTarget;
+                if (img.src.includes('SECRETARIA_DA_CULTURA_HORIZONTAL_MONOCROM_BRANCO.png')) {
+                  img.src = '/SECRETARIA DA CULTURA_HORIZONTAL_MONOCROM_BRANCO.png';
+                } else {
+                  img.style.display = 'none';
+                }
+              }}
+            />
+          </div>
+        </div>
+
+        <div className="max-w-7xl mx-auto pt-6 border-t border-app-medium/20 flex flex-col md:flex-row justify-between items-center text-xs text-slate-400 font-mono gap-4">
+          <span className="text-center md:text-left">© 2026 9ª Convenção Municipal de Quartetos. Todos os direitos reservados.</span>
+          <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-6 text-center">
+            <span className="uppercase tracking-widest text-app-gold font-bold">#CuidandoDePessoas</span>
+            <span className="hidden sm:inline text-slate-600">|</span>
+            <span className="normal-case text-slate-300">
+              Desenvolvido por{' '}
+              <a 
+                href="https://suitehub.github.io/portifolio/" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="text-app-gold hover:text-white underline font-bold transition-colors"
+              >
+                Suite Hub
+              </a>
+            </span>
+          </div>
         </div>
       </footer>
 

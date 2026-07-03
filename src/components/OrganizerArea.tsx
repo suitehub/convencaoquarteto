@@ -12,7 +12,7 @@ import {
 import { 
   LayoutDashboard, Users, BarChart3, Settings, Gift, Music, Search, 
   SlidersHorizontal, CheckCircle2, AlertCircle, Save, Calendar, Clock, 
-  MapPin, Sliders, ArrowUpRight, Check, Menu, X, UserPlus, Key
+  MapPin, Sliders, ArrowUpRight, Check, Menu, X, UserPlus, Key, Download, FileSpreadsheet
 } from 'lucide-react';
 import { Participant, EventConfig, StaffUser } from '../types';
 import Sorteio from './Sorteio';
@@ -150,6 +150,34 @@ export default function OrganizerArea({
 
   const handleToggleParticipantStatus = (p: Participant) => {
     onCheckIn(p.id);
+  };
+
+  const handleExportLeads = () => {
+    const headers = ['Nome', 'Email', 'Telefone', 'Cidade', 'Tipo Inscrição', 'Status Presença', 'Data Registro'];
+    const rows = participants.map((p) => [
+      p.name,
+      p.email,
+      p.phone,
+      p.city || 'Não informado',
+      p.registrationType || 'Público',
+      p.status,
+      p.registrationDate || ''
+    ]);
+
+    const csvContent = '\uFEFF' + [
+      headers.join(','),
+      ...rows.map(row => row.map(val => `"${String(val).replace(/"/g, '""')}"`).join(','))
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `leads_convencao_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   return (
@@ -448,6 +476,17 @@ export default function OrganizerArea({
                     ))}
                   </select>
                 </div>
+
+                {/* Export Leads Button */}
+                <button
+                  type="button"
+                  onClick={handleExportLeads}
+                  className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-extrabold transition-all flex items-center space-x-1.5 cursor-pointer shadow-sm hover:shadow-emerald-600/10 active:scale-95"
+                  title="Exportar base de inscritos como leads em formato CSV"
+                >
+                  <FileSpreadsheet className="w-4 h-4" />
+                  <span>Exportar Leads</span>
+                </button>
 
               </div>
 

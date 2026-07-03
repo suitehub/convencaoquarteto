@@ -10,12 +10,19 @@ import { Participant } from '../types';
 
 interface CadastroProps {
   initialType?: 'Público' | 'Participante';
-  onAddParticipant: (newPart: Omit<Participant, 'id' | 'status' | 'registrationDate'>) => void;
+  onAddParticipant: (newPart: Omit<Participant, 'id' | 'status' | 'registrationDate'>) => Promise<void>;
   onNavigate: (view: string, role?: 'public' | 'participant' | 'reception' | 'organizer') => void;
   participantsCount?: number;
+  participants?: Participant[];
 }
 
-export default function Cadastro({ initialType = 'Público', onAddParticipant, onNavigate, participantsCount = 0 }: CadastroProps) {
+export default function Cadastro({ 
+  initialType = 'Público', 
+  onAddParticipant, 
+  onNavigate, 
+  participantsCount = 0,
+  participants = []
+}: CadastroProps) {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -25,6 +32,7 @@ export default function Cadastro({ initialType = 'Público', onAddParticipant, o
   const [privacyChecked, setPrivacyChecked] = useState(false);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
 
   if (participantsCount >= 445) {
     return (
@@ -96,22 +104,47 @@ export default function Cadastro({ initialType = 'Público', onAddParticipant, o
     );
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErrorMsg('');
     if (!formData.name || !formData.email || !formData.phone || !formData.password || !privacyChecked) return;
 
+    // Duplicates check
+    const normalizedEmail = formData.email.trim().toLowerCase();
+    const normalizedPhone = formData.phone.replace(/\D/g, '');
+
+    const isEmailRegistered = participants.some(
+      (p) => p.email.trim().toLowerCase() === normalizedEmail
+    );
+    const isPhoneRegistered = participants.some(
+      (p) => p.phone.replace(/\D/g, '') === normalizedPhone
+    );
+
+    if (isEmailRegistered) {
+      setErrorMsg('Este e-mail já possui um ingresso reservado / cadastrado.');
+      return;
+    }
+    if (isPhoneRegistered) {
+      setErrorMsg('Este celular / WhatsApp já possui um ingresso reservado / cadastrado.');
+      return;
+    }
+
     setLoading(true);
-    setTimeout(() => {
-      onAddParticipant({
-        name: formData.name,
-        email: formData.email,
-        phone: formData.phone,
+    try {
+      await onAddParticipant({
+        name: formData.name.trim(),
+        email: formData.email.trim(),
+        phone: formData.phone.trim(),
         password: formData.password,
         registrationType: initialType
       });
-      setLoading(false);
       setSuccess(true);
-    }, 1200);
+    } catch (err: any) {
+      console.error('Registration failed:', err);
+      setErrorMsg('Ocorreu um erro ao salvar seu cadastro no banco de dados. Por favor, tente novamente.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const formatPhone = (value: string) => {
@@ -275,16 +308,22 @@ export default function Cadastro({ initialType = 'Público', onAddParticipant, o
                       className="mt-0.5 w-4.5 h-4.5 rounded-md border-slate-300 bg-white text-app-medium focus:ring-app-medium/30 focus:ring-offset-0 cursor-pointer"
                     />
                     <span className="leading-relaxed font-light">
-                      Li e concordo com a <strong className="text-app-medium font-semibold">Política de Privacidade</strong> e autorizo o armazenamento dos meus dados para utilização neste evento, incluindo futuras comunicações relacionadas à Convenção.
+                      Li e concordo com a <strong className="text-app-medium font-semibold">Política de Privacidade</strong> e autorizo o armazenamento dos meus dados para utilização neste evento, incluindo futuras cookies ou comunicações relacionadas à Convenção.
                     </span>
                   </label>
                 </div>
+
+                {errorMsg && (
+                  <p className="text-red-600 text-xs text-center bg-red-50 p-3 rounded-xl border border-red-200">
+                    {errorMsg}
+                  </p>
+                )}
 
                 {/* Submit button */}
                 <button
                   type="submit"
                   disabled={loading || !privacyChecked}
-                  className="w-full mt-6 px-6 py-4 bg-app-gold disabled:opacity-50 text-app-deep font-extrabold text-sm rounded-2xl cursor-pointer transition-all hover:shadow-lg hover:shadow-app-gold/10 active:scale-98 flex items-center justify-center space-x-2 font-black"
+                  className="w-full mt-4 px-6 py-4 bg-app-gold disabled:opacity-50 text-app-deep font-extrabold text-sm rounded-2xl cursor-pointer transition-all hover:shadow-lg hover:shadow-app-gold/10 active:scale-98 flex items-center justify-center space-x-2 font-black"
                 >
                   {loading ? (
                     <div className="w-5 h-5 border-2 border-app-deep border-t-transparent rounded-full animate-spin" />

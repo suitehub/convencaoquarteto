@@ -1,0 +1,63 @@
+{
+  "entities": {
+    "Participant": {
+      "title": "Participant",
+      "description": "A registered attendee or participating quartet member",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "email": { "type": "string" },
+        "phone": { "type": "string" },
+        "password": { "type": "string" },
+        "city": { "type": "string" },
+        "status": { "type": "string", "enum": ["Pendente", "Presente"] },
+        "checkInTime": { "type": "string" },
+        "registrationDate": { "type": "string" },
+        "registrationType": { "type": "string", "enum": ["Público", "Participante"] }
+      },
+      "required": ["id", "name", "email", "phone", "status", "registrationDate", "registrationType"]
+    },
+    "EventConfig": {
+      "title": "EventConfig",
+      "description": "Global event details and configuration",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "date": { "type": "string" },
+        "time": { "type": "string" },
+        "location": { "type": "string" },
+        "maxParticipants": { "type": "integer" },
+        "description": { "type": "string" }
+      },
+      "required": ["name", "date", "time", "location", "maxParticipants", "description"]
+    },
+    "StaffUser": {
+      "title": "StaffUser",
+      "description": "Reception or organizer team user",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "username": { "type": "string" },
+        "password": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "name", "username", "password", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/participants/{participantId}": {
+      "schema": "Participant",
+      "description": "Registered users or groups for the convention"
+    },
+    "/staffUsers/{staffUserId}": {
+      "schema": "StaffUser",
+      "description": "Internal administration or reception personnel"
+    },
+    "/eventConfigs/{configId}": {
+      "schema": "EventConfig",
+      "description": "Configuration profiles for active events"
+    }
+  }
+}

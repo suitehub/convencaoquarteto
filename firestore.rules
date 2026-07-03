@@ -1,0 +1,89 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Default-deny catch-all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming(req) {
+      return req.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // 1. Participant Rules
+    match /participants/{participantId} {
+      allow get: if true;
+      allow list: if true;
+      
+      allow create: if isValidId(participantId) && isValidParticipant(incoming(request));
+      allow update: if isValidId(participantId) && isValidParticipant(incoming(request)) && (
+        (incoming(request).diff(existing()).affectedKeys().hasOnly(['status', 'checkInTime'])) ||
+        (incoming(request).diff(existing()).affectedKeys().hasOnly(['name', 'phone', 'city', 'password', 'registrationType']))
+      );
+      allow delete: if false;
+    }
+
+    // 2. StaffUser Rules
+    match /staffUsers/{staffUserId} {
+      allow read: if true;
+      allow create, update: if isValidId(staffUserId) && isValidStaffUser(incoming(request));
+      allow delete: if false;
+    }
+
+    // 3. EventConfig Rules
+    match /eventConfigs/{configId} {
+      allow read: if true;
+      allow create, update: if isValidId(configId) && isValidEventConfig(incoming(request));
+      allow delete: if false;
+    }
+
+    // Validation blueprints
+    function isValidParticipant(data) {
+      return data.keys().hasAll(['id', 'name', 'email', 'phone', 'status', 'registrationDate', 'registrationType'])
+        && data.keys().size() <= 10
+        && data.id is string && data.id.size() <= 128
+        && data.name is string && data.name.size() > 0 && data.name.size() <= 150
+        && data.email is string && data.email.size() > 0 && data.email.size() <= 150
+        && data.phone is string && data.phone.size() > 0 && data.phone.size() <= 30
+        && (data.status == 'Pendente' || data.status == 'Presente')
+        && data.registrationDate is string && data.registrationDate.size() <= 20
+        && (data.registrationType == 'Público' || data.registrationType == 'Participante')
+        && (!data.keys().hasAny(['password']) || (data.password is string && data.password.size() <= 64))
+        && (!data.keys().hasAny(['city']) || (data.city is string && data.city.size() <= 100))
+        && (!data.keys().hasAny(['checkInTime']) || (data.checkInTime is string && data.checkInTime.size() <= 30));
+    }
+
+    // Validation helper for staffUsers
+    function isValidStaffUser(data) {
+      return data.keys().hasAll(['id', 'name', 'username', 'createdAt'])
+        && data.keys().size() <= 5
+        && data.id is string && data.id.size() <= 128
+        && data.name is string && data.name.size() > 0 && data.name.size() <= 150
+        && data.username is string && data.username.size() > 0 && data.username.size() <= 50
+        && data.createdAt is string && data.createdAt.size() <= 20
+        && (!data.keys().hasAny(['password']) || (data.password is string && data.password.size() <= 64));
+    }
+
+    // Validation helper for eventConfigs
+    function isValidEventConfig(data) {
+      return data.keys().hasAll(['name', 'date', 'time', 'location', 'maxParticipants', 'description'])
+        && data.keys().size() == 6
+        && data.name is string && data.name.size() <= 150
+        && data.date is string && data.date.size() <= 50
+        && data.time is string && data.time.size() <= 50
+        && data.location is string && data.location.size() <= 300
+        && data.maxParticipants is int && data.maxParticipants >= 0 && data.maxParticipants <= 100000
+        && data.description is string && data.description.size() <= 1000;
+    }
+  }
+}

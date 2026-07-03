@@ -6,6 +6,16 @@
 import React, { useState, useEffect } from 'react';
 import { Participant, EventConfig, UserRole, StaffUser } from './types';
 import { INITIAL_EVENT_CONFIG, INITIAL_PARTICIPANTS, MOCK_SCHEDULE } from './mockData';
+import {
+  seedInitialDataIfNeeded,
+  subscribeEventConfig,
+  subscribeStaffUsers,
+  subscribeParticipants,
+  addParticipantInFirestore,
+  addStaffUserInFirestore,
+  updateParticipantInFirestore,
+  updateEventConfig
+} from './firebase';
 
 // Component Imports
 import Splash from './components/Splash';
@@ -15,7 +25,6 @@ import Login from './components/Login';
 import ParticipantArea from './components/ParticipantArea';
 import ReceptionArea from './components/ReceptionArea';
 import OrganizerArea from './components/OrganizerArea';
-import DemoPanel from './components/DemoPanel';
 
 export default function App() {
   // Application states
@@ -29,109 +38,81 @@ export default function App() {
   const [currentView, setCurrentView] = useState<string>('splash');
   const [currentUser, setCurrentUser] = useState<Participant | null>(null);
 
-  // Initialize demo data from mockData
+  // Initialize and subscribe to Firestore collections
   useEffect(() => {
-    const savedParts = localStorage.getItem('convenção_participants');
-    const savedConfig = localStorage.getItem('convenção_config');
-    const savedStaff = localStorage.getItem('convenção_staff_users');
-    
-    if (savedParts) {
-      setParticipants(JSON.parse(savedParts));
-    } else {
-      setParticipants(INITIAL_PARTICIPANTS);
-    }
+    // Seed default configuration and default staff user on first run
+    seedInitialDataIfNeeded();
 
-    if (savedConfig) {
-      setEventConfig(JSON.parse(savedConfig));
-    } else {
-      setEventConfig(INITIAL_EVENT_CONFIG);
-    }
+    // Setup real-time listeners
+    const unsubConfig = subscribeEventConfig((config) => {
+      setEventConfig(config);
+    });
 
-    if (savedStaff) {
-      setStaffUsers(JSON.parse(savedStaff));
-    } else {
-      const defaultStaff: StaffUser[] = [
-        { id: 'staff-default', name: 'Recepção Padrão', username: 'recepcao', password: '1234', createdAt: '01/07/2026' }
-      ];
-      setStaffUsers(defaultStaff);
-      localStorage.setItem('convenção_staff_users', JSON.stringify(defaultStaff));
-    }
+    const unsubStaff = subscribeStaffUsers((staffList) => {
+      setStaffUsers(staffList);
+    });
+
+    const unsubParticipants = subscribeParticipants((partList) => {
+      setParticipants(partList);
+    });
+
+    return () => {
+      unsubConfig();
+      unsubStaff();
+      unsubParticipants();
+    };
   }, []);
 
-  // Sync state to localStorage for premium feel (refreshes retain modifications!)
-  const updateParticipantsState = (newParts: Participant[]) => {
-    setParticipants(newParts);
-    localStorage.setItem('convenção_participants', JSON.stringify(newParts));
-  };
-
-  const updateConfigState = (newConfig: EventConfig) => {
-    setEventConfig(newConfig);
-    localStorage.setItem('convenção_config', JSON.stringify(newConfig));
-  };
-
-  const updateStaffUsersState = (newStaff: StaffUser[]) => {
-    setStaffUsers(newStaff);
-    localStorage.setItem('convenção_staff_users', JSON.stringify(newStaff));
-  };
-
   // Helper action: Register new staff user
-  const handleAddStaffUser = (newStaff: Omit<StaffUser, 'id' | 'createdAt'>) => {
+  const handleAddStaffUser = async (newStaff: Omit<StaffUser, 'id' | 'createdAt'>) => {
     const freshStaff: StaffUser = {
       ...newStaff,
       id: `staff-${Date.now()}`,
       createdAt: new Date().toLocaleDateString('pt-BR')
     };
-    const updated = [...staffUsers, freshStaff];
-    updateStaffUsersState(updated);
+    await addStaffUserInFirestore(freshStaff);
   };
 
   // Helper action: Register new participant
-  const handleAddParticipant = (newPart: Omit<Participant, 'id' | 'status' | 'registrationDate'>) => {
+  const handleAddParticipant = async (newPart: Omit<Participant, 'id' | 'status' | 'registrationDate'>) => {
     const freshParticipant: Participant = {
       ...newPart,
       id: `part-${Date.now()}`,
       status: 'Pendente',
       registrationDate: new Date().toLocaleDateString('pt-BR')
     };
-
-    const updated = [...participants, freshParticipant];
-    updateParticipantsState(updated);
+    await addParticipantInFirestore(freshParticipant);
   };
 
   // Helper action: Check in/Credenciar participant
-  const handleCheckIn = (id: string) => {
+  const handleCheckIn = async (id: string) => {
     const now = new Date();
     const timeString = `${now.getDate()}/07 ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
     
-    const updated = participants.map((p) => {
-      if (p.id === id) {
-        return {
-          ...p,
-          status: 'Presente' as const,
-          checkInTime: timeString
-        };
-      }
-      return p;
+    await updateParticipantInFirestore(id, {
+      status: 'Presente',
+      checkInTime: timeString
     });
-
-    updateParticipantsState(updated);
 
     // If current logged-in participant is the one checked in, update current user too!
     if (currentUser && currentUser.id === id) {
-      setCurrentUser({
-        ...currentUser,
-        status: 'Presente',
-        checkInTime: timeString
+      setCurrentUser((prev) => {
+        if (!prev) return null;
+        return {
+          ...prev,
+          status: 'Presente',
+          checkInTime: timeString
+        };
       });
     }
   };
 
-  // Reset all data to factory settings
+  const updateConfigState = async (newConfig: EventConfig) => {
+    await updateEventConfig(newConfig);
+  };
+
+  // Reset all data to factory settings (kept for reset hooks compatibility if needed)
   const handleResetDemo = () => {
-    localStorage.removeItem('convenção_participants');
-    localStorage.removeItem('convenção_config');
-    setParticipants(INITIAL_PARTICIPANTS);
-    setEventConfig(INITIAL_EVENT_CONFIG);
     setCurrentRole('public');
     setCurrentView('landing');
     setCurrentUser(null);
@@ -208,6 +189,7 @@ export default function App() {
               onAddParticipant={handleAddParticipant}
               onNavigate={handleNavigate}
               participantsCount={participants.length}
+              participants={participants}
             />
           );
         }
@@ -304,16 +286,6 @@ export default function App() {
       
       {/* Primary Workspace View Area */}
       {renderActiveView()}
-
-      {/* Floating Presentation Control Overlay */}
-      {splashCompleted && (
-        <DemoPanel
-          currentRole={currentRole}
-          currentView={currentView}
-          onNavigate={handleNavigate}
-          onResetDemo={handleResetDemo}
-        />
-      )}
       
     </div>
   );
