@@ -177,13 +177,13 @@ export default function LandingPage({ eventConfig, onNavigate, participantsCount
           {/* Institutional Reference - Free elegant layout, no borders, no block container */}
           <div className="w-full max-w-4xl mt-16 flex flex-col md:flex-row items-center gap-6 sm:gap-8 text-center md:text-left relative z-10">
             <img 
-              src="/SECRETARIA DA CULTURA_VERTICAL_MONOCROM_BRANCO.png" 
+              src="SECRETARIA DA CULTURA_VERTICAL_MONOCROM_BRANCO.png" 
               alt="Secretaria Municipal de Cultura" 
               className="h-24 w-auto opacity-95 shrink-0 hover:scale-105 transition-transform duration-300"
               onError={(e) => {
                 const img = e.currentTarget;
                 if (img.src.includes('SECRETARIA%20DA%20CULTURA_VERTICAL_MONOCROM_BRANCO.png') || img.src.includes('SECRETARIA DA CULTURA_VERTICAL_MONOCROM_BRANCO.png')) {
-                  img.src = '/SECRETARIA_DA_CULTURA_VERTICAL_MONOCROM_BRANCO.png';
+                  img.src = 'SECRETARIA_DA_CULTURA_VERTICAL_MONOCROM_BRANCO.png';
                 } else {
                   img.style.display = 'none';
                 }
@@ -497,13 +497,13 @@ export default function LandingPage({ eventConfig, onNavigate, participantsCount
           </div>
           <div className="shrink-0 flex items-center justify-center bg-white/5 py-2 px-4 rounded-xl border border-white/5 shadow-inner">
             <img 
-              src="/SECRETARIA_DA_CULTURA_HORIZONTAL_MONOCROM_BRANCO.png" 
+              src="SECRETARIA_DA_CULTURA_HORIZONTAL_MONOCROM_BRANCO.png" 
               alt="Secretaria Municipal de Cultura" 
               className="h-8 sm:h-9 w-auto opacity-80 hover:opacity-100 transition-opacity object-contain"
               onError={(e) => {
                 const img = e.currentTarget;
                 if (img.src.includes('SECRETARIA_DA_CULTURA_HORIZONTAL_MONOCROM_BRANCO.png')) {
-                  img.src = '/SECRETARIA DA CULTURA_HORIZONTAL_MONOCROM_BRANCO.png';
+                  img.src = 'SECRETARIA DA CULTURA_HORIZONTAL_MONOCROM_BRANCO.png';
                 } else {
                   img.style.display = 'none';
                 }
@@ -518,11 +518,11 @@ export default function LandingPage({ eventConfig, onNavigate, participantsCount
             <span className="uppercase tracking-widest text-app-gold font-bold">#CuidandoDePessoas</span>
             <span className="hidden sm:inline text-slate-600">|</span>
             <button
-              onClick={() => onNavigate('admin-lock')}
+              onClick={() => onNavigate('cadastro-quarteto')}
               className="text-slate-400 hover:text-app-gold transition-colors font-bold flex items-center space-x-1 uppercase tracking-widest text-[11px] cursor-pointer"
-              title="Área Administrativa do Organizador"
+              title="Área de Cadastro dos Quartetos Participantes"
             >
-              <span>[ Área do Organizador ]</span>
+              <span>[ Cadastro de Quartetos ]</span>
             </button>
             <span className="hidden sm:inline text-slate-600">|</span>
             <span className="normal-case text-slate-300">
