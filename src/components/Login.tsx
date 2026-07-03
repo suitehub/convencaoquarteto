@@ -4,7 +4,7 @@
  */
 
 import React, { useState } from 'react';
-import { Mail, Phone, Lock, User, ArrowLeft, LogIn, Sparkles, CheckCircle2 } from 'lucide-react';
+import { Mail, Phone, Lock, User, ArrowLeft, LogIn, Sparkles } from 'lucide-react';
 import { Participant, StaffUser } from '../types';
 
 interface LoginProps {
@@ -105,11 +105,7 @@ export default function Login({
     }, 1000);
   };
 
-  const autofillStaff = () => {
-    setUsername('recepcao');
-    setPassword('1234');
-    setReceptionError('');
-  };
+
 
   return (
     <div className="min-h-screen bg-app-deep flex flex-col justify-center items-center px-4 py-20 relative overflow-hidden">
@@ -348,22 +344,7 @@ export default function Login({
                 </button>
               </form>
 
-              {/* Demo Helper for reception credentials */}
-              <div className="mt-8 border-t border-slate-100 pt-6">
-                <button
-                  type="button"
-                  onClick={autofillStaff}
-                  className="w-full py-3 px-4 border border-slate-200 border-dashed hover:border-slate-300 bg-app-light rounded-2xl text-xs text-slate-600 flex items-center justify-between transition-all cursor-pointer"
-                >
-                  <div className="flex items-center space-x-2">
-                    <CheckCircle2 className="w-4 h-4 text-app-medium shrink-0" />
-                    <span className="font-semibold text-app-deep">Autocompletar Staff</span>
-                  </div>
-                  <span className="text-[10px] font-mono text-app-medium bg-app-light px-2 py-0.5 rounded border border-slate-200">
-                    recepcao / 1234
-                  </span>
-                </button>
-              </div>
+
             </div>
           )}
 

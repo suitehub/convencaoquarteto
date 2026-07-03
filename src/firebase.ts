@@ -8,6 +8,7 @@ import { getAuth } from 'firebase/auth';
 import { 
   getFirestore, 
   doc, 
+  getDoc,
   getDocFromServer, 
   collection, 
   getDocs, 
@@ -104,25 +105,31 @@ export async function seedInitialDataIfNeeded() {
       console.log('Event config seeded in Firestore.');
     }
 
-    // 2. Seed default staff if empty
-    const staffSnapshot = await getDocs(collection(db, 'staffUsers')).catch(err => {
-      handleFirestoreError(err, OperationType.LIST, 'staffUsers');
-      throw err;
-    });
+    // 2. Seed default staff if empty, or update existing default staff if it has the old password '1234'
+    const defaultStaffDocRef = doc(db, 'staffUsers', 'staff-default');
+    const defaultStaffSnap = await getDoc(defaultStaffDocRef).catch(() => null);
 
-    if (staffSnapshot.empty) {
+    if (!defaultStaffSnap || !defaultStaffSnap.exists()) {
       const defaultStaff: StaffUser = {
         id: 'staff-default',
         name: 'Recepção Padrão',
         username: 'recepcao',
-        password: '1234',
+        password: 'admin@recepcao',
         createdAt: '01/07/2026'
       };
-      await setDoc(doc(db, 'staffUsers', 'staff-default'), defaultStaff).catch(err => {
+      await setDoc(defaultStaffDocRef, defaultStaff).catch(err => {
         handleFirestoreError(err, OperationType.WRITE, 'staffUsers/staff-default');
         throw err;
       });
       console.log('Default staff user seeded in Firestore.');
+    } else {
+      const data = defaultStaffSnap.data() as StaffUser;
+      if (data.password === '1234') {
+        await updateDoc(defaultStaffDocRef, { password: 'admin@recepcao' }).catch(err => {
+          handleFirestoreError(err, OperationType.WRITE, 'staffUsers/staff-default');
+        });
+        console.log('Default staff user password updated to admin@recepcao.');
+      }
     }
   } catch (error) {
     console.error('Failed to seed initial data:', error);
