@@ -15,7 +15,11 @@ import {
   addStaffUserInFirestore,
   deleteStaffUserInFirestore,
   updateParticipantInFirestore,
-  updateEventConfig
+  updateEventConfig,
+  getParticipantsCountSecure,
+  checkDuplicateParticipantSecure,
+  loginStaffSecure,
+  loginParticipantSecure
 } from './firebase';
 
 // Component Imports
@@ -47,6 +51,7 @@ export default function App() {
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [eventConfig, setEventConfig] = useState<EventConfig>(INITIAL_EVENT_CONFIG);
   const [staffUsers, setStaffUsers] = useState<StaffUser[]>([]);
+  const [secureCount, setSecureCount] = useState<number>(0);
   
   // Navigation states - initialized dynamically based on the current URL route
   const [splashCompleted, setSplashCompleted] = useState<boolean>(() => checkIsAdminRoute());
@@ -66,30 +71,54 @@ export default function App() {
   });
   const [currentUser, setCurrentUser] = useState<Participant | null>(null);
 
-  // Initialize and subscribe to Firestore collections
+  // Fetch count securely on mount and update whenever participants are added
+  const fetchParticipantsCount = async () => {
+    try {
+      const count = await getParticipantsCountSecure();
+      setSecureCount(count);
+    } catch (err) {
+      console.error('Error fetching participant count securely:', err);
+    }
+  };
+
+  useEffect(() => {
+    fetchParticipantsCount();
+  }, []);
+
+  // Initialize and subscribe to Firestore collections securely based on the user role
   useEffect(() => {
     // Seed default configuration and default staff user on first run
     seedInitialDataIfNeeded();
 
-    // Setup real-time listeners
+    // Setup real-time listener for the event config (public info)
     const unsubConfig = subscribeEventConfig((config) => {
       setEventConfig(config);
     });
 
-    const unsubStaff = subscribeStaffUsers((staffList) => {
-      setStaffUsers(staffList);
-    });
+    let unsubStaff = () => {};
+    let unsubParticipants = () => {};
 
-    const unsubParticipants = subscribeParticipants((partList) => {
-      setParticipants(partList);
-    });
+    // Secure, role-based real-time subscriptions:
+    // Unauthorized public users will NEVER trigger a subscription to sensitive collections.
+    if (currentRole === 'organizer') {
+      unsubStaff = subscribeStaffUsers((staffList) => {
+        setStaffUsers(staffList);
+      });
+      unsubParticipants = subscribeParticipants((partList) => {
+        setParticipants(partList);
+      });
+    } else if (currentRole === 'reception') {
+      unsubParticipants = subscribeParticipants((partList) => {
+        setParticipants(partList);
+      });
+    }
 
     return () => {
       unsubConfig();
       unsubStaff();
       unsubParticipants();
     };
-  }, []);
+  }, [currentRole]);
 
   // Hash/Path routing listener for admin
   useEffect(() => {
@@ -139,6 +168,15 @@ export default function App() {
 
   // Helper action: Register new participant
   const handleAddParticipant = async (newPart: Omit<Participant, 'id' | 'status' | 'registrationDate'>) => {
+    // Check duplicates securely on the database to preserve LGPD privacy
+    const { emailExists, phoneExists } = await checkDuplicateParticipantSecure(newPart.email, newPart.phone);
+    if (emailExists) {
+      throw new Error('EMAIL_EXISTS');
+    }
+    if (phoneExists) {
+      throw new Error('PHONE_EXISTS');
+    }
+
     const freshParticipant: Participant = {
       ...newPart,
       id: `part-${Date.now()}`,
@@ -146,6 +184,9 @@ export default function App() {
       registrationDate: new Date().toLocaleDateString('pt-BR')
     };
     await addParticipantInFirestore(freshParticipant);
+    
+    // Refresh public registration count securely
+    await fetchParticipantsCount();
   };
 
   // Helper action: Check in/Credenciar participant
@@ -260,7 +301,7 @@ export default function App() {
             <LandingPage
               eventConfig={eventConfig}
               onNavigate={handleNavigate}
-              participantsCount={participants.length}
+              participantsCount={currentRole === 'organizer' || currentRole === 'reception' ? participants.length : secureCount}
             />
           );
         }
@@ -270,32 +311,38 @@ export default function App() {
               initialType={currentView === 'cadastro-quarteto' ? 'Participante' : 'Público'}
               onAddParticipant={handleAddParticipant}
               onNavigate={handleNavigate}
-              participantsCount={participants.length}
-              participants={participants}
+              participantsCount={secureCount}
+              participants={[]}
             />
           );
         }
         if (currentView === 'login') {
           return (
             <Login
-              participants={participants}
-              staffUsers={staffUsers}
               onLoginSuccess={handleLoginSuccess}
               onStaffLoginSuccess={handleStaffLoginSuccess}
               onNavigate={handleNavigate}
               initialMode="participant"
+              onLoginParticipant={loginParticipantSecure}
+              onLoginStaff={async (u, p) => {
+                const staff = await loginStaffSecure(u, p);
+                return !!staff;
+              }}
             />
           );
         }
         if (currentView === 'login-reception') {
           return (
             <Login
-              participants={participants}
-              staffUsers={staffUsers}
               onLoginSuccess={handleLoginSuccess}
               onStaffLoginSuccess={handleStaffLoginSuccess}
               onNavigate={handleNavigate}
               initialMode="reception"
+              onLoginParticipant={loginParticipantSecure}
+              onLoginStaff={async (u, p) => {
+                const staff = await loginStaffSecure(u, p);
+                return !!staff;
+              }}
             />
           );
         }
@@ -338,12 +385,15 @@ export default function App() {
         // Fallback to login if no active user session
         return (
           <Login
-            participants={participants}
-            staffUsers={staffUsers}
             onLoginSuccess={handleLoginSuccess}
             onStaffLoginSuccess={handleStaffLoginSuccess}
             onNavigate={handleNavigate}
             initialMode="participant"
+            onLoginParticipant={loginParticipantSecure}
+            onLoginStaff={async (u, p) => {
+              const staff = await loginStaffSecure(u, p);
+              return !!staff;
+            }}
           />
         );
 

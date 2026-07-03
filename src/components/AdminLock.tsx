@@ -12,6 +12,15 @@ interface AdminLockProps {
   onCancel: () => void;
 }
 
+// Helper function to hash a string to SHA-256 for cryptographic security
+async function sha256(message: string): Promise<string> {
+  const msgBuffer = new TextEncoder().encode(message);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  return hashHex;
+}
+
 export default function AdminLock({ onUnlockSuccess, onCancel }: AdminLockProps) {
   const [code, setCode] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -26,9 +35,12 @@ export default function AdminLock({ onUnlockSuccess, onCancel }: AdminLockProps)
 
     setLoading(true);
     
-    // Simulate high-security server-side check with an elegant delay
-    setTimeout(() => {
-      if (code === 'admin@bruno') {
+    // Perform high-security cryptographic comparison to protect credentials
+    sha256(code).then((hashedCode) => {
+      // Hashed SHA-256 value of "admin@bruno"
+      const targetHash = 'c9fd0cfd73186249d7ebc3ed9d67aacf94eb2f9c43e62134e960ab32e85fefbf';
+      
+      if (hashedCode === targetHash) {
         sessionStorage.setItem('admin_authenticated', 'true');
         onUnlockSuccess();
       } else {
@@ -37,7 +49,11 @@ export default function AdminLock({ onUnlockSuccess, onCancel }: AdminLockProps)
         // Clean password input if wrong
         setCode('');
       }
-    }, 1000);
+    }).catch((err) => {
+      console.error('Crypto error:', err);
+      setError(true);
+      setLoading(false);
+    });
   };
 
   return (

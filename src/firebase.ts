@@ -16,7 +16,10 @@ import {
   updateDoc, 
   deleteDoc,
   onSnapshot,
-  query
+  query,
+  getCountFromServer,
+  where,
+  limit
 } from 'firebase/firestore';
 import firebaseConfig from '../firebase-applet-config.json';
 import { Participant, EventConfig, StaffUser } from './types';
@@ -221,5 +224,84 @@ export async function deleteStaffUserInFirestore(id: string) {
     await deleteDoc(doc(db, 'staffUsers', id));
   } catch (error) {
     handleFirestoreError(error, OperationType.DELETE, path);
+  }
+}
+
+export async function getParticipantsCountSecure(): Promise<number> {
+  try {
+    const coll = collection(db, 'participants');
+    const snapshot = await getCountFromServer(coll);
+    return snapshot.data().count;
+  } catch (error) {
+    console.error('Error fetching participant count securely:', error);
+    return 0;
+  }
+}
+
+export async function checkDuplicateParticipantSecure(email: string, phone: string): Promise<{ emailExists: boolean, phoneExists: boolean }> {
+  try {
+    const coll = collection(db, 'participants');
+    
+    // Check email
+    const emailQuery = query(coll, where('email', '==', email.trim()), limit(1));
+    const emailSnap = await getDocs(emailQuery);
+    const emailExists = !emailSnap.empty;
+
+    // Check phone
+    const phoneQuery = query(coll, where('phone', '==', phone.trim()), limit(1));
+    const phoneSnap = await getDocs(phoneQuery);
+    const phoneExists = !phoneSnap.empty;
+
+    return { emailExists, phoneExists };
+  } catch (error) {
+    console.error('Error checking duplicates securely:', error);
+    return { emailExists: false, phoneExists: false };
+  }
+}
+
+export async function loginStaffSecure(usernameInput: string, passwordInput: string): Promise<StaffUser | null> {
+  try {
+    const coll = collection(db, 'staffUsers');
+    const q = query(coll, where('username', '==', usernameInput.trim().toLowerCase()), limit(1));
+    const snap = await getDocs(q);
+    
+    if (!snap.empty) {
+      const docData = snap.docs[0].data() as StaffUser;
+      if (docData.password === passwordInput) {
+        return docData;
+      }
+    }
+    return null;
+  } catch (error) {
+    console.error('Error in secure staff login:', error);
+    return null;
+  }
+}
+
+export async function loginParticipantSecure(emailOrPhone: string, passwordInput: string): Promise<Participant | null> {
+  try {
+    const coll = collection(db, 'participants');
+    const cleanInput = emailOrPhone.trim().toLowerCase();
+    
+    // Try email first
+    let q = query(coll, where('email', '==', cleanInput), limit(1));
+    let snap = await getDocs(q);
+    
+    // Try phone if email not matched
+    if (snap.empty) {
+      q = query(coll, where('phone', '==', emailOrPhone.trim()), limit(1));
+      snap = await getDocs(q);
+    }
+    
+    if (!snap.empty) {
+      const docData = snap.docs[0].data() as Participant;
+      if (docData.password === passwordInput) {
+        return docData;
+      }
+    }
+    return null;
+  } catch (error) {
+    console.error('Error in secure participant login:', error);
+    return null;
   }
 }

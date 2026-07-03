@@ -8,21 +8,21 @@ import { Mail, Phone, Lock, User, ArrowLeft, LogIn, Sparkles } from 'lucide-reac
 import { Participant, StaffUser } from '../types';
 
 interface LoginProps {
-  participants: Participant[];
-  staffUsers?: StaffUser[];
   onLoginSuccess: (user: Participant) => void;
   onStaffLoginSuccess: () => void;
   onNavigate: (view: string, role?: 'public' | 'participant' | 'reception' | 'organizer') => void;
   initialMode?: 'participant' | 'reception';
+  onLoginParticipant: (emailOrPhone: string, passwordInput: string) => Promise<Participant | null>;
+  onLoginStaff: (usernameInput: string, passwordInput: string) => Promise<boolean>;
 }
 
 export default function Login({ 
-  participants, 
-  staffUsers = [],
   onLoginSuccess, 
   onStaffLoginSuccess, 
   onNavigate,
-  initialMode = 'participant'
+  initialMode = 'participant',
+  onLoginParticipant,
+  onLoginStaff
 }: LoginProps) {
   const [mode, setMode] = useState<'participant' | 'reception'>(initialMode);
   
@@ -39,10 +39,7 @@ export default function Login({
 
   const [loading, setLoading] = useState(false);
 
-  // Take first 3 active participants for the quick autofill demo
-  const sampleParticipants = participants.slice(0, 3);
-
-  const handleParticipantLogin = (e: React.FormEvent) => {
+  const handleParticipantLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setPartError('');
     if (!email && !phone) {
@@ -55,54 +52,40 @@ export default function Login({
     }
 
     setLoading(true);
-    setTimeout(() => {
-      // Find matching mock participant
-      const match = participants.find(
-        (p) => (email && p.email.toLowerCase().trim() === email.toLowerCase().trim()) || 
-               (phone && p.phone.replace(/\D/g, '') === phone.replace(/\D/g, ''))
-      );
-
+    try {
+      const match = await onLoginParticipant(email || phone, partPassword);
       setLoading(false);
       if (match) {
-        // Validate password
-        const expectedPassword = match.password || '1234';
-        if (partPassword === expectedPassword) {
-          onLoginSuccess(match);
-        } else {
-          setPartError('Senha de acesso incorreta. Verifique sua senha e tente novamente.');
-        }
+        onLoginSuccess(match);
       } else {
-        setPartError('Inscrição não localizada. Verifique os dados fornecidos ou realize o seu cadastro.');
+        setPartError('Inscrição não localizada ou senha incorreta. Verifique os dados fornecidos.');
       }
-    }, 1000);
+    } catch (error) {
+      console.error('Login error:', error);
+      setLoading(false);
+      setPartError('Ocorreu um erro ao realizar o login. Tente novamente.');
+    }
   };
 
-  const handleQuickAutofill = (p: Participant) => {
-    setEmail(p.email);
-    setPhone(p.phone);
-    setPartPassword(p.password || '1234');
-    setPartError('');
-  };
-
-  const handleReceptionLogin = (e: React.FormEvent) => {
+  const handleReceptionLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setReceptionError('');
     if (!username || !password) return;
 
     setLoading(true);
-    setTimeout(() => {
+    try {
+      const success = await onLoginStaff(username, password);
       setLoading(false);
-      // Validate credentials against the dynamic staffUsers list
-      const matchedStaff = staffUsers.find(
-        (su) => su.username.trim().toLowerCase() === username.trim().toLowerCase() && su.password === password
-      );
-
-      if (matchedStaff) {
+      if (success) {
         onStaffLoginSuccess();
       } else {
         setReceptionError('Usuário ou senha incorretos. Verifique suas credenciais de equipe.');
       }
-    }, 1000);
+    } catch (error) {
+      console.error('Staff login error:', error);
+      setLoading(false);
+      setReceptionError('Ocorreu um erro de conexão. Tente novamente.');
+    }
   };
 
 
