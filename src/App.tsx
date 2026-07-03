@@ -25,6 +25,7 @@ import Login from './components/Login';
 import ParticipantArea from './components/ParticipantArea';
 import ReceptionArea from './components/ReceptionArea';
 import OrganizerArea from './components/OrganizerArea';
+import AdminLock from './components/AdminLock';
 
 export default function App() {
   // Application states
@@ -61,6 +62,30 @@ export default function App() {
       unsubStaff();
       unsubParticipants();
     };
+  }, []);
+
+  // Hash/Path routing listener for admin
+  useEffect(() => {
+    const checkRoute = () => {
+      const path = window.location.pathname;
+      const hash = window.location.hash;
+      
+      if (path.endsWith('/admin') || path.endsWith('/admin/') || hash === '#/admin' || hash === '#admin') {
+        const isAuth = sessionStorage.getItem('admin_authenticated') === 'true';
+        if (isAuth) {
+          setCurrentRole('organizer');
+          setCurrentView('dashboard');
+        } else {
+          setSplashCompleted(true); // Bypass splash for direct admin link
+          setCurrentRole('public');
+          setCurrentView('admin-lock');
+        }
+      }
+    };
+
+    checkRoute();
+    window.addEventListener('hashchange', checkRoute);
+    return () => window.removeEventListener('hashchange', checkRoute);
   }, []);
 
   // Helper action: Register new staff user
@@ -214,6 +239,23 @@ export default function App() {
               onStaffLoginSuccess={handleStaffLoginSuccess}
               onNavigate={handleNavigate}
               initialMode="reception"
+            />
+          );
+        }
+        if (currentView === 'admin-lock') {
+          return (
+            <AdminLock
+              onUnlockSuccess={() => {
+                setCurrentRole('organizer');
+                setCurrentView('dashboard');
+              }}
+              onCancel={() => {
+                if (window.location.hash.includes('admin')) {
+                  window.location.hash = '';
+                }
+                setCurrentRole('public');
+                setCurrentView('landing');
+              }}
             />
           );
         }

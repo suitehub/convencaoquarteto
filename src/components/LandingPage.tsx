@@ -517,6 +517,14 @@ export default function LandingPage({ eventConfig, onNavigate, participantsCount
           <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-6 text-center">
             <span className="uppercase tracking-widest text-app-gold font-bold">#CuidandoDePessoas</span>
             <span className="hidden sm:inline text-slate-600">|</span>
+            <button
+              onClick={() => onNavigate('admin-lock')}
+              className="text-slate-400 hover:text-app-gold transition-colors font-bold flex items-center space-x-1 uppercase tracking-widest text-[11px] cursor-pointer"
+              title="Área Administrativa do Organizador"
+            >
+              <span>[ Área do Organizador ]</span>
+            </button>
+            <span className="hidden sm:inline text-slate-600">|</span>
             <span className="normal-case text-slate-300">
               Desenvolvido por{' '}
               <a 
