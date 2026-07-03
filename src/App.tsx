@@ -254,6 +254,7 @@ export default function App() {
             <LandingPage
               eventConfig={eventConfig}
               onNavigate={handleNavigate}
+              participantsCount={participants.length}
             />
           );
         }
