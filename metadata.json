@@ -1,0 +1,8 @@
+{
+  "name": "8ª Convenção de Quartetos",
+  "description": "Protótipo navegável de alta fidelidade para a 9ª Convenção Municipal de Quartetos, focado na reserva simplificada de ingressos e credenciamento.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
