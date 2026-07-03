@@ -13,6 +13,7 @@ import {
   getDocs, 
   setDoc, 
   updateDoc, 
+  deleteDoc,
   onSnapshot,
   query
 } from 'firebase/firestore';
@@ -204,5 +205,14 @@ export async function updateParticipantInFirestore(id: string, updates: Partial<
     await updateDoc(doc(db, 'participants', id), updates);
   } catch (error) {
     handleFirestoreError(error, OperationType.WRITE, path);
+  }
+}
+
+export async function deleteStaffUserInFirestore(id: string) {
+  const path = `staffUsers/${id}`;
+  try {
+    await deleteDoc(doc(db, 'staffUsers', id));
+  } catch (error) {
+    handleFirestoreError(error, OperationType.DELETE, path);
   }
 }

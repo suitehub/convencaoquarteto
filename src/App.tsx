@@ -13,6 +13,7 @@ import {
   subscribeParticipants,
   addParticipantInFirestore,
   addStaffUserInFirestore,
+  deleteStaffUserInFirestore,
   updateParticipantInFirestore,
   updateEventConfig
 } from './firebase';
@@ -129,6 +130,11 @@ export default function App() {
       createdAt: new Date().toLocaleDateString('pt-BR')
     };
     await addStaffUserInFirestore(freshStaff);
+  };
+
+  // Helper action: Delete a staff user
+  const handleDeleteStaffUser = async (id: string) => {
+    await deleteStaffUserInFirestore(id);
   };
 
   // Helper action: Register new participant
@@ -356,6 +362,7 @@ export default function App() {
             participants={participants}
             staffUsers={staffUsers}
             onAddStaffUser={handleAddStaffUser}
+            onDeleteStaffUser={handleDeleteStaffUser}
             eventConfig={eventConfig}
             onUpdateConfig={updateConfigState}
             onCheckIn={handleCheckIn}

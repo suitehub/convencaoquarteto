@@ -12,7 +12,8 @@ import {
 import { 
   LayoutDashboard, Users, BarChart3, Settings, Gift, Music, Search, 
   SlidersHorizontal, CheckCircle2, AlertCircle, Save, Calendar, Clock, 
-  MapPin, Sliders, ArrowUpRight, Check, Menu, X, UserPlus, Key, Download, FileSpreadsheet
+  MapPin, Sliders, ArrowUpRight, Check, Menu, X, UserPlus, Key, Download, FileSpreadsheet,
+  Trash2
 } from 'lucide-react';
 import { Participant, EventConfig, StaffUser } from '../types';
 import Sorteio from './Sorteio';
@@ -21,6 +22,7 @@ interface OrganizerAreaProps {
   participants: Participant[];
   staffUsers?: StaffUser[];
   onAddStaffUser?: (newStaff: { name: string; username: string; password?: string }) => void;
+  onDeleteStaffUser?: (id: string) => void;
   eventConfig: EventConfig;
   onUpdateConfig: (newConfig: EventConfig) => void;
   onCheckIn: (id: string) => void;
@@ -31,6 +33,7 @@ export default function OrganizerArea({
   participants, 
   staffUsers = [],
   onAddStaffUser,
+  onDeleteStaffUser,
   eventConfig, 
   onUpdateConfig, 
   onCheckIn, 
@@ -885,7 +888,8 @@ export default function OrganizerArea({
                         <th className="pb-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest font-mono">Nome / Membro</th>
                         <th className="pb-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest font-mono">Usuário</th>
                         <th className="pb-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest font-mono">Senha</th>
-                        <th className="pb-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest font-mono text-right">Cadastrado em</th>
+                        <th className="pb-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest font-mono text-center">Cadastrado em</th>
+                        <th className="pb-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest font-mono text-right">Ações</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
@@ -912,8 +916,17 @@ export default function OrganizerArea({
                               {su.password || '••••'}
                             </span>
                           </td>
-                          <td className="py-3.5 text-right text-xs font-mono text-slate-400">
+                          <td className="py-3.5 text-center text-xs font-mono text-slate-400">
                             {su.createdAt}
+                          </td>
+                          <td className="py-3.5 text-right">
+                            <button
+                              onClick={() => onDeleteStaffUser && onDeleteStaffUser(su.id)}
+                              className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all cursor-pointer inline-flex items-center"
+                              title="Excluir Colaborador"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
                           </td>
                         </tr>
                       ))}
