@@ -28,15 +28,41 @@ import OrganizerArea from './components/OrganizerArea';
 import AdminLock from './components/AdminLock';
 
 export default function App() {
+  // Check if the current URL points to the admin panel
+  const checkIsAdminRoute = (): boolean => {
+    if (typeof window === 'undefined') return false;
+    const path = window.location.pathname.toLowerCase();
+    const hash = window.location.hash.toLowerCase();
+    return (
+      path.endsWith('/admin') || 
+      path.endsWith('/admin/') || 
+      hash === '#/admin' || 
+      hash === '#admin' ||
+      hash.includes('admin')
+    );
+  };
+
   // Application states
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [eventConfig, setEventConfig] = useState<EventConfig>(INITIAL_EVENT_CONFIG);
   const [staffUsers, setStaffUsers] = useState<StaffUser[]>([]);
-  const [splashCompleted, setSplashCompleted] = useState(false);
   
-  // Navigation states
-  const [currentRole, setCurrentRole] = useState<UserRole>('public');
-  const [currentView, setCurrentView] = useState<string>('splash');
+  // Navigation states - initialized dynamically based on the current URL route
+  const [splashCompleted, setSplashCompleted] = useState<boolean>(() => checkIsAdminRoute());
+  const [currentRole, setCurrentRole] = useState<UserRole>(() => {
+    if (checkIsAdminRoute()) {
+      const isAuth = sessionStorage.getItem('admin_authenticated') === 'true';
+      return isAuth ? 'organizer' : 'public';
+    }
+    return 'public';
+  });
+  const [currentView, setCurrentView] = useState<string>(() => {
+    if (checkIsAdminRoute()) {
+      const isAuth = sessionStorage.getItem('admin_authenticated') === 'true';
+      return isAuth ? 'dashboard' : 'admin-lock';
+    }
+    return 'splash';
+  });
   const [currentUser, setCurrentUser] = useState<Participant | null>(null);
 
   // Initialize and subscribe to Firestore collections
@@ -66,27 +92,34 @@ export default function App() {
 
   // Hash/Path routing listener for admin
   useEffect(() => {
-    const checkRoute = () => {
-      const path = window.location.pathname;
-      const hash = window.location.hash;
-      
-      if (path.endsWith('/admin') || path.endsWith('/admin/') || hash === '#/admin' || hash === '#admin') {
+    const handleRouteUpdate = () => {
+      if (checkIsAdminRoute()) {
         const isAuth = sessionStorage.getItem('admin_authenticated') === 'true';
         if (isAuth) {
           setCurrentRole('organizer');
           setCurrentView('dashboard');
         } else {
-          setSplashCompleted(true); // Bypass splash for direct admin link
+          setSplashCompleted(true); // Bypass splash for admin direct visits
           setCurrentRole('public');
           setCurrentView('admin-lock');
+        }
+      } else {
+        // If they navigate away from admin manually, go to landing
+        if (currentView === 'admin-lock') {
+          setCurrentRole('public');
+          setCurrentView('landing');
         }
       }
     };
 
-    checkRoute();
-    window.addEventListener('hashchange', checkRoute);
-    return () => window.removeEventListener('hashchange', checkRoute);
-  }, []);
+    handleRouteUpdate();
+    window.addEventListener('hashchange', handleRouteUpdate);
+    window.addEventListener('popstate', handleRouteUpdate);
+    return () => {
+      window.removeEventListener('hashchange', handleRouteUpdate);
+      window.removeEventListener('popstate', handleRouteUpdate);
+    };
+  }, [currentView]);
 
   // Helper action: Register new staff user
   const handleAddStaffUser = async (newStaff: Omit<StaffUser, 'id' | 'createdAt'>) => {
@@ -155,7 +188,24 @@ export default function App() {
       setSplashCompleted(false);
       setCurrentRole('public');
       setCurrentView('splash');
+      if (window.location.hash.includes('admin')) {
+        window.location.hash = '';
+      }
       return;
+    }
+
+    if (view === 'admin-lock') {
+      window.location.hash = '#/admin';
+      setSplashCompleted(true);
+      setCurrentRole('public');
+      setCurrentView('admin-lock');
+      return;
+    }
+
+    if (view === 'landing' || view === 'home') {
+      if (window.location.hash.includes('admin')) {
+        window.location.hash = '';
+      }
     }
 
     if (view === 'login-reception') {
