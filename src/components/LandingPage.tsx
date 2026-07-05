@@ -81,57 +81,72 @@ export default function LandingPage({ eventConfig, onNavigate, participantsCount
         {/* Banner principal */}
         <section className="pt-16 pb-20 px-6 max-w-5xl mx-auto text-center flex flex-col items-center">
           
-          {/* Badge */}
-          <span className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 rounded-full text-[10px] font-bold bg-app-gold/10 border border-app-gold/20 text-app-gold mb-6 font-mono uppercase tracking-widest animate-pulse">
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>MÚSICA • ADORAÇÃO • COMUNHÃO</span>
-          </span>
-
-          {/* Event Name */}
-          <h1 className="text-4xl sm:text-7xl font-black font-display tracking-tight leading-[1.05] mb-6">
-            9ª Convenção Municipal <br />
-            <span className="bg-clip-text text-transparent animate-gradient-slide">
-              de Quartetos
+          {/* Main Hero block with scroll animation */}
+          <motion.div
+            initial={{ opacity: 0, y: 40 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: false, amount: 0.15 }}
+            transition={{ duration: 0.8 }}
+            className="flex flex-col items-center"
+          >
+            {/* Badge */}
+            <span className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 rounded-full text-[10px] font-bold bg-app-gold/10 border border-app-gold/20 text-app-gold mb-6 font-mono uppercase tracking-widest animate-pulse">
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>MÚSICA • ADORAÇÃO • COMUNHÃO</span>
             </span>
-          </h1>
 
-          {/* Brief event description */}
-          <p className="text-sm sm:text-base text-slate-200 font-light mb-10 max-w-3xl leading-relaxed">
-            O maior encontro de música vocal harmônica e quartetos do município. Venha adorar e se inspirar com apresentações marcantes, capacitação técnica e o tradicional grande coro de vozes. Participe deste momento inesquecível de louvor e desenvolvimento vocal focado em conectar pessoas.
-            <span className="block mt-4 text-app-gold font-mono font-bold text-xs tracking-widest sm:text-sm">
-              #CuidandoDePessoas
-            </span>
-          </p>
+            {/* Event Name */}
+            <h1 className="text-4xl sm:text-7xl font-black font-display tracking-tight leading-[1.05] mb-6">
+              9ª Convenção Municipal <br />
+              <span className="bg-clip-text text-transparent animate-gradient-slide">
+                de Quartetos
+              </span>
+            </h1>
 
-          {/* Main CTA button: Large, prominent, glowing, pulse anim */}
-          <div className="relative group mb-16">
-            {participantsCount >= 445 ? (
-              <button
-                onClick={() => onNavigate('cadastro')}
-                className="relative w-full sm:w-auto px-10 py-5 text-base bg-red-600 hover:bg-red-700 text-white rounded-2xl shadow-2xl border border-red-500 transition-all flex items-center justify-center space-x-3.5 font-black uppercase tracking-wide cursor-pointer"
-              >
-                <Ticket className="w-6 h-6 text-white animate-bounce" />
-                <span>INSCRIÇÕES ENCERRADAS (LOTADO)</span>
-              </button>
-            ) : (
-              <>
-                <div className="absolute -inset-1 bg-gradient-to-r from-app-medium via-app-gold to-app-medium rounded-2xl blur-lg opacity-60 group-hover:opacity-100 transition duration-1000 group-hover:duration-200 animate-pulse" />
+            {/* Brief event description */}
+            <p className="text-sm sm:text-base text-slate-200 font-light mb-10 max-w-3xl leading-relaxed">
+              O maior encontro de música vocal harmônica e quartetos do município. Venha adorar e se inspirar com apresentações marcantes, capacitação técnica e o tradicional grande coro de vozes. Participe deste momento inesquecível de louvor e desenvolvimento vocal focado em conectar pessoas.
+              <span className="block mt-4 text-app-gold font-mono font-bold text-xs tracking-widest sm:text-sm">
+                #CuidandoDePessoas
+              </span>
+            </p>
+
+            {/* Main CTA button: Large, prominent, glowing, pulse anim */}
+            <div className="relative group mb-16">
+              {participantsCount >= 445 ? (
                 <button
                   onClick={() => onNavigate('cadastro')}
-                  className="relative w-full sm:w-auto px-10 py-5 text-base bg-app-gold hover:bg-app-gold/95 text-app-deep rounded-2xl shadow-2xl hover:shadow-app-gold/20 transition-all cursor-pointer active:scale-98 flex items-center justify-center space-x-3.5 font-black"
+                  className="relative w-full sm:w-auto px-10 py-5 text-base bg-red-600 hover:bg-red-700 text-white rounded-2xl shadow-2xl border border-red-500 transition-all flex items-center justify-center space-x-3.5 font-black uppercase tracking-wide cursor-pointer"
                 >
-                  <Ticket className="w-6 h-6 text-app-deep" />
-                  <span>RESERVAR INGRESSO GRATUITO</span>
+                  <Ticket className="w-6 h-6 text-white animate-bounce" />
+                  <span>INSCRIÇÕES ENCERRADAS (LOTADO)</span>
                 </button>
-                <span className="absolute top-full mt-2 left-0 right-0 text-center text-xs font-mono text-slate-300 font-medium">
-                  Garanta sua vaga! Apenas <strong className="text-app-gold">{445 - participantsCount}</strong> ingressos restantes de 445.
-                </span>
-              </>
-            )}
-          </div>
+              ) : (
+                <>
+                  <div className="absolute -inset-1 bg-gradient-to-r from-app-medium via-app-gold to-app-medium rounded-2xl blur-lg opacity-60 group-hover:opacity-100 transition duration-1000 group-hover:duration-200 animate-pulse" />
+                  <button
+                    onClick={() => onNavigate('cadastro')}
+                    className="relative w-full sm:w-auto px-10 py-5 text-base bg-app-gold hover:bg-app-gold/95 text-app-deep rounded-2xl shadow-2xl hover:shadow-app-gold/20 transition-all cursor-pointer active:scale-98 flex items-center justify-center space-x-3.5 font-black"
+                  >
+                    <Ticket className="w-6 h-6 text-app-deep" />
+                    <span>RESERVAR INGRESSO GRATUITO</span>
+                  </button>
+                  <span className="absolute top-full mt-2 left-0 right-0 text-center text-xs font-mono text-slate-300 font-medium">
+                    Garanta sua vaga! Apenas <strong className="text-app-gold">{445 - participantsCount}</strong> ingressos restantes de 445.
+                  </span>
+                </>
+              )}
+            </div>
+          </motion.div>
 
           {/* Event Details metadata card */}
-          <div className="w-full max-w-4xl bg-white rounded-3xl p-6 sm:p-8 shadow-2xl grid grid-cols-1 md:grid-cols-3 gap-6 text-left relative overflow-hidden border border-slate-200">
+          <motion.div 
+            initial={{ opacity: 0, y: 40, scale: 0.98 }}
+            whileInView={{ opacity: 1, y: 0, scale: 1 }}
+            viewport={{ once: false, amount: 0.15 }}
+            transition={{ duration: 0.8 }}
+            className="w-full max-w-4xl bg-white rounded-3xl p-6 sm:p-8 shadow-2xl grid grid-cols-1 md:grid-cols-3 gap-6 text-left relative overflow-hidden border border-slate-200"
+          >
             <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-app-medium/20 via-app-gold/20 to-app-medium/20" />
             
             {/* Date */}
@@ -172,10 +187,16 @@ export default function LandingPage({ eventConfig, onNavigate, participantsCount
                 </p>
               </div>
             </div>
-          </div>
+          </motion.div>
 
           {/* Institutional Reference - Free elegant layout, no borders, no block container */}
-          <div className="w-full max-w-4xl mt-16 flex flex-col md:flex-row items-center gap-6 sm:gap-8 text-center md:text-left relative z-10">
+          <motion.div 
+            initial={{ opacity: 0, y: 40 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: false, amount: 0.15 }}
+            transition={{ duration: 0.8, delay: 0.1 }}
+            className="w-full max-w-4xl mt-16 flex flex-col md:flex-row items-center gap-6 sm:gap-8 text-center md:text-left relative z-10"
+          >
             <img 
               src="SECRETARIA DA CULTURA_VERTICAL_MONOCROM_BRANCO.png" 
               alt="Secretaria Municipal de Cultura" 
@@ -202,7 +223,7 @@ export default function LandingPage({ eventConfig, onNavigate, participantsCount
                 , integrando oficialmente a agenda cultural e de fomento artístico do município de São Paulo.
               </p>
             </div>
-          </div>
+          </motion.div>
         </section>
 
         {/* Guest Quartets highlight section */}
@@ -212,7 +233,13 @@ export default function LandingPage({ eventConfig, onNavigate, participantsCount
           <div className="absolute inset-0 bg-[linear-gradient(to_right,#2c6cbf_1px,transparent_1px),linear-gradient(to_bottom,#2c6cbf_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)] opacity-20 pointer-events-none" />
 
           {/* Section Header */}
-          <div className="text-center max-w-2xl mx-auto mb-16 relative z-10">
+          <motion.div 
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: false, amount: 0.15 }}
+            transition={{ duration: 0.7 }}
+            className="text-center max-w-2xl mx-auto mb-16 relative z-10"
+          >
             <span className="text-[10px] font-bold text-app-gold uppercase tracking-widest font-mono">Quartetos Confirmados</span>
             <h2 className="text-3xl sm:text-5xl font-black font-display tracking-tight text-white mt-2">
               Quartetos Convidados Especiais
@@ -220,7 +247,7 @@ export default function LandingPage({ eventConfig, onNavigate, participantsCount
             <p className="text-slate-200 text-xs sm:text-sm mt-3 font-light leading-relaxed">
               Vozes de referência que inspiram gerações e conduzem momentos inesquecíveis de adoração em nosso município.
             </p>
-          </div>
+          </motion.div>
 
           {/* 3-Column Immersive Stage Display with Scroll Fade/Rise Effects */}
           <div className="relative max-w-6xl mx-auto flex flex-col md:flex-row items-end justify-center gap-8 md:gap-4 lg:gap-8 z-10 pt-8">
@@ -232,10 +259,10 @@ export default function LandingPage({ eventConfig, onNavigate, participantsCount
 
             {/* JASD (Left column) */}
             <motion.div 
-              initial={{ opacity: 0, y: 100, filter: 'blur(8px)' }}
+              initial={{ opacity: 0, y: 80, filter: 'blur(8px)' }}
               whileInView={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-              viewport={{ once: true, margin: "-100px" }}
-              transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1], delay: 0.1 }}
+              viewport={{ once: false, amount: 0.15 }}
+              transition={{ duration: 1.0, ease: [0.16, 1, 0.3, 1], delay: 0.1 }}
               className="w-full md:w-[32%] flex flex-col items-center group relative order-2 md:order-1"
             >
               <div className="relative w-full h-[320px] md:h-[380px] flex items-end justify-center">
@@ -265,10 +292,10 @@ export default function LandingPage({ eventConfig, onNavigate, participantsCount
 
             {/* ARAUTOS DO REI (Center column - Taller/Larger Spotlight) */}
             <motion.div 
-              initial={{ opacity: 0, y: 120, filter: 'blur(10px)' }}
+              initial={{ opacity: 0, y: 100, filter: 'blur(10px)' }}
               whileInView={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-              viewport={{ once: true, margin: "-100px" }}
-              transition={{ duration: 1.5, ease: [0.16, 1, 0.3, 1] }}
+              viewport={{ once: false, amount: 0.15 }}
+              transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
               className="w-full md:w-[36%] flex flex-col items-center group relative z-20 order-1 md:order-2"
             >
               <div className="relative w-full h-[320px] md:h-[410px] flex items-end justify-center">
@@ -298,10 +325,10 @@ export default function LandingPage({ eventConfig, onNavigate, participantsCount
 
             {/* MENSAGEM (Right column) */}
             <motion.div 
-              initial={{ opacity: 0, y: 100, filter: 'blur(8px)' }}
+              initial={{ opacity: 0, y: 80, filter: 'blur(8px)' }}
               whileInView={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-              viewport={{ once: true, margin: "-100px" }}
-              transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1], delay: 0.2 }}
+              viewport={{ once: false, amount: 0.15 }}
+              transition={{ duration: 1.0, ease: [0.16, 1, 0.3, 1], delay: 0.2 }}
               className="w-full md:w-[32%] flex flex-col items-center group relative order-3 md:order-3"
             >
               <div className="relative w-full h-[320px] md:h-[380px] flex items-end justify-center">
@@ -335,8 +362,15 @@ export default function LandingPage({ eventConfig, onNavigate, participantsCount
         {/* Support This Project section */}
         <section className="w-full max-w-4xl mx-auto px-6 py-12 mb-16">
           <motion.div 
-            whileHover={{ y: -6, boxShadow: "0 30px 60px -15px rgba(44, 108, 191, 0.15)" }}
-            transition={{ type: "spring", stiffness: 200, damping: 20 }}
+            initial={{ opacity: 0, y: 50, scale: 0.98 }}
+            whileInView={{ opacity: 1, y: 0, scale: 1 }}
+            viewport={{ once: false, amount: 0.15 }}
+            whileHover={{ y: -6, scale: 1.01, boxShadow: "0 30px 60px -15px rgba(44, 108, 191, 0.15)" }}
+            transition={{ 
+              type: "spring", 
+              stiffness: 150, 
+              damping: 20 
+            }}
             className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-10 shadow-2xl relative overflow-hidden text-slate-800"
           >
             
