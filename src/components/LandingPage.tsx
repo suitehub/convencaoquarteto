@@ -7,6 +7,7 @@ import React, { useState } from 'react';
 import { Calendar, Clock, MapPin, Ticket, LogIn, Music, Heart, Copy, Check, Users, Sparkles } from 'lucide-react';
 import { motion } from 'motion/react';
 import { EventConfig } from '../types';
+import backgroundImg from './background.png';
 
 interface LandingPageProps {
   eventConfig: EventConfig;
@@ -91,7 +92,7 @@ export default function LandingPage({ eventConfig, onNavigate, participantsCount
         
         {/* Full-width Hero Banner with Image Background */}
         <div className="w-full relative overflow-hidden" style={{
-          backgroundImage: 'linear-gradient(to bottom, rgba(18, 58, 109, 0.45) 0%, rgba(18, 58, 109, 0.8) 70%, rgba(18, 58, 109, 1) 100%), url("/background.png")',
+          backgroundImage: `linear-gradient(to bottom, rgba(18, 58, 109, 0.45) 0%, rgba(18, 58, 109, 0.8) 70%, rgba(18, 58, 109, 1) 100%), url(${backgroundImg})`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           backgroundRepeat: 'no-repeat'
@@ -130,7 +131,7 @@ export default function LandingPage({ eventConfig, onNavigate, participantsCount
               <h2 className="text-2xl sm:text-4xl font-black font-display text-app-gold tracking-widest uppercase filter drop-shadow-[0_2px_8px_rgba(234,179,8,0.2)]">
                 Vozes em Missão
               </h2>
-              <div className="mt-4 flex items-center space-x-2 bg-gradient-to-r from-app-gold/10 via-app-gold/25 to-app-gold/10 border border-app-gold/30 px-4 py-1.5 rounded-full shadow-lg shadow-app-gold/5 max-w-lg">
+              <div className="mt-3 text-center max-w-lg">
                 <span className="text-[10px] sm:text-xs font-semibold text-app-gold tracking-wider uppercase font-mono text-center">
                   Edição Temática 2026 • Inspirada pelo projeto Roupão da Fé
                 </span>
