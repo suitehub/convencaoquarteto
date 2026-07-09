@@ -87,10 +87,20 @@ export default function LandingPage({ eventConfig, onNavigate, participantsCount
       </header>
 
       {/* Main Hero Section (Main Banner) */}
-      <main className="flex-1 relative z-10 flex flex-col items-center">
+      <main className="flex-1 relative z-10 w-full flex flex-col items-center">
         
-        {/* Banner principal */}
-        <section className="pt-16 pb-20 px-6 max-w-5xl mx-auto text-center flex flex-col items-center">
+        {/* Full-width Hero Banner with Image Background */}
+        <div className="w-full relative overflow-hidden" style={{
+          backgroundImage: 'linear-gradient(to bottom, rgba(18, 58, 109, 0.45) 0%, rgba(18, 58, 109, 0.8) 70%, rgba(18, 58, 109, 1) 100%), url("/background.png")',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat'
+        }}>
+          {/* Glowing lighting overlays specifically on the hero backdrop to make it pop like the mockup */}
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_var(--tw-gradient-stops))] from-app-medium/15 via-transparent to-transparent opacity-60 pointer-events-none" />
+
+          {/* Banner principal */}
+          <section className="pt-16 pb-20 px-6 max-w-5xl mx-auto text-center flex flex-col items-center relative z-10">
           
           {/* Main Hero block with scroll animation */}
           <motion.div
@@ -100,11 +110,6 @@ export default function LandingPage({ eventConfig, onNavigate, participantsCount
             transition={{ duration: 0.8 }}
             className="flex flex-col items-center"
           >
-            {/* Badge */}
-            <span className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 rounded-full text-[10px] font-bold bg-app-gold/10 border border-app-gold/20 text-app-gold mb-6 font-mono uppercase tracking-widest animate-pulse">
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>MÚSICA • ADORAÇÃO • COMUNHÃO</span>
-            </span>
 
             {/* Event Name */}
             <h1 className="text-4xl sm:text-7xl font-black font-display tracking-tight leading-[1.05] mb-2">
@@ -135,9 +140,6 @@ export default function LandingPage({ eventConfig, onNavigate, participantsCount
             {/* Brief event description */}
             <p className="text-sm sm:text-base text-slate-200 font-light mb-8 max-w-3xl leading-relaxed">
               O maior encontro de música vocal harmônica e quartetos do município. Venha adorar e se inspirar com apresentações marcantes, capacitação técnica e o tradicional grande coro de vozes. Participe deste momento inesquecível de louvor e desenvolvimento vocal focado em conectar pessoas.
-              <span className="block mt-4 text-app-gold font-mono font-bold text-xs tracking-widest sm:text-sm">
-                #CuidandoDePessoas
-              </span>
             </p>
 
             {/* Seção Institucional: Vozes em Missão */}
@@ -146,17 +148,19 @@ export default function LandingPage({ eventConfig, onNavigate, participantsCount
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: false, amount: 0.15 }}
               transition={{ duration: 0.8 }}
-              className="mb-12 max-w-3xl px-6 py-6 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-sm relative overflow-hidden"
+              className="mt-14 mb-14 max-w-3xl text-center relative z-10 flex flex-col items-center"
             >
-              <div className="absolute top-0 left-0 w-1.5 h-full bg-app-gold" />
-              <div className="absolute top-0 right-0 w-1.5 h-full bg-app-gold" />
-              <div className="pl-4 pr-4 text-center sm:text-left">
-                <span className="text-[10px] font-bold text-app-gold uppercase tracking-widest font-mono block mb-1">Propósito da Edição</span>
-                <h3 className="text-lg font-bold text-white uppercase tracking-wide font-display mb-2 flex items-center justify-center sm:justify-start gap-1.5">
+              <div className="flex items-center space-x-2 bg-gradient-to-r from-app-gold/10 via-app-gold/25 to-app-gold/10 border border-app-gold/30 px-4 py-1.5 rounded-full shadow-lg shadow-app-gold/5 mb-4">
+                <span className="text-[10px] font-bold text-app-gold uppercase tracking-widest font-mono">
+                  Propósito da Edição
+                </span>
+              </div>
+              <div className="text-center">
+                <h3 className="text-lg sm:text-xl font-bold text-white uppercase tracking-wide font-display mb-3 flex items-center justify-center gap-1.5">
                   <Sparkles className="w-4 h-4 text-app-gold" />
                   <span>Vozes em Missão</span>
                 </h3>
-                <p className="text-xs sm:text-sm text-slate-300 leading-relaxed font-light">
+                <p className="text-xs sm:text-sm text-slate-200 leading-relaxed font-light max-w-2xl mx-auto">
                   Nesta edição, queremos recordar a essência da Convenção Municipal de Quartetos: usar a música como instrumento para conduzir pessoas de volta aos braços de Cristo. Inspirados pelo projeto Roupão da Fé, reafirmamos nosso compromisso com o evangelismo e o resgate de vidas.
                 </p>
               </div>
@@ -196,43 +200,43 @@ export default function LandingPage({ eventConfig, onNavigate, participantsCount
             whileInView={{ opacity: 1, y: 0, scale: 1 }}
             viewport={{ once: false, amount: 0.15 }}
             transition={{ duration: 0.8 }}
-            className="w-full max-w-4xl bg-white rounded-3xl p-6 sm:p-8 shadow-2xl grid grid-cols-1 md:grid-cols-3 gap-6 text-left relative overflow-hidden border border-slate-200"
+            className="w-full max-w-4xl mt-16 sm:mt-24 bg-slate-950/40 backdrop-blur-md rounded-3xl p-6 sm:p-8 shadow-2xl grid grid-cols-1 md:grid-cols-3 gap-6 text-left relative overflow-hidden border border-white/10"
           >
-            <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-app-medium/20 via-app-gold/20 to-app-medium/20" />
+            <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-app-medium/30 via-app-gold/40 to-app-medium/30" />
             
             {/* Date */}
             <div className="flex items-start space-x-4">
-              <div className="p-3 bg-app-light rounded-2xl text-app-medium border border-slate-200 shadow-inner">
-                <Calendar className="w-5 h-5 text-app-medium" />
+              <div className="p-3 bg-white/5 rounded-2xl text-app-gold border border-white/10 shadow-inner">
+                <Calendar className="w-5 h-5 text-app-gold" />
               </div>
               <div>
-                <span className="text-[10px] font-bold text-app-medium uppercase tracking-widest font-mono">Data do Evento</span>
-                <p className="text-app-deep text-sm font-bold mt-1 font-display">17 de Outubro de 2026</p>
-                <p className="text-slate-500 text-xs mt-0.5 font-light">Sábado</p>
+                <span className="text-[10px] font-bold text-app-gold uppercase tracking-widest font-mono">Data do Evento</span>
+                <p className="text-white text-sm font-bold mt-1 font-display">17 de Outubro de 2026</p>
+                <p className="text-slate-300 text-xs mt-0.5 font-light">Sábado</p>
               </div>
             </div>
 
             {/* Time */}
-            <div className="flex items-start space-x-4 md:border-l md:border-slate-150 md:pl-6">
-              <div className="p-3 bg-app-light rounded-2xl text-app-gold border border-slate-200 shadow-inner">
+            <div className="flex items-start space-x-4 md:border-l md:border-white/10 md:pl-6">
+              <div className="p-3 bg-white/5 rounded-2xl text-app-gold border border-white/10 shadow-inner">
                 <Clock className="w-5 h-5 text-app-gold" />
               </div>
               <div>
                 <span className="text-[10px] font-bold text-app-gold uppercase tracking-widest font-mono">Horário Oficial</span>
-                <p className="text-app-deep text-sm font-bold mt-1 font-display">18h00</p>
-                <p className="text-slate-500 text-xs mt-0.5 font-light">Recepção a partir das 17h30</p>
+                <p className="text-white text-sm font-bold mt-1 font-display">18h00</p>
+                <p className="text-slate-300 text-xs mt-0.5 font-light">Recepção a partir das 17h30</p>
               </div>
             </div>
 
             {/* Location */}
-            <div className="flex items-start space-x-4 md:border-l md:border-slate-150 md:pl-6">
-              <div className="p-3 bg-app-light rounded-2xl text-app-medium border border-slate-200 shadow-inner">
-                <MapPin className="w-5 h-5 text-app-medium" />
+            <div className="flex items-start space-x-4 md:border-l md:border-white/10 md:pl-6">
+              <div className="p-3 bg-white/5 rounded-2xl text-app-gold border border-white/10 shadow-inner">
+                <MapPin className="w-5 h-5 text-app-gold" />
               </div>
               <div>
-                <span className="text-[10px] font-bold text-app-medium uppercase tracking-widest font-mono">Localização</span>
-                <p className="text-app-deep text-sm font-bold mt-1 font-display">IASD Nova Semente</p>
-                <p className="text-slate-600 text-xs mt-1 font-light leading-relaxed">
+                <span className="text-[10px] font-bold text-app-gold uppercase tracking-widest font-mono">Localização</span>
+                <p className="text-white text-sm font-bold mt-1 font-display">IASD Nova Semente</p>
+                <p className="text-slate-300 text-xs mt-1 font-light leading-relaxed">
                   R. Cubatão, 48 - Paraíso <br />
                   São Paulo - SP, 04013-040
                 </p>
@@ -276,6 +280,7 @@ export default function LandingPage({ eventConfig, onNavigate, participantsCount
             </div>
           </motion.div>
         </section>
+      </div>
 
         {/* Guest Quartets highlight section */}
         <section className="w-full max-w-7xl px-6 py-24 border-t border-app-medium/20 bg-app-deep relative overflow-hidden">
@@ -422,11 +427,11 @@ export default function LandingPage({ eventConfig, onNavigate, participantsCount
               stiffness: 150, 
               damping: 20 
             }}
-            className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-10 shadow-2xl relative overflow-hidden text-slate-800"
+            className="bg-slate-950/40 backdrop-blur-md border border-white/10 rounded-3xl p-6 sm:p-10 shadow-2xl relative overflow-hidden text-white"
           >
             
             {/* Elegant geometric grid lines inside the card */}
-            <div className="absolute inset-0 bg-[linear-gradient(to_right,#f1f5f9_1px,transparent_1px),linear-gradient(to_bottom,#f1f5f9_1px,transparent_1px)] bg-[size:1.5rem_1.5rem] opacity-75 pointer-events-none" />
+            <div className="absolute inset-0 bg-[linear-gradient(to_right,#1e293b_1px,transparent_1px),linear-gradient(to_bottom,#1e293b_1px,transparent_1px)] bg-[size:1.5rem_1.5rem] opacity-40 pointer-events-none" />
             
             {/* Dynamic floating light dots or shapes on grid intersection */}
             <motion.div 
@@ -488,16 +493,16 @@ export default function LandingPage({ eventConfig, onNavigate, participantsCount
 
             <div className="flex flex-col md:flex-row items-center justify-between gap-8 relative z-10">
               <div className="md:w-3/5 text-left">
-                <span className="inline-flex items-center space-x-1 px-3 py-1 rounded-full text-[9px] font-bold bg-app-gold/10 border border-app-gold/20 text-app-deep mb-4 font-mono uppercase tracking-widest">
+                <span className="inline-flex items-center space-x-1 px-3 py-1 rounded-full text-[9px] font-bold bg-app-gold/10 border border-app-gold/20 text-app-gold mb-4 font-mono uppercase tracking-widest">
                   <Heart className="w-3 h-3 fill-app-gold text-app-gold" />
                   <span>Apoie este Projeto</span>
                 </span>
                 
-                <h2 className="text-2xl font-black font-display tracking-tight text-app-deep">
+                <h2 className="text-2xl font-black font-display tracking-tight text-white">
                   Ajude a Multiplicar o Alcance
                 </h2>
                 
-                <p className="text-slate-600 text-xs sm:text-sm font-light mt-3 leading-relaxed">
+                <p className="text-slate-300 text-xs sm:text-sm font-light mt-3 leading-relaxed">
                   A Convenção Municipal de Quartetos é um projeto voluntário. Sua contribuição de qualquer valor nos apoia com custos de transporte, logística técnica, e possibilita trazer grupos talentosos de várias partes do estado.
                 </p>
                 
@@ -511,35 +516,35 @@ export default function LandingPage({ eventConfig, onNavigate, participantsCount
               </div>
 
               {/* PIX Detail Card */}
-              <div className="md:w-2/5 w-full bg-app-light border border-slate-200 rounded-2xl p-5 flex flex-col justify-center text-center">
-                <p className="text-slate-500 text-[10px] font-mono tracking-widest uppercase">CONTRIBUIÇÃO VOLUNTÁRIA</p>
+              <div className="md:w-2/5 w-full bg-white/5 border border-white/10 rounded-2xl p-5 flex flex-col justify-center text-center">
+                <p className="text-slate-300 text-[10px] font-mono tracking-widest uppercase">CONTRIBUIÇÃO VOLUNTÁRIA</p>
                 <p className="text-slate-400 text-[9px] mt-1">Chave Pix (Celular):</p>
                 
-                <div className="my-3 p-3 bg-white rounded-xl border border-slate-200 flex items-center justify-between shadow-xs">
-                  <span className="text-app-deep font-mono font-bold text-sm select-all">11 99544-9821</span>
+                <div className="my-3 p-3 bg-white/10 rounded-xl border border-white/10 flex items-center justify-between shadow-xs">
+                  <span className="text-app-gold font-mono font-bold text-sm select-all">11 99544-9821</span>
                   <button
                     onClick={handleCopyPix}
-                    className="p-2 rounded-lg bg-app-light hover:bg-slate-200 text-app-medium transition-colors cursor-pointer"
+                    className="p-2 rounded-lg bg-white/10 hover:bg-white/20 text-app-gold transition-colors cursor-pointer"
                     title="Copiar Chave Pix"
                   >
-                    {copied ? <Check className="w-4 h-4 text-emerald-600" /> : <Copy className="w-4 h-4" />}
+                    {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4 text-white" />}
                   </button>
                 </div>
                 
                 {copied && (
-                  <span className="text-[10px] text-emerald-600 font-mono font-bold animate-pulse">
+                  <span className="text-[10px] text-emerald-400 font-mono font-bold animate-pulse">
                     Chave PIX copiada!
                   </span>
                 )}
 
-                <div className="mt-2 text-left border-t border-slate-200 pt-2.5 text-[10px] space-y-1">
+                <div className="mt-2 text-left border-t border-white/10 pt-2.5 text-[10px] space-y-1">
                   <div className="flex justify-between">
                     <span className="text-slate-400">TITULAR:</span>
-                    <span className="text-slate-700 font-bold">Bruno Camilo</span>
+                    <span className="text-white font-bold">Bruno Camilo</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-slate-400">DESTINO:</span>
-                    <span className="text-slate-700 font-bold">Convenção de Quartetos</span>
+                    <span className="text-white font-bold">Convenção de Quartetos</span>
                   </div>
                 </div>
               </div>
