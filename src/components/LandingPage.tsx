@@ -32,6 +32,17 @@ export default function LandingPage({ eventConfig, onNavigate, participantsCount
       <div className="absolute bottom-1/3 left-0 w-[450px] h-[450px] rounded-full bg-app-medium/5 blur-[100px] -translate-x-1/4 pointer-events-none" />
       <div className="absolute bottom-0 right-1/4 w-[550px] h-[550px] rounded-full bg-app-gold/10 blur-[120px] translate-y-1/3 pointer-events-none" />
 
+      {/* Light Beams from Heaven - Strategic visual fomento */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[120%] h-[800px] bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-app-gold/5 via-transparent to-transparent opacity-60 pointer-events-none z-0" />
+      <div className="absolute top-[-200px] left-[15%] w-[150px] h-[1000px] bg-gradient-to-b from-app-gold/5 via-app-gold/1 to-transparent rotate-12 blur-[40px] pointer-events-none z-0" />
+      <div className="absolute top-[-200px] right-[20%] w-[120px] h-[1000px] bg-gradient-to-b from-app-medium/5 via-app-medium/1 to-transparent -rotate-12 blur-[30px] pointer-events-none z-0" />
+
+      {/* Soft texture inspired by baptismal robe/veste batismal */}
+      <div className="absolute inset-0 opacity-[0.03] pointer-events-none mix-blend-overlay z-0" style={{
+        backgroundImage: `url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 40 C 20 30, 40 50, 60 30 C 70 20, 80 40, 80 40 L80 80 L0 80 Z' fill='%23ffffff' fill-opacity='0.1'/%3E%3Cpath d='M0 10 C 30 40, 50 10, 80 30' stroke='%23ffffff' stroke-width='0.5' fill='none' stroke-opacity='0.15'/%3E%3C/svg%3E")`,
+        backgroundSize: '160px 160px'
+      }} />
+
       {/* Elegant geometric grid lines */}
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#1e293b_1px,transparent_1px),linear-gradient(to_bottom,#1e293b_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)] opacity-20 pointer-events-none" />
 
@@ -96,20 +107,60 @@ export default function LandingPage({ eventConfig, onNavigate, participantsCount
             </span>
 
             {/* Event Name */}
-            <h1 className="text-4xl sm:text-7xl font-black font-display tracking-tight leading-[1.05] mb-6">
+            <h1 className="text-4xl sm:text-7xl font-black font-display tracking-tight leading-[1.05] mb-2">
               9ª Convenção Municipal <br />
               <span className="bg-clip-text text-transparent animate-gradient-slide">
                 de Quartetos
               </span>
             </h1>
 
+            {/* Subtítulo da Edição & Selo Temático */}
+            <motion.div
+              initial={{ opacity: 0, y: 15 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: false, amount: 0.15 }}
+              transition={{ delay: 0.2, duration: 0.8 }}
+              className="mb-8 flex flex-col items-center"
+            >
+              <h2 className="text-2xl sm:text-4xl font-black font-display text-app-gold tracking-widest uppercase filter drop-shadow-[0_2px_8px_rgba(234,179,8,0.2)]">
+                Vozes em Missão
+              </h2>
+              <div className="mt-4 flex items-center space-x-2 bg-gradient-to-r from-app-gold/10 via-app-gold/25 to-app-gold/10 border border-app-gold/30 px-4 py-1.5 rounded-full shadow-lg shadow-app-gold/5 max-w-lg">
+                <span className="text-[10px] sm:text-xs font-semibold text-app-gold tracking-wider uppercase font-mono text-center">
+                  Edição Temática 2026 • Inspirada pelo projeto Roupão da Fé
+                </span>
+              </div>
+            </motion.div>
+
             {/* Brief event description */}
-            <p className="text-sm sm:text-base text-slate-200 font-light mb-10 max-w-3xl leading-relaxed">
+            <p className="text-sm sm:text-base text-slate-200 font-light mb-8 max-w-3xl leading-relaxed">
               O maior encontro de música vocal harmônica e quartetos do município. Venha adorar e se inspirar com apresentações marcantes, capacitação técnica e o tradicional grande coro de vozes. Participe deste momento inesquecível de louvor e desenvolvimento vocal focado em conectar pessoas.
               <span className="block mt-4 text-app-gold font-mono font-bold text-xs tracking-widest sm:text-sm">
                 #CuidandoDePessoas
               </span>
             </p>
+
+            {/* Seção Institucional: Vozes em Missão */}
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: false, amount: 0.15 }}
+              transition={{ duration: 0.8 }}
+              className="mb-12 max-w-3xl px-6 py-6 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-sm relative overflow-hidden"
+            >
+              <div className="absolute top-0 left-0 w-1.5 h-full bg-app-gold" />
+              <div className="absolute top-0 right-0 w-1.5 h-full bg-app-gold" />
+              <div className="pl-4 pr-4 text-center sm:text-left">
+                <span className="text-[10px] font-bold text-app-gold uppercase tracking-widest font-mono block mb-1">Propósito da Edição</span>
+                <h3 className="text-lg font-bold text-white uppercase tracking-wide font-display mb-2 flex items-center justify-center sm:justify-start gap-1.5">
+                  <Sparkles className="w-4 h-4 text-app-gold" />
+                  <span>Vozes em Missão</span>
+                </h3>
+                <p className="text-xs sm:text-sm text-slate-300 leading-relaxed font-light">
+                  Nesta edição, queremos recordar a essência da Convenção Municipal de Quartetos: usar a música como instrumento para conduzir pessoas de volta aos braços de Cristo. Inspirados pelo projeto Roupão da Fé, reafirmamos nosso compromisso com o evangelismo e o resgate de vidas.
+                </p>
+              </div>
+            </motion.div>
 
             {/* Main CTA button: Large, prominent, glowing, pulse anim */}
             <div className="relative group mb-16">
@@ -240,7 +291,7 @@ export default function LandingPage({ eventConfig, onNavigate, participantsCount
             transition={{ duration: 0.7 }}
             className="text-center max-w-2xl mx-auto mb-16 relative z-10"
           >
-            <span className="text-[10px] font-bold text-app-gold uppercase tracking-widest font-mono">Quartetos Confirmados</span>
+            <span className="text-[10px] font-bold text-app-gold uppercase tracking-widest font-mono">Quartetos Confirmados • Vozes em Missão</span>
             <h2 className="text-3xl sm:text-5xl font-black font-display tracking-tight text-white mt-2">
               Quartetos Convidados Especiais
             </h2>
@@ -492,6 +543,36 @@ export default function LandingPage({ eventConfig, onNavigate, participantsCount
                   </div>
                 </div>
               </div>
+            </div>
+          </motion.div>
+        </section>
+        {/* Closing Message / Mensagem de encerramento */}
+        <section className="w-full max-w-4xl mx-auto px-6 py-16 mb-8 text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: false, amount: 0.15 }}
+            transition={{ duration: 0.8 }}
+            className="relative py-12 px-8 rounded-3xl bg-gradient-to-r from-app-medium/5 via-app-gold/5 to-app-medium/5 border border-app-gold/10 overflow-hidden"
+          >
+            {/* Ambient decoration light */}
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] rounded-full bg-app-gold/10 blur-[80px] pointer-events-none" />
+            
+            {/* Glowing Cross or Sparkles icon decoration */}
+            <div className="relative z-10 flex justify-center mb-6">
+              <div className="p-3 rounded-full bg-app-gold/10 border border-app-gold/30">
+                <Sparkles className="w-6 h-6 text-app-gold animate-pulse" />
+              </div>
+            </div>
+            
+            <p className="relative z-10 text-xl sm:text-2xl font-display font-medium text-slate-100 italic tracking-wide leading-relaxed max-w-2xl mx-auto">
+              "O palco é apenas o começo. Nossa missão continua onde há uma alma esperando por Cristo."
+            </p>
+            
+            <div className="relative z-10 mt-6 flex items-center justify-center space-x-2">
+              <span className="h-[1px] w-8 bg-app-gold/30" />
+              <span className="text-[10px] font-bold text-app-gold uppercase tracking-widest font-mono">Vozes em Missão</span>
+              <span className="h-[1px] w-8 bg-app-gold/30" />
             </div>
           </motion.div>
         </section>
