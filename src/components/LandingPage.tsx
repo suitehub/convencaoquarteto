@@ -299,7 +299,7 @@ export default function LandingPage({ eventConfig, onNavigate, participantsCount
           >
             <span className="text-[10px] font-bold text-app-gold uppercase tracking-widest font-mono">Quartetos Confirmados • Vozes em Missão</span>
             <h2 className="text-3xl sm:text-5xl font-black font-display tracking-tight text-white mt-2">
-              Quartetos Convidados Especiais
+              Quartetos Convidados
             </h2>
             <p className="text-slate-200 text-xs sm:text-sm mt-3 font-light leading-relaxed">
               Vozes de referência que inspiram gerações e conduzem momentos inesquecíveis de adoração em nosso município.
@@ -413,6 +413,104 @@ export default function LandingPage({ eventConfig, onNavigate, participantsCount
               </h3>
             </motion.div>
 
+          </div>
+        </section>
+
+        {/* Special Guests Section */}
+        <section className="w-full max-w-7xl px-6 py-20 border-t border-app-medium/20 bg-app-deep relative overflow-hidden">
+          {/* Subtle grid on the background */}
+          <div className="absolute inset-0 bg-[linear-gradient(to_right,#2c6cbf_1px,transparent_1px),linear-gradient(to_bottom,#2c6cbf_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)] opacity-10 pointer-events-none" />
+
+          {/* Section Header */}
+          <motion.div 
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: false, amount: 0.15 }}
+            transition={{ duration: 0.7 }}
+            className="text-center max-w-2xl mx-auto mb-14 relative z-10"
+          >
+            <span className="text-[10px] font-bold text-app-gold uppercase tracking-widest font-mono">Participações Especiais</span>
+            <h2 className="text-3xl sm:text-5xl font-black font-display tracking-tight text-white mt-2">
+              Convidados Especiais
+            </h2>
+            <p className="text-slate-200 text-xs sm:text-sm mt-3 font-light leading-relaxed">
+              Presenças confirmadas que enriquecerão nossa programação com mensagens inspiradoras e histórico de adoração.
+            </p>
+          </motion.div>
+
+          {/* 2-Column Responsive Layout */}
+          <div className="relative max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-12 sm:gap-16 z-10 pt-4 px-4">
+            {/* Background Spotlights */}
+            <div className="absolute top-1/2 left-1/3 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] rounded-full bg-app-medium/10 blur-[90px] pointer-events-none" />
+            <div className="absolute top-1/2 right-1/3 translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] rounded-full bg-app-gold/10 blur-[90px] pointer-events-none" />
+
+            {/* Pr. Luis Mota */}
+            <motion.div 
+              initial={{ opacity: 0, y: 60, filter: 'blur(6px)' }}
+              whileInView={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+              viewport={{ once: false, amount: 0.15 }}
+              transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
+              className="flex flex-col items-center text-center group relative"
+            >
+              <div className="relative w-full h-[320px] sm:h-[380px] flex items-end justify-center overflow-hidden">
+                <img 
+                  src="luismota.png" 
+                  alt="Pr. Luis Mota" 
+                  referrerPolicy="no-referrer"
+                  className="max-h-full max-w-full object-contain object-bottom group-hover:scale-[1.04] transition-transform duration-700 relative z-20"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                    const sibling = e.currentTarget.nextElementSibling;
+                    if (sibling) sibling.classList.remove('hidden');
+                  }}
+                />
+                <div className="hidden absolute inset-0 flex flex-col items-center justify-center p-4 text-center font-mono text-slate-500 z-20">
+                  <Users className="w-12 h-12 text-app-medium/80 mb-2" />
+                  <span className="text-[11px] font-bold tracking-widest uppercase">Pr. Luis Mota</span>
+                </div>
+              </div>
+              
+              <h3 className="text-white text-2xl font-bold font-display mt-6 tracking-wide group-hover:text-app-gold transition-colors leading-none">
+                Pr. Luis Mota
+              </h3>
+              <p className="text-app-gold/90 text-xs sm:text-sm font-mono mt-2 tracking-wide max-w-sm px-4">
+                2º Tenor da Primeira Formação dos Arautos do Rei
+              </p>
+            </motion.div>
+
+            {/* Pr. Gilson Brito */}
+            <motion.div 
+              initial={{ opacity: 0, y: 60, filter: 'blur(6px)' }}
+              whileInView={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+              viewport={{ once: false, amount: 0.15 }}
+              transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1], delay: 0.15 }}
+              className="flex flex-col items-center text-center group relative"
+            >
+              <div className="relative w-full h-[320px] sm:h-[380px] flex items-end justify-center overflow-hidden">
+                <img 
+                  src="gilson.png" 
+                  alt="Pr. Gilson Brito" 
+                  referrerPolicy="no-referrer"
+                  className="max-h-full max-w-full object-contain object-bottom group-hover:scale-[1.04] transition-transform duration-700 relative z-20"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                    const sibling = e.currentTarget.nextElementSibling;
+                    if (sibling) sibling.classList.remove('hidden');
+                  }}
+                />
+                <div className="hidden absolute inset-0 flex flex-col items-center justify-center p-4 text-center font-mono text-slate-500 z-20">
+                  <Users className="w-12 h-12 text-app-medium/80 mb-2" />
+                  <span className="text-[11px] font-bold tracking-widest uppercase">Pr. Gilson Brito</span>
+                </div>
+              </div>
+              
+              <h3 className="text-white text-2xl font-bold font-display mt-6 tracking-wide group-hover:text-app-gold transition-colors leading-none">
+                Pr. Gilson Brito
+              </h3>
+              <p className="text-app-gold/90 text-xs sm:text-sm font-mono mt-2 tracking-wide max-w-sm px-4">
+                Orador e Apresentador - A Voz da Profecia
+              </p>
+            </motion.div>
           </div>
         </section>
 
