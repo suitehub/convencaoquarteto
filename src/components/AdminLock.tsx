@@ -4,8 +4,9 @@
  */
 
 import React, { useState } from 'react';
-import { ShieldAlert, KeyRound, ArrowRight, Eye, EyeOff, Music } from 'lucide-react';
+import { ShieldAlert, KeyRound, ArrowRight, Eye, EyeOff, Music, Lock } from 'lucide-react';
 import { motion } from 'motion/react';
+import { checkRateLimit, recordAttempt, clearRateLimit, sanitizeInput } from '../utils/security';
 
 interface AdminLockProps {
   onUnlockSuccess: () => void;
@@ -24,34 +25,49 @@ async function sha256(message: string): Promise<string> {
 export default function AdminLock({ onUnlockSuccess, onCancel }: AdminLockProps) {
   const [code, setCode] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setError(false);
+    setErrorMsg('');
     
-    if (!code) return;
+    // Check Rate Limiter for admin_lock
+    const rateCheck = checkRateLimit('admin_lock');
+    if (!rateCheck.allowed) {
+      setErrorMsg(`Muitas tentativas incorretas. Por segurança, aguarde ${rateCheck.remainingSeconds}s antes de tentar novamente.`);
+      return;
+    }
+
+    const cleanCode = sanitizeInput(code, 64);
+    if (!cleanCode) return;
 
     setLoading(true);
     
     // Perform high-security cryptographic comparison to protect credentials
-    sha256(code).then((hashedCode) => {
+    sha256(cleanCode).then((hashedCode) => {
       // Hashed SHA-256 value of "admin@bruno"
       const targetHash = 'c9fd0cfd73186249d7ebc3ed9d67aacf94eb2f9c43e62134e960ab32e85fefbf';
       
       if (hashedCode === targetHash) {
+        clearRateLimit('admin_lock');
         sessionStorage.setItem('admin_authenticated', 'true');
         onUnlockSuccess();
       } else {
-        setError(true);
+        recordAttempt('admin_lock');
+        const updatedCheck = checkRateLimit('admin_lock');
+        if (!updatedCheck.allowed) {
+          setErrorMsg(`Bloqueado por segurança! Aguarde ${updatedCheck.remainingSeconds}s para tentar novamente.`);
+        } else {
+          setErrorMsg('Código incorreto. Acesso negado.');
+        }
         setLoading(false);
-        // Clean password input if wrong
         setCode('');
       }
     }).catch((err) => {
       console.error('Crypto error:', err);
-      setError(true);
+      recordAttempt('admin_lock');
+      setErrorMsg('Erro de validação de segurança.');
       setLoading(false);
     });
   };
@@ -123,14 +139,14 @@ export default function AdminLock({ onUnlockSuccess, onCancel }: AdminLockProps)
             </div>
 
             {/* Error Message */}
-            {error && (
+            {errorMsg && (
               <motion.div
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
                 className="p-3 bg-red-950/40 border border-red-500/30 rounded-xl flex items-center space-x-2 text-red-200 text-xs"
               >
                 <div className="w-1.5 h-1.5 rounded-full bg-red-500 shrink-0" />
-                <span>Código incorreto. Acesso negado.</span>
+                <span>{errorMsg}</span>
               </motion.div>
             )}
 

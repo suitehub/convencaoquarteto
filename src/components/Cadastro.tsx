@@ -5,8 +5,9 @@
 
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
-import { User, Mail, Phone, ArrowLeft, Ticket, CheckCircle, ShieldCheck, Lock, AlertCircle } from 'lucide-react';
+import { User, Mail, Phone, ArrowLeft, Ticket, CheckCircle, ShieldCheck, Lock, AlertCircle, ShieldAlert } from 'lucide-react';
 import { Participant } from '../types';
+import { checkRateLimit, recordAttempt, clearRateLimit, sanitizeInput, isValidEmail, isValidPhone } from '../utils/security';
 
 interface CadastroProps {
   initialType?: 'Público' | 'Participante';
@@ -107,11 +108,42 @@ export default function Cadastro({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg('');
-    if (!formData.name || !formData.email || !formData.phone || !formData.password || !privacyChecked) return;
+
+    // Rate Limit Check
+    const rateCheck = checkRateLimit('registration');
+    if (!rateCheck.allowed) {
+      setErrorMsg(`Muitas solicitações de cadastro. Por segurança contra bots, aguarde ${rateCheck.remainingSeconds}s antes de enviar novamente.`);
+      return;
+    }
+
+    const cleanName = sanitizeInput(formData.name, 150);
+    const cleanEmail = sanitizeInput(formData.email, 150).toLowerCase();
+    const cleanPhone = sanitizeInput(formData.phone, 30);
+    const cleanPassword = sanitizeInput(formData.password, 64);
+
+    if (!cleanName || !cleanEmail || !cleanPhone || !cleanPassword || !privacyChecked) {
+      setErrorMsg('Por favor, preencha todos os campos corretamente.');
+      return;
+    }
+
+    if (!isValidEmail(cleanEmail)) {
+      setErrorMsg('Por favor, informe um endereço de e-mail válido.');
+      return;
+    }
+
+    if (!isValidPhone(cleanPhone)) {
+      setErrorMsg('Por favor, informe um número de telefone/WhatsApp válido.');
+      return;
+    }
+
+    if (cleanPassword.length < 4) {
+      setErrorMsg('A senha precisa ter no mínimo 4 caracteres.');
+      return;
+    }
 
     // Duplicates check
-    const normalizedEmail = formData.email.trim().toLowerCase();
-    const normalizedPhone = formData.phone.replace(/\D/g, '');
+    const normalizedEmail = cleanEmail.trim();
+    const normalizedPhone = cleanPhone.replace(/\D/g, '');
 
     const isEmailRegistered = participants.some(
       (p) => p.email.trim().toLowerCase() === normalizedEmail
@@ -121,10 +153,12 @@ export default function Cadastro({
     );
 
     if (isEmailRegistered) {
+      recordAttempt('registration');
       setErrorMsg('Este e-mail já possui um ingresso reservado / cadastrado.');
       return;
     }
     if (isPhoneRegistered) {
+      recordAttempt('registration');
       setErrorMsg('Este celular / WhatsApp já possui um ingresso reservado / cadastrado.');
       return;
     }
@@ -132,15 +166,17 @@ export default function Cadastro({
     setLoading(true);
     try {
       await onAddParticipant({
-        name: formData.name.trim(),
-        email: formData.email.trim(),
-        phone: formData.phone.trim(),
-        password: formData.password,
+        name: cleanName,
+        email: cleanEmail,
+        phone: cleanPhone,
+        password: cleanPassword,
         registrationType: initialType
       });
+      recordAttempt('registration');
       setSuccess(true);
     } catch (err: any) {
       console.error('Registration failed:', err);
+      recordAttempt('registration');
       setErrorMsg('Ocorreu um erro ao salvar seu cadastro no banco de dados. Por favor, tente novamente.');
     } finally {
       setLoading(false);

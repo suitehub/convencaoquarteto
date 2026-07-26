@@ -4,8 +4,9 @@
  */
 
 import React, { useState } from 'react';
-import { Mail, Phone, Lock, User, ArrowLeft, LogIn, Sparkles } from 'lucide-react';
+import { Mail, Phone, Lock, User, ArrowLeft, LogIn, Sparkles, ShieldAlert } from 'lucide-react';
 import { Participant, StaffUser } from '../types';
+import { checkRateLimit, recordAttempt, clearRateLimit, sanitizeInput } from '../utils/security';
 
 interface LoginProps {
   onLoginSuccess: (user: Participant) => void;
@@ -42,27 +43,47 @@ export default function Login({
   const handleParticipantLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setPartError('');
-    if (!email && !phone) {
+
+    // Security Check: Rate limiting
+    const rateCheck = checkRateLimit('login_participant');
+    if (!rateCheck.allowed) {
+      setPartError(`Muitas tentativas malsucedidas de login. Por segurança, aguarde ${rateCheck.remainingSeconds} segundos.`);
+      return;
+    }
+
+    const cleanEmail = sanitizeInput(email, 150);
+    const cleanPhone = sanitizeInput(phone, 30);
+    const cleanPassword = sanitizeInput(partPassword, 64);
+
+    if (!cleanEmail && !cleanPhone) {
       setPartError('Preencha seu e-mail ou WhatsApp / Celular cadastrado.');
       return;
     }
-    if (!partPassword) {
+    if (!cleanPassword) {
       setPartError('Preencha sua senha de acesso.');
       return;
     }
 
     setLoading(true);
     try {
-      const match = await onLoginParticipant(email || phone, partPassword);
+      const match = await onLoginParticipant(cleanEmail || cleanPhone, cleanPassword);
       setLoading(false);
       if (match) {
+        clearRateLimit('login_participant');
         onLoginSuccess(match);
       } else {
-        setPartError('Inscrição não localizada ou senha incorreta. Verifique os dados fornecidos.');
+        recordAttempt('login_participant');
+        const updatedCheck = checkRateLimit('login_participant');
+        if (!updatedCheck.allowed) {
+          setPartError(`Limite de tentativas excedido! Aguarde ${updatedCheck.remainingSeconds}s antes de tentar novamente.`);
+        } else {
+          setPartError('Inscrição não localizada ou senha incorreta. Verifique os dados fornecidos.');
+        }
       }
     } catch (error) {
       console.error('Login error:', error);
       setLoading(false);
+      recordAttempt('login_participant');
       setPartError('Ocorreu um erro ao realizar o login. Tente novamente.');
     }
   };
@@ -70,20 +91,39 @@ export default function Login({
   const handleReceptionLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setReceptionError('');
-    if (!username || !password) return;
+
+    // Security Check: Rate limiting
+    const rateCheck = checkRateLimit('login_staff');
+    if (!rateCheck.allowed) {
+      setReceptionError(`Muitas tentativas de login de equipe. Por segurança, aguarde ${rateCheck.remainingSeconds} segundos.`);
+      return;
+    }
+
+    const cleanUsername = sanitizeInput(username, 50).toLowerCase();
+    const cleanPassword = sanitizeInput(password, 64);
+
+    if (!cleanUsername || !cleanPassword) return;
 
     setLoading(true);
     try {
-      const success = await onLoginStaff(username, password);
+      const success = await onLoginStaff(cleanUsername, cleanPassword);
       setLoading(false);
       if (success) {
+        clearRateLimit('login_staff');
         onStaffLoginSuccess();
       } else {
-        setReceptionError('Usuário ou senha incorretos. Verifique suas credenciais de equipe.');
+        recordAttempt('login_staff');
+        const updatedCheck = checkRateLimit('login_staff');
+        if (!updatedCheck.allowed) {
+          setReceptionError(`Limite de tentativas de credenciamento atingido! Aguarde ${updatedCheck.remainingSeconds}s.`);
+        } else {
+          setReceptionError('Usuário ou senha incorretos. Verifique suas credenciais de equipe.');
+        }
       }
     } catch (error) {
       console.error('Staff login error:', error);
       setLoading(false);
+      recordAttempt('login_staff');
       setReceptionError('Ocorreu um erro de conexão. Tente novamente.');
     }
   };
