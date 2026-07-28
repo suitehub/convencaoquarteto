@@ -106,6 +106,18 @@ export async function seedInitialDataIfNeeded() {
         throw err;
       });
       console.log('Event config seeded in Firestore.');
+    } else {
+      // Ensure location is updated if it contains previous address
+      const existingDoc = await getDoc(configDocRef).catch(() => null);
+      if (existingDoc && existingDoc.exists()) {
+        const data = existingDoc.data() as EventConfig;
+        if (data.location && (data.location.includes('Nova Semente') || data.location.includes('Cubatão'))) {
+          await updateDoc(configDocRef, { location: INITIAL_EVENT_CONFIG.location }).catch(err => {
+            handleFirestoreError(err, OperationType.WRITE, 'eventConfigs/default');
+          });
+          console.log('Updated location to IASD Moema in Firestore.');
+        }
+      }
     }
 
     // 2. Seed default staff if empty, or update existing default staff if it has the old password '1234'
