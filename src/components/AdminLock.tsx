@@ -7,19 +7,11 @@ import React, { useState } from 'react';
 import { ShieldAlert, KeyRound, ArrowRight, Eye, EyeOff, Music, Lock } from 'lucide-react';
 import { motion } from 'motion/react';
 import { checkRateLimit, recordAttempt, clearRateLimit, sanitizeInput } from '../utils/security';
+import { authenticateAdminPassword } from '../utils/adminSecurity';
 
 interface AdminLockProps {
   onUnlockSuccess: () => void;
   onCancel: () => void;
-}
-
-// Helper function to hash a string to SHA-256 for cryptographic security
-async function sha256(message: string): Promise<string> {
-  const msgBuffer = new TextEncoder().encode(message);
-  const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-  return hashHex;
 }
 
 export default function AdminLock({ onUnlockSuccess, onCancel }: AdminLockProps) {
@@ -28,7 +20,7 @@ export default function AdminLock({ onUnlockSuccess, onCancel }: AdminLockProps)
   const [errorMsg, setErrorMsg] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg('');
     
@@ -44,14 +36,10 @@ export default function AdminLock({ onUnlockSuccess, onCancel }: AdminLockProps)
 
     setLoading(true);
     
-    // Perform high-security cryptographic comparison to protect credentials
-    sha256(cleanCode).then((hashedCode) => {
-      // Hashed SHA-256 value of "admin@bruno"
-      const targetHash = 'c9fd0cfd73186249d7ebc3ed9d67aacf94eb2f9c43e62134e960ab32e85fefbf';
-      
-      if (hashedCode === targetHash) {
+    try {
+      const isValid = await authenticateAdminPassword(cleanCode);
+      if (isValid) {
         clearRateLimit('admin_lock');
-        sessionStorage.setItem('admin_authenticated', 'true');
         onUnlockSuccess();
       } else {
         recordAttempt('admin_lock');
@@ -64,12 +52,11 @@ export default function AdminLock({ onUnlockSuccess, onCancel }: AdminLockProps)
         setLoading(false);
         setCode('');
       }
-    }).catch((err) => {
-      console.error('Crypto error:', err);
+    } catch (err) {
       recordAttempt('admin_lock');
       setErrorMsg('Erro de validação de segurança.');
       setLoading(false);
-    });
+    }
   };
 
   return (

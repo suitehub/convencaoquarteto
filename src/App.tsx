@@ -21,6 +21,7 @@ import {
   loginStaffSecure,
   loginParticipantSecure
 } from './firebase';
+import { isSecretAdminRoute, verifyAdminSession, logoutAdminSession } from './utils/adminSecurity';
 
 // Component Imports
 import Splash from './components/Splash';
@@ -33,20 +34,6 @@ import OrganizerArea from './components/OrganizerArea';
 import AdminLock from './components/AdminLock';
 
 export default function App() {
-  // Check if the current URL points to the admin panel
-  const checkIsAdminRoute = (): boolean => {
-    if (typeof window === 'undefined') return false;
-    const path = window.location.pathname.toLowerCase();
-    const hash = window.location.hash.toLowerCase();
-    return (
-      path.endsWith('/admin') || 
-      path.endsWith('/admin/') || 
-      hash === '#/admin' || 
-      hash === '#admin' ||
-      hash.includes('admin')
-    );
-  };
-
   // Application states
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [eventConfig, setEventConfig] = useState<EventConfig>(INITIAL_EVENT_CONFIG);
@@ -54,18 +41,11 @@ export default function App() {
   const [secureCount, setSecureCount] = useState<number>(0);
   
   // Navigation states - initialized dynamically based on the current URL route
-  const [splashCompleted, setSplashCompleted] = useState<boolean>(() => checkIsAdminRoute());
-  const [currentRole, setCurrentRole] = useState<UserRole>(() => {
-    if (checkIsAdminRoute()) {
-      const isAuth = sessionStorage.getItem('admin_authenticated') === 'true';
-      return isAuth ? 'organizer' : 'public';
-    }
-    return 'public';
-  });
+  const [splashCompleted, setSplashCompleted] = useState<boolean>(() => isSecretAdminRoute());
+  const [currentRole, setCurrentRole] = useState<UserRole>('public');
   const [currentView, setCurrentView] = useState<string>(() => {
-    if (checkIsAdminRoute()) {
-      const isAuth = sessionStorage.getItem('admin_authenticated') === 'true';
-      return isAuth ? 'dashboard' : 'admin-lock';
+    if (isSecretAdminRoute()) {
+      return 'admin-lock';
     }
     return 'splash';
   });
@@ -122,9 +102,9 @@ export default function App() {
 
   // Hash/Path routing listener for admin
   useEffect(() => {
-    const handleRouteUpdate = () => {
-      if (checkIsAdminRoute()) {
-        const isAuth = sessionStorage.getItem('admin_authenticated') === 'true';
+    const handleRouteUpdate = async () => {
+      if (isSecretAdminRoute()) {
+        const isAuth = await verifyAdminSession();
         if (isAuth) {
           setCurrentRole('organizer');
           setCurrentView('dashboard');
@@ -276,6 +256,7 @@ export default function App() {
   };
 
   const handleLogout = () => {
+    logoutAdminSession();
     setCurrentUser(null);
     setCurrentRole('public');
     setCurrentView('landing');
