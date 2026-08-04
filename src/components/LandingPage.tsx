@@ -236,10 +236,10 @@ export default function LandingPage({ eventConfig, onNavigate, participantsCount
               </div>
               <div>
                 <span className="text-[10px] font-bold text-app-gold uppercase tracking-widest font-mono">Localização</span>
-                <p className="text-white text-sm font-bold mt-1 font-display">IASD Moema</p>
+                <p className="text-white text-sm font-bold mt-1 font-display">IASD Nova Semente</p>
                 <p className="text-slate-300 text-xs mt-1 font-light leading-relaxed">
-                  Av. Chibarás, 185 - Planalto Paulista <br />
-                  São Paulo - SP, 04076-000
+                  R. Cubatão, 48 - Paraíso <br />
+                  São Paulo - SP, 04013-040
                 </p>
               </div>
             </div>

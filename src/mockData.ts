@@ -9,7 +9,7 @@ export const INITIAL_EVENT_CONFIG: EventConfig = {
   name: '9ª Convenção Municipal de Quartetos',
   date: '17 de Outubro de 2026',
   time: '18h00',
-  location: 'IASD Moema - Av. Chibarás, 185 - Planalto Paulista, São Paulo - SP, 04076-000',
+  location: 'IASD Nova Semente - R. Cubatão, 48 - Paraíso, São Paulo - SP, 04013-040',
   maxParticipants: 500,
   description: 'O maior encontro de música vocal harmônica e quartetos do município. Venha adorar e se inspirar com apresentações marcantes, capacitação técnica e o tradicional grande coro de vozes sob a hashtag #CuidandoDePessoas.'
 };

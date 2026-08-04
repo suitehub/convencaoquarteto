@@ -305,10 +305,10 @@ export default function ParticipantArea({ currentUser, schedule, onLogout, onNav
                     <MapPin className="w-4 h-4 text-app-gold" />
                     <span>Local do Evento</span>
                   </h4>
-                  <p className="text-slate-300 text-xs mt-2 font-semibold">IASD Moema</p>
+                  <p className="text-slate-300 text-xs mt-2 font-semibold">IASD Nova Semente</p>
                   <p className="text-slate-400 text-[11px] mt-0.5 leading-relaxed font-light">
-                    Av. Chibarás, 185 - Planalto Paulista <br />
-                    São Paulo - SP, 04076-000
+                    R. Cubatão, 48 - Paraíso <br />
+                    São Paulo - SP, 04013-040
                   </p>
                 </div>
               </div>
@@ -548,10 +548,10 @@ export default function ParticipantArea({ currentUser, schedule, onLogout, onNav
               <MapPin className="w-4 h-4 text-app-gold" />
               <span>Local do Evento</span>
             </h4>
-            <p className="text-app-gold text-xs mt-2 font-semibold">IASD Moema</p>
+            <p className="text-app-gold text-xs mt-2 font-semibold">IASD Nova Semente</p>
             <p className="text-slate-300 text-[11px] mt-0.5 leading-relaxed font-light">
-              Av. Chibarás, 185 - Planalto Paulista <br />
-              São Paulo - SP, 04076-000
+              R. Cubatão, 48 - Paraíso <br />
+              São Paulo - SP, 04013-040
             </p>
           </div>
         </div>
