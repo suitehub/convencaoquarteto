@@ -8,6 +8,7 @@ import { motion } from 'motion/react';
 import { User, Mail, Phone, ArrowLeft, Ticket, CheckCircle, ShieldCheck, Lock, AlertCircle, ShieldAlert, Check, X, Eye, EyeOff } from 'lucide-react';
 import { Participant } from '../types';
 import { checkRateLimit, recordAttempt, clearRateLimit, sanitizeInput, isValidEmail, isValidPhone, evaluatePassword } from '../utils/security';
+import { ReCaptcha } from './ReCaptcha';
 
 interface CadastroProps {
   initialType?: 'Público' | 'Participante';
@@ -32,6 +33,7 @@ export default function Cadastro({
   });
   const [showPassword, setShowPassword] = useState(false);
   const [privacyChecked, setPrivacyChecked] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
@@ -124,8 +126,13 @@ export default function Cadastro({
     const cleanPhone = sanitizeInput(formData.phone, 30);
     const cleanPassword = sanitizeInput(formData.password, 64);
 
-    if (!cleanName || !cleanEmail || !cleanPhone || !cleanPassword || !privacyChecked) {
-      setErrorMsg('Por favor, preencha todos os campos corretamente.');
+    if (!privacyChecked) {
+      setErrorMsg('Por favor, aceite os termos e a política de privacidade.');
+      return;
+    }
+
+    if (!captchaToken) {
+      setErrorMsg('Por favor, confirme que você não é um robô pelo reCAPTCHA.');
       return;
     }
 
@@ -389,6 +396,9 @@ export default function Cadastro({
                   </label>
                 </div>
 
+                {/* Google reCAPTCHA */}
+                <ReCaptcha onChange={(token) => setCaptchaToken(token)} />
+
                 {errorMsg && (
                   <p className="text-red-600 text-xs text-center bg-red-50 p-3 rounded-xl border border-red-200">
                     {errorMsg}
@@ -398,8 +408,8 @@ export default function Cadastro({
                 {/* Submit button */}
                 <button
                   type="submit"
-                  disabled={loading || !privacyChecked}
-                  className="w-full mt-4 px-6 py-4 bg-app-gold disabled:opacity-50 text-app-deep font-extrabold text-sm rounded-2xl cursor-pointer transition-all hover:shadow-lg hover:shadow-app-gold/10 active:scale-98 flex items-center justify-center space-x-2 font-black"
+                  disabled={loading || !privacyChecked || !captchaToken}
+                  className="w-full mt-2 px-6 py-4 bg-app-gold disabled:opacity-50 text-app-deep font-extrabold text-sm rounded-2xl cursor-pointer transition-all hover:shadow-lg hover:shadow-app-gold/10 active:scale-98 flex items-center justify-center space-x-2 font-black"
                 >
                   {loading ? (
                     <div className="w-5 h-5 border-2 border-app-deep border-t-transparent rounded-full animate-spin" />

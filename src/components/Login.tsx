@@ -7,6 +7,7 @@ import React, { useState } from 'react';
 import { Mail, Phone, Lock, User, ArrowLeft, LogIn, Sparkles, ShieldAlert } from 'lucide-react';
 import { Participant, StaffUser } from '../types';
 import { checkRateLimit, recordAttempt, clearRateLimit, sanitizeInput } from '../utils/security';
+import { ReCaptcha } from './ReCaptcha';
 
 interface LoginProps {
   onLoginSuccess: (user: Participant) => void;
@@ -31,6 +32,7 @@ export default function Login({
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [partPassword, setPartPassword] = useState('');
+  const [partCaptchaToken, setPartCaptchaToken] = useState<string | null>(null);
   const [partError, setPartError] = useState('');
 
   // Reception form
@@ -61,6 +63,11 @@ export default function Login({
     }
     if (!cleanPassword) {
       setPartError('Preencha sua senha de acesso.');
+      return;
+    }
+
+    if (!partCaptchaToken) {
+      setPartError('Por favor, confirme que você não é um robô pelo reCAPTCHA.');
       return;
     }
 
@@ -258,6 +265,9 @@ export default function Login({
                   </div>
                 </div>
 
+                {/* Google reCAPTCHA */}
+                <ReCaptcha onChange={(token) => setPartCaptchaToken(token)} />
+
                 {partError && (
                   <p className="text-red-600 text-xs mt-2 text-center bg-red-50 p-3 rounded-xl border border-red-200">
                     {partError}
@@ -266,8 +276,8 @@ export default function Login({
 
                 <button
                   type="submit"
-                  disabled={loading}
-                  className="w-full mt-4 px-6 py-3.5 bg-app-gold text-app-deep font-extrabold text-sm rounded-2xl cursor-pointer transition-all active:scale-98 flex items-center justify-center space-x-2 shadow-md hover:shadow-app-gold/10 font-black"
+                  disabled={loading || !partCaptchaToken}
+                  className="w-full mt-3 px-6 py-3.5 bg-app-gold disabled:opacity-50 text-app-deep font-extrabold text-sm rounded-2xl cursor-pointer transition-all active:scale-98 flex items-center justify-center space-x-2 shadow-md hover:shadow-app-gold/10 font-black"
                 >
                   {loading ? (
                     <div className="w-5 h-5 border-2 border-app-deep border-t-transparent rounded-full animate-spin" />
