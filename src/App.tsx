@@ -169,12 +169,9 @@ export default function App() {
   // Helper action: Register new participant
   const handleAddParticipant = async (newPart: Omit<Participant, 'id' | 'status' | 'registrationDate'>) => {
     // Check duplicates securely on the database to preserve LGPD privacy
-    const { emailExists, phoneExists } = await checkDuplicateParticipantSecure(newPart.email, newPart.phone);
+    const { emailExists } = await checkDuplicateParticipantSecure(newPart.email, newPart.phone);
     if (emailExists) {
       throw new Error('EMAIL_EXISTS');
-    }
-    if (phoneExists) {
-      throw new Error('PHONE_EXISTS');
     }
 
     const freshParticipant: Participant = {

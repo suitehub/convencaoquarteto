@@ -243,16 +243,11 @@ export async function checkDuplicateParticipantSecure(email: string, phone: stri
     const coll = collection(db, 'participants');
     
     // Check email
-    const emailQuery = query(coll, where('email', '==', email.trim()), limit(1));
+    const emailQuery = query(coll, where('email', '==', email.trim().toLowerCase()), limit(1));
     const emailSnap = await getDocs(emailQuery);
     const emailExists = !emailSnap.empty;
 
-    // Check phone
-    const phoneQuery = query(coll, where('phone', '==', phone.trim()), limit(1));
-    const phoneSnap = await getDocs(phoneQuery);
-    const phoneExists = !phoneSnap.empty;
-
-    return { emailExists, phoneExists };
+    return { emailExists, phoneExists: false };
   } catch (error) {
     console.error('Error checking duplicates securely:', error);
     return { emailExists: false, phoneExists: false };

@@ -152,24 +152,15 @@ export default function Cadastro({
     }
 
     // Duplicates check
-    const normalizedEmail = cleanEmail.trim();
-    const normalizedPhone = cleanPhone.replace(/\D/g, '');
+    const normalizedEmail = cleanEmail.trim().toLowerCase();
 
     const isEmailRegistered = participants.some(
       (p) => p.email.trim().toLowerCase() === normalizedEmail
     );
-    const isPhoneRegistered = participants.some(
-      (p) => p.phone.replace(/\D/g, '') === normalizedPhone
-    );
 
     if (isEmailRegistered) {
       recordAttempt('registration');
-      setErrorMsg('Este e-mail já possui um ingresso reservado / cadastrado.');
-      return;
-    }
-    if (isPhoneRegistered) {
-      recordAttempt('registration');
-      setErrorMsg('Este celular / WhatsApp já possui um ingresso reservado / cadastrado.');
+      setErrorMsg('Já existe um cadastro realizado com este e-mail. Se você já possui uma inscrição, acesse a Área do Participante.');
       return;
     }
 
@@ -187,7 +178,11 @@ export default function Cadastro({
     } catch (err: any) {
       console.error('Registration failed:', err);
       recordAttempt('registration');
-      setErrorMsg('Ocorreu um erro ao salvar seu cadastro no banco de dados. Por favor, tente novamente.');
+      if (err?.message === 'EMAIL_EXISTS') {
+        setErrorMsg('Já existe um cadastro realizado com este e-mail. Se você já possui uma inscrição, acesse a Área do Participante.');
+      } else {
+        setErrorMsg('Ocorreu um erro ao salvar seu cadastro no banco de dados. Por favor, tente novamente.');
+      }
     } finally {
       setLoading(false);
     }
