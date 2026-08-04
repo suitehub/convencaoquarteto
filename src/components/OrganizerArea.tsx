@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { Participant, EventConfig, StaffUser } from '../types';
 import Sorteio from './Sorteio';
+import { evaluatePassword } from '../utils/security';
 
 interface OrganizerAreaProps {
   participants: Participant[];
@@ -123,6 +124,12 @@ export default function OrganizerArea({
 
     if (!newStaffName.trim() || !newStaffUsername.trim() || !newStaffPassword.trim()) {
       setStaffError('Por favor, preencha todos os campos obrigatórios.');
+      return;
+    }
+
+    const staffPwdCheck = evaluatePassword(newStaffPassword);
+    if (!staffPwdCheck.isValid) {
+      setStaffError('A senha do colaborador precisa ter no mínimo 8 caracteres, 1 letra e 1 caractere especial.');
       return;
     }
 
@@ -840,6 +847,33 @@ export default function OrganizerArea({
                       onChange={(e) => setNewStaffPassword(e.target.value)}
                       className="block w-full px-4 py-2.5 bg-slate-50 border border-slate-200 focus:border-emerald-500/50 rounded-xl text-slate-800 text-xs transition-all focus:outline-hidden"
                     />
+
+                    {/* Staff Password Requirements Live Checklist */}
+                    {(() => {
+                      const check = evaluatePassword(newStaffPassword);
+                      return (
+                        <div className="mt-2 p-2.5 bg-slate-50 border border-slate-200/80 rounded-xl space-y-1.5 text-[10px]">
+                          <div className={`flex items-center space-x-2 ${check.hasMinLength ? 'text-emerald-700 font-medium' : 'text-slate-500'}`}>
+                            <div className={`w-3.5 h-3.5 rounded-full flex items-center justify-center shrink-0 ${check.hasMinLength ? 'bg-emerald-500 text-white' : 'bg-red-100 text-red-500'}`}>
+                              {check.hasMinLength ? <Check className="w-2 h-2 stroke-[3]" /> : <X className="w-2 h-2 stroke-[3]" />}
+                            </div>
+                            <span>Mínimo 8 caracteres</span>
+                          </div>
+                          <div className={`flex items-center space-x-2 ${check.hasLetter ? 'text-emerald-700 font-medium' : 'text-slate-500'}`}>
+                            <div className={`w-3.5 h-3.5 rounded-full flex items-center justify-center shrink-0 ${check.hasLetter ? 'bg-emerald-500 text-white' : 'bg-red-100 text-red-500'}`}>
+                              {check.hasLetter ? <Check className="w-2 h-2 stroke-[3]" /> : <X className="w-2 h-2 stroke-[3]" />}
+                            </div>
+                            <span>Pelo menos 1 letra (a-z / A-Z)</span>
+                          </div>
+                          <div className={`flex items-center space-x-2 ${check.hasSpecialChar ? 'text-emerald-700 font-medium' : 'text-slate-500'}`}>
+                            <div className={`w-3.5 h-3.5 rounded-full flex items-center justify-center shrink-0 ${check.hasSpecialChar ? 'bg-emerald-500 text-white' : 'bg-red-100 text-red-500'}`}>
+                              {check.hasSpecialChar ? <Check className="w-2 h-2 stroke-[3]" /> : <X className="w-2 h-2 stroke-[3]" />}
+                            </div>
+                            <span>Pelo menos 1 caractere especial (ex: @, #, $, !)</span>
+                          </div>
+                        </div>
+                      );
+                    })()}
                   </div>
 
                   {staffError && (

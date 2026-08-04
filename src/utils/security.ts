@@ -152,3 +152,27 @@ export function isValidPhone(phone: string): boolean {
   const digitsOnly = phone.replace(/\D/g, '');
   return digitsOnly.length >= 10 && digitsOnly.length <= 13;
 }
+
+/**
+ * Password Strength & Requirement Evaluator
+ * Checks for at least 8 characters, at least 1 letter, and at least 1 special character.
+ */
+export function evaluatePassword(password: string): {
+  hasMinLength: boolean;
+  hasLetter: boolean;
+  hasSpecialChar: boolean;
+  isValid: boolean;
+} {
+  const pwd = password || '';
+  const hasMinLength = pwd.length >= 8;
+  const hasLetter = /[a-zA-Z]/.test(pwd);
+  const hasSpecialChar = /[^a-zA-Z0-9\s]/.test(pwd) || /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?~`]/.test(pwd);
+
+  return {
+    hasMinLength,
+    hasLetter,
+    hasSpecialChar,
+    isValid: hasMinLength && hasLetter && hasSpecialChar,
+  };
+}
+

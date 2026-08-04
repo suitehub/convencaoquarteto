@@ -5,9 +5,9 @@
 
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
-import { User, Mail, Phone, ArrowLeft, Ticket, CheckCircle, ShieldCheck, Lock, AlertCircle, ShieldAlert } from 'lucide-react';
+import { User, Mail, Phone, ArrowLeft, Ticket, CheckCircle, ShieldCheck, Lock, AlertCircle, ShieldAlert, Check, X, Eye, EyeOff } from 'lucide-react';
 import { Participant } from '../types';
-import { checkRateLimit, recordAttempt, clearRateLimit, sanitizeInput, isValidEmail, isValidPhone } from '../utils/security';
+import { checkRateLimit, recordAttempt, clearRateLimit, sanitizeInput, isValidEmail, isValidPhone, evaluatePassword } from '../utils/security';
 
 interface CadastroProps {
   initialType?: 'Público' | 'Participante';
@@ -30,10 +30,13 @@ export default function Cadastro({
     phone: '',
     password: '',
   });
+  const [showPassword, setShowPassword] = useState(false);
   const [privacyChecked, setPrivacyChecked] = useState(false);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+
+  const passwordEvaluation = evaluatePassword(formData.password);
 
   if (participantsCount >= 445) {
     return (
@@ -136,8 +139,8 @@ export default function Cadastro({
       return;
     }
 
-    if (cleanPassword.length < 4) {
-      setErrorMsg('A senha precisa ter no mínimo 4 caracteres.');
+    if (!passwordEvaluation.isValid) {
+      setErrorMsg('A senha precisa ter no mínimo 8 dígitos, incluir pelo menos 1 letra e 1 caractere especial (ex: @, #, $, !).');
       return;
     }
 
@@ -322,15 +325,52 @@ export default function Cadastro({
                       <Lock className="w-4 h-4 text-app-medium/80" />
                     </div>
                     <input
-                      type="password"
+                      type={showPassword ? 'text' : 'password'}
                       required
-                      placeholder="Mínimo 4 caracteres"
+                      placeholder="Mínimo 8 dígitos + caractere especial"
                       value={formData.password}
                       onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                      className="block w-full pl-10 pr-4 py-3 bg-app-light border border-slate-200 focus:border-app-medium focus:ring-4 focus:ring-app-medium/5 rounded-2xl text-slate-800 placeholder-slate-400 focus:outline-hidden text-sm transition-all"
+                      className="block w-full pl-10 pr-10 py-3 bg-app-light border border-slate-200 focus:border-app-medium focus:ring-4 focus:ring-app-medium/5 rounded-2xl text-slate-800 placeholder-slate-400 focus:outline-hidden text-sm transition-all"
                     />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-slate-600 cursor-pointer"
+                      tabIndex={-1}
+                    >
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
                   </div>
-                  <span className="text-[10px] text-slate-400 mt-1 block">Esta senha será necessária para acessar a sua área exclusiva futuramente.</span>
+
+                  {/* Password Requirements Live Checklist */}
+                  <div className="mt-2.5 p-3 bg-slate-50 border border-slate-200/80 rounded-2xl space-y-2 text-[11px]">
+                    <div className="text-[10px] font-bold text-slate-500 uppercase font-mono tracking-wider">
+                      Requisitos da Senha:
+                    </div>
+                    
+                    <div className={`flex items-center space-x-2 transition-colors ${passwordEvaluation.hasMinLength ? 'text-emerald-700 font-medium' : 'text-slate-500'}`}>
+                      <div className={`w-4 h-4 rounded-full flex items-center justify-center shrink-0 transition-all ${passwordEvaluation.hasMinLength ? 'bg-emerald-500 text-white shadow-xs' : 'bg-red-100 text-red-500'}`}>
+                        {passwordEvaluation.hasMinLength ? <Check className="w-2.5 h-2.5 stroke-[3]" /> : <X className="w-2.5 h-2.5 stroke-[3]" />}
+                      </div>
+                      <span className={passwordEvaluation.hasMinLength ? 'font-semibold text-emerald-800' : ''}>Pelo menos 8 caracteres</span>
+                    </div>
+
+                    <div className={`flex items-center space-x-2 transition-colors ${passwordEvaluation.hasLetter ? 'text-emerald-700 font-medium' : 'text-slate-500'}`}>
+                      <div className={`w-4 h-4 rounded-full flex items-center justify-center shrink-0 transition-all ${passwordEvaluation.hasLetter ? 'bg-emerald-500 text-white shadow-xs' : 'bg-red-100 text-red-500'}`}>
+                        {passwordEvaluation.hasLetter ? <Check className="w-2.5 h-2.5 stroke-[3]" /> : <X className="w-2.5 h-2.5 stroke-[3]" />}
+                      </div>
+                      <span className={passwordEvaluation.hasLetter ? 'font-semibold text-emerald-800' : ''}>Pelo menos 1 letra (a-z / A-Z)</span>
+                    </div>
+
+                    <div className={`flex items-center space-x-2 transition-colors ${passwordEvaluation.hasSpecialChar ? 'text-emerald-700 font-medium' : 'text-slate-500'}`}>
+                      <div className={`w-4 h-4 rounded-full flex items-center justify-center shrink-0 transition-all ${passwordEvaluation.hasSpecialChar ? 'bg-emerald-500 text-white shadow-xs' : 'bg-red-100 text-red-500'}`}>
+                        {passwordEvaluation.hasSpecialChar ? <Check className="w-2.5 h-2.5 stroke-[3]" /> : <X className="w-2.5 h-2.5 stroke-[3]" />}
+                      </div>
+                      <span className={passwordEvaluation.hasSpecialChar ? 'font-semibold text-emerald-800' : ''}>Pelo menos 1 caractere especial (ex: @, #, $, !, %, &)</span>
+                    </div>
+                  </div>
+
+                  <span className="text-[10px] text-slate-400 mt-1.5 block">Esta senha será necessária para acessar a sua área exclusiva futuramente.</span>
                 </div>
 
                 {/* Required Checkbox */}
