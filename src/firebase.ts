@@ -191,6 +191,15 @@ export async function updateParticipantInFirestore(id: string, updates: Partial<
   }
 }
 
+export async function deleteParticipantInFirestore(id: string) {
+  const path = `participants/${id}`;
+  try {
+    await deleteDoc(doc(db, 'participants', id));
+  } catch (error) {
+    handleFirestoreError(error, OperationType.DELETE, path);
+  }
+}
+
 export async function deleteStaffUserInFirestore(id: string) {
   const path = `staffUsers/${id}`;
   try {

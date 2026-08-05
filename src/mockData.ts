@@ -10,7 +10,7 @@ export const INITIAL_EVENT_CONFIG: EventConfig = {
   date: '17 de Outubro de 2026',
   time: '18h00',
   location: 'IASD Nova Semente - R. Cubatão, 48 - Paraíso, São Paulo - SP, 04013-040',
-  maxParticipants: 500,
+  maxParticipants: 415,
   description: 'O maior encontro de música vocal gospel harmônica de quartetos vocais do município. Venha adorar e se inspirar com apresentações marcantes, capacitação técnica e o tradicional grande coro de vozes. Participe deste momento inesquecível de louvor e adoração focado em conectar pessoas.'
 };
 

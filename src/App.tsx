@@ -14,6 +14,7 @@ import {
   addParticipantInFirestore,
   addStaffUserInFirestore,
   deleteStaffUserInFirestore,
+  deleteParticipantInFirestore,
   updateParticipantInFirestore,
   updateEventConfig,
   getParticipantsCountSecure,
@@ -168,6 +169,12 @@ export default function App() {
 
   // Helper action: Register new participant
   const handleAddParticipant = async (newPart: Omit<Participant, 'id' | 'status' | 'registrationDate'>) => {
+    // Check total count before registering
+    const currentCount = await getParticipantsCountSecure();
+    if (currentCount >= 415) {
+      throw new Error('CAPACITY_REACHED');
+    }
+
     // Check duplicates securely on the database to preserve LGPD privacy
     const { emailExists } = await checkDuplicateParticipantSecure(newPart.email, newPart.phone);
     if (emailExists) {
@@ -184,6 +191,15 @@ export default function App() {
     
     // Refresh public registration count securely
     await fetchParticipantsCount();
+  };
+
+  // Helper action: Delete/Cancel participant registration
+  const handleDeleteParticipant = async (participantId: string) => {
+    await deleteParticipantInFirestore(participantId);
+    await fetchParticipantsCount();
+    setCurrentUser(null);
+    setCurrentRole('public');
+    setCurrentView('landing');
   };
 
   // Helper action: Check in/Credenciar participant
@@ -383,6 +399,7 @@ export default function App() {
               onLogout={handleLogout}
               onNavigate={handleNavigate}
               onUpdateUser={handleUpdateCurrentUser}
+              onDeleteUser={handleDeleteParticipant}
             />
           );
         }

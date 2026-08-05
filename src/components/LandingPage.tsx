@@ -171,7 +171,7 @@ export default function LandingPage({ eventConfig, onNavigate, participantsCount
 
             {/* Main CTA button: Large, prominent, glowing, pulse anim */}
             <div className="relative group mb-16">
-              {participantsCount >= 445 ? (
+              {participantsCount >= 415 ? (
                 <button
                   onClick={() => onNavigate('cadastro')}
                   className="relative w-full sm:w-auto px-10 py-5 text-base bg-red-600 hover:bg-red-700 text-white rounded-2xl shadow-2xl border border-red-500 transition-all flex items-center justify-center space-x-3.5 font-black uppercase tracking-wide cursor-pointer"
@@ -190,7 +190,7 @@ export default function LandingPage({ eventConfig, onNavigate, participantsCount
                     <span>RESERVAR INGRESSO GRATUITO</span>
                   </button>
                   <span className="absolute top-full mt-2 left-0 right-0 text-center text-xs font-mono text-slate-300 font-medium">
-                    Garanta sua vaga! Apenas <strong className="text-app-gold">{445 - participantsCount}</strong> ingressos restantes de 445.
+                    Garanta sua vaga! Apenas <strong className="text-app-gold">{Math.max(0, 415 - participantsCount)}</strong> ingressos restantes de 415.
                   </span>
                 </>
               )}

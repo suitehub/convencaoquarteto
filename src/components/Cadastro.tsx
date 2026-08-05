@@ -42,7 +42,7 @@ export default function Cadastro({
 
   const passwordEvaluation = evaluatePassword(formData.password);
 
-  if (participantsCount >= 445) {
+  if (participantsCount >= 415) {
     return (
       <div className="min-h-screen bg-app-deep flex flex-col justify-center items-center px-4 py-20 relative overflow-hidden">
         {/* Immersive brand glow elements */}
@@ -75,17 +75,17 @@ export default function Cadastro({
               <h2 className="text-2xl font-black text-app-deep font-display tracking-tight">Inscrições Encerradas!</h2>
               
               <p className="text-slate-600 text-sm mt-3 font-light leading-relaxed">
-                Desculpe! O limite máximo de <strong className="text-app-medium font-semibold">445 ingressos</strong> foi atingido e as inscrições foram encerradas para este evento.
+                Desculpe! O limite máximo de <strong className="text-app-medium font-semibold">415 ingressos</strong> foi atingido e as inscrições foram encerradas para este evento.
               </p>
               
               <div className="bg-app-light p-4 rounded-2xl border border-slate-200 my-6 text-left space-y-2">
                 <div className="text-xs text-slate-500 font-mono flex justify-between">
                   <span>CAPACIDADE MÁXIMA:</span>
-                  <span className="text-red-600 font-bold">445 INGRESSOS</span>
+                  <span className="text-red-600 font-bold">415 INGRESSOS</span>
                 </div>
                 <div className="text-xs text-slate-500 font-mono flex justify-between">
                   <span>RESERVAS ATIVAS:</span>
-                  <span className="text-app-deep font-bold">{participantsCount} / 445</span>
+                  <span className="text-app-deep font-bold">{participantsCount} / 415</span>
                 </div>
                 <div className="text-xs text-slate-500 font-mono flex justify-between">
                   <span>STATUS EVENTO:</span>
@@ -103,7 +103,7 @@ export default function Cadastro({
             
             <div className="mt-8 pt-4 border-t border-slate-100 text-center">
               <span className="text-[10px] text-slate-400 font-mono uppercase tracking-widest block select-none">
-                #CuidandoDePessoas
+                #MissãoEmCadaCanção
               </span>
             </div>
           </div>
@@ -115,6 +115,11 @@ export default function Cadastro({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg('');
+
+    if (participantsCount >= 415) {
+      setErrorMsg('Desculpe, o limite máximo de 415 ingressos foi atingido.');
+      return;
+    }
 
     // Rate Limit Check
     const rateCheck = checkRateLimit('registration');
@@ -180,7 +185,9 @@ export default function Cadastro({
     } catch (err: any) {
       console.error('Registration failed:', err);
       recordAttempt('registration');
-      if (err?.message === 'EMAIL_EXISTS') {
+      if (err?.message === 'CAPACITY_REACHED') {
+        setErrorMsg('Desculpe! O limite máximo de 415 ingressos foi atingido e não há mais vagas disponíveis no momento.');
+      } else if (err?.message === 'EMAIL_EXISTS') {
         setErrorMsg('Já existe um cadastro realizado com este e-mail. Se você já possui uma inscrição, acesse a Área do Participante.');
       } else {
         setErrorMsg('Ocorreu um erro ao salvar seu cadastro no banco de dados. Por favor, tente novamente.');
