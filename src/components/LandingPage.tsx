@@ -135,7 +135,7 @@ export default function LandingPage({ eventConfig, onNavigate, participantsCount
               </h2>
               <div className="mt-3 text-center w-full max-w-full px-1">
                 <span className="text-[8.5px] min-[380px]:text-[10px] sm:text-xs font-semibold text-app-gold tracking-normal sm:tracking-wider uppercase font-mono text-center whitespace-nowrap block">
-                  Edição Temática 2026
+                  Edição 2026
                 </span>
               </div>
             </motion.div>
