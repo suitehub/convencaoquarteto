@@ -285,9 +285,10 @@ export default function App() {
     setCurrentView('landing');
   };
 
-  const handleUpdateCurrentUser = (updatedUser: Participant) => {
+  const handleUpdateCurrentUser = async (updatedUser: Participant) => {
     setCurrentUser(updatedUser);
-    updateParticipantInFirestore(updatedUser.id, updatedUser);
+    await updateParticipantInFirestore(updatedUser.id, updatedUser);
+    await fetchParticipantsCount();
   };
 
   // Render the current view based on active role and view states
@@ -303,7 +304,7 @@ export default function App() {
             <LandingPage
               eventConfig={eventConfig}
               onNavigate={handleNavigate}
-              participantsCount={currentRole === 'organizer' || currentRole === 'reception' ? participants.length : secureCount}
+              participantsCount={secureCount}
             />
           );
         }

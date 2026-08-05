@@ -59,8 +59,10 @@ export default function OrganizerArea({
   const [statusFilter, setStatusFilter] = useState<'Todos' | 'Pendente' | 'Presente'>('Todos');
   const [cityFilter, setCityFilter] = useState('Todas');
 
-  // Math stats based on parent state
-  const totalRegistered = participants.length;
+  // Math stats based on parent state (Main adults + linked child dependents)
+  const totalAdults = participants.length;
+  const totalDependents = participants.reduce((acc, p) => acc + (p.dependents?.length || 0), 0);
+  const totalRegistered = totalAdults + totalDependents;
   const presentCount = participants.filter((p) => p.status === 'Presente').length;
   const pendingCount = totalRegistered - presentCount;
   const occupancyRate = eventConfig.maxParticipants > 0 

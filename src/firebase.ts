@@ -203,8 +203,16 @@ export async function deleteStaffUserInFirestore(id: string) {
 export async function getParticipantsCountSecure(): Promise<number> {
   try {
     const coll = collection(db, 'participants');
-    const snapshot = await getCountFromServer(coll);
-    return snapshot.data().count;
+    const snapshot = await getDocs(coll);
+    let total = 0;
+    snapshot.forEach((docSnap) => {
+      const data = docSnap.data();
+      total += 1;
+      if (Array.isArray(data.dependents)) {
+        total += data.dependents.length;
+      }
+    });
+    return total;
   } catch (error) {
     console.error('Error fetching participant count securely:', error);
     return 0;

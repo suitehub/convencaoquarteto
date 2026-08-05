@@ -37,6 +37,19 @@ function calculateAge(birthDateStr: string): string {
   return `${age} ${age === 1 ? 'ano' : 'anos'}`;
 }
 
+function getAgeInYears(birthDateStr: string): number {
+  if (!birthDateStr) return 0;
+  const birthDate = new Date(birthDateStr);
+  const today = new Date();
+  if (isNaN(birthDate.getTime())) return 0;
+  let age = today.getFullYear() - birthDate.getFullYear();
+  const monthDiff = today.getMonth() - birthDate.getMonth();
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+    age--;
+  }
+  return age;
+}
+
 function formatDateBR(dateStr: string): string {
   if (!dateStr) return '';
   const parts = dateStr.split('-');
@@ -83,12 +96,24 @@ export default function ParticipantArea({ currentUser, schedule, onLogout, onNav
 
   const handleSaveDependent = (e: React.FormEvent) => {
     e.preventDefault();
+    setFormError(null);
+
     if (!depName.trim()) {
       setFormError('Por favor, informe o nome completo da criança.');
       return;
     }
     if (!depBirthDate) {
       setFormError('Por favor, informe a data de nascimento.');
+      return;
+    }
+
+    const ageYears = getAgeInYears(depBirthDate);
+    if (ageYears > 15) {
+      setFormError(`O cadastro de dependente é exclusivo para crianças e jovens de até 15 anos. A idade calculada foi de ${ageYears} anos. Para maiores de 15 anos, realize uma inscrição individual.`);
+      return;
+    }
+    if (ageYears < 0) {
+      setFormError('A data de nascimento não pode ser no futuro.');
       return;
     }
 
@@ -862,16 +887,33 @@ export default function ParticipantArea({ currentUser, schedule, onLogout, onNav
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="block text-xs font-bold text-slate-700">
-                    Data de Nascimento *
-                  </label>
+                  <div className="flex items-center justify-between">
+                    <label className="block text-xs font-bold text-slate-700">
+                      Data de Nascimento *
+                    </label>
+                    <span className="text-[10px] text-amber-700 font-bold bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200/80">
+                      Limite de Idade: Até 15 anos
+                    </span>
+                  </div>
                   <input
                     type="date"
                     required
                     value={depBirthDate}
-                    onChange={(e) => setDepBirthDate(e.target.value)}
+                    onChange={(e) => {
+                      setDepBirthDate(e.target.value);
+                      if (formError) setFormError(null);
+                    }}
                     className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:outline-hidden focus:border-app-medium text-xs font-medium"
                   />
+                  {depBirthDate && (
+                    <p className={`text-[11px] font-medium mt-1 flex items-center space-x-1 ${getAgeInYears(depBirthDate) > 15 ? 'text-red-600 font-bold' : 'text-emerald-700 font-semibold'}`}>
+                      {getAgeInYears(depBirthDate) > 15 ? (
+                        <span>⚠️ Idade calculada: {calculateAge(depBirthDate)} (Acima do limite de 15 anos)</span>
+                      ) : (
+                        <span>✓ Idade calculada: {calculateAge(depBirthDate)} (Dentro do limite de 15 anos)</span>
+                      )}
+                    </p>
+                  )}
                 </div>
 
                 <div className="bg-amber-50/80 border border-amber-200/70 p-3.5 rounded-2xl text-[11px] text-amber-950 font-light leading-relaxed flex items-start space-x-2.5">
