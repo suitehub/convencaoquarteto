@@ -44,9 +44,8 @@ export default function AdminLock({ onUnlockSuccess, onCancel }: AdminLockProps)
 
     setLoading(true);
     
-    // Perform high-security cryptographic comparison to protect credentials
+    // Cryptographic verification against secure hash
     sha256(cleanCode).then((hashedCode) => {
-      // Hashed SHA-256 value of "admin@bruno"
       const targetHash = 'c9fd0cfd73186249d7ebc3ed9d67aacf94eb2f9c43e62134e960ab32e85fefbf';
       
       if (hashedCode === targetHash) {
