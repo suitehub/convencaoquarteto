@@ -5,6 +5,7 @@
 
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
+import { QRCodeSVG } from 'qrcode.react';
 import { 
   User, Mail, Phone, MapPin, QrCode, Calendar, Clock, LogOut, 
   Map, Bell, ShieldAlert, CheckCircle, ChevronLeft, Search, Music, Sparkles,
@@ -185,50 +186,20 @@ export default function ParticipantArea({ currentUser, schedule, onLogout, onNav
 
                 {/* Card Bottom - QR Code */}
                 <div className="p-6 pt-4 flex flex-col items-center bg-slate-900/40">
-                  {/* Decorative animated music-theme QR code */}
-                  <div className="p-4 bg-white rounded-2xl relative group shadow-lg">
-                    <svg viewBox="0 0 100 100" className="w-32 h-32">
-                      {/* Stylized QR Code elements */}
-                      <rect x="0" y="0" width="25" height="25" fill="#020617" />
-                      <rect x="5" y="5" width="15" height="15" fill="#ffffff" />
-                      <rect x="8" y="8" width="9" height="9" fill="#020617" />
-                      
-                      <rect x="75" y="0" width="25" height="25" fill="#020617" />
-                      <rect x="80" y="5" width="15" height="15" fill="#ffffff" />
-                      <rect x="83" y="8" width="9" height="9" fill="#020617" />
-
-                      <rect x="0" y="75" width="25" height="25" fill="#020617" />
-                      <rect x="5" y="80" width="15" height="15" fill="#ffffff" />
-                      <rect x="8" y="83" width="9" height="9" fill="#020617" />
-
-                      {/* Random aesthetic QR blocks */}
-                      <rect x="35" y="5" width="10" height="10" fill="#020617" />
-                      <rect x="55" y="10" width="15" height="5" fill="#020617" />
-                      <rect x="35" y="25" width="5" height="15" fill="#020617" />
-                      <rect x="50" y="30" width="15" height="10" fill="#020617" />
-                      <rect x="20" y="45" width="25" height="5" fill="#020617" />
-                      <rect x="10" y="55" width="10" height="15" fill="#020617" />
-                      <rect x="35" y="55" width="15" height="10" fill="#020617" />
-                      
-                      <rect x="70" y="35" width="10" height="25" fill="#020617" />
-                      <rect x="85" y="45" width="10" height="10" fill="#020617" />
-                      <rect x="55" y="65" width="15" height="15" fill="#020617" />
-                      <rect x="80" y="70" width="15" height="15" fill="#020617" />
-                      
-                      <rect x="30" y="80" width="15" height="5" fill="#020617" />
-                      <rect x="35" y="90" width="20" height="5" fill="#020617" />
-
-                      {/* Custom Music Symbol overlay in the center */}
-                      <circle cx="50" cy="50" r="14" fill="#D4AF37" />
-                      <path d="M 47,56 L 47,44 L 56,41 L 56,53" fill="none" stroke="#ffffff" strokeWidth="2" strokeLinecap="round" />
-                      <circle cx="44" cy="56" r="3" fill="#ffffff" />
-                      <circle cx="53" cy="53" r="3" fill="#ffffff" />
-                    </svg>
+                  {/* Real Scannable QR Code */}
+                  <div className="p-3 bg-white rounded-2xl relative group shadow-lg flex items-center justify-center">
+                    <QRCodeSVG 
+                      value={currentUser.id} 
+                      size={135} 
+                      level="H"
+                      marginSize={1}
+                      fgColor="#020617"
+                    />
 
                     {/* QR watermark indicator */}
                     <div className="absolute inset-0 bg-app-medium/10 opacity-0 group-hover:opacity-100 transition-opacity rounded-2xl flex items-center justify-center backdrop-blur-xs">
-                      <span className="bg-slate-950 text-white text-[9px] font-mono font-bold tracking-wider px-2 py-1 rounded">
-                        MOCK PASS VALID
+                      <span className="bg-slate-950 text-white text-[9px] font-mono font-bold tracking-wider px-2 py-1 rounded shadow-md">
+                        QR VÁLIDO
                       </span>
                     </div>
                   </div>
@@ -446,41 +417,14 @@ export default function ParticipantArea({ currentUser, schedule, onLogout, onNav
 
             {/* Card Bottom - QR Code */}
             <div className="p-6 pt-4 flex flex-col items-center bg-slate-900/40">
-              <div className="p-4 bg-white rounded-2xl relative shadow-lg">
-                <svg viewBox="0 0 100 100" className="w-32 h-32">
-                  <rect x="0" y="0" width="25" height="25" fill="#020617" />
-                  <rect x="5" y="5" width="15" height="15" fill="#ffffff" />
-                  <rect x="8" y="8" width="9" height="9" fill="#020617" />
-                  
-                  <rect x="75" y="0" width="25" height="25" fill="#020617" />
-                  <rect x="80" y="5" width="15" height="15" fill="#ffffff" />
-                  <rect x="83" y="8" width="9" height="9" fill="#020617" />
-
-                  <rect x="0" y="75" width="25" height="25" fill="#020617" />
-                  <rect x="5" y="80" width="15" height="15" fill="#ffffff" />
-                  <rect x="8" y="83" width="9" height="9" fill="#020617" />
-
-                  <rect x="35" y="5" width="10" height="10" fill="#020617" />
-                  <rect x="55" y="10" width="15" height="5" fill="#020617" />
-                  <rect x="35" y="25" width="5" height="15" fill="#020617" />
-                  <rect x="50" y="30" width="15" height="10" fill="#020617" />
-                  <rect x="20" y="45" width="25" height="5" fill="#020617" />
-                  <rect x="10" y="55" width="10" height="15" fill="#020617" />
-                  <rect x="35" y="55" width="15" height="10" fill="#020617" />
-                  
-                  <rect x="70" y="35" width="10" height="25" fill="#020617" />
-                  <rect x="85" y="45" width="10" height="10" fill="#020617" />
-                  <rect x="55" y="65" width="15" height="15" fill="#020617" />
-                  <rect x="80" y="70" width="15" height="15" fill="#020617" />
-                  
-                  <rect x="30" y="80" width="15" height="5" fill="#020617" />
-                  <rect x="35" y="90" width="20" height="5" fill="#020617" />
-
-                  <circle cx="50" cy="50" r="14" fill="#D4AF37" />
-                  <path d="M 47,56 L 47,44 L 56,41 L 56,53" fill="none" stroke="#ffffff" strokeWidth="2" strokeLinecap="round" />
-                  <circle cx="44" cy="56" r="3" fill="#ffffff" />
-                  <circle cx="53" cy="53" r="3" fill="#ffffff" />
-                </svg>
+              <div className="p-3 bg-white rounded-2xl relative shadow-lg flex items-center justify-center">
+                <QRCodeSVG 
+                  value={currentUser.id} 
+                  size={135} 
+                  level="H"
+                  marginSize={1}
+                  fgColor="#020617"
+                />
               </div>
 
               <span className="text-[10px] text-slate-400 font-mono tracking-widest mt-4 uppercase font-bold">

@@ -1,7 +1,9 @@
 {
   "name": "9ª Convenção Municipal de Quartetos",
   "description": "Plataforma integrada para a 9ª Convenção Municipal de Quartetos, focada na reserva simplificada de ingressos, credenciamento e gestão de participantes em tempo real.",
-  "requestFramePermissions": [],
+  "requestFramePermissions": [
+    "camera"
+  ],
   "majorCapabilities": [
     "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
   ]
