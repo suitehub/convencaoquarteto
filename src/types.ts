@@ -3,6 +3,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+export interface Dependent {
+  id: string;
+  name: string;
+  birthDate: string;
+  addedAt: string;
+}
+
 export interface Participant {
   id: string;
   name: string;
@@ -14,6 +21,7 @@ export interface Participant {
   checkInTime?: string;
   registrationDate: string;
   registrationType: 'Público' | 'Participante';
+  dependents?: Dependent[];
 }
 
 export interface EventConfig {

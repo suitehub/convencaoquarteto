@@ -8,7 +8,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { QRCodeSVG } from 'qrcode.react';
 import { 
   Users, CheckCircle, UserX, UserCheck, Search, ShieldCheck, 
-  MapPin, Phone, Mail, QrCode, ArrowLeft, LogOut, Check, ChevronRight, X, Camera, AlertTriangle
+  MapPin, Phone, Mail, QrCode, ArrowLeft, LogOut, Check, ChevronRight, X, Camera, AlertTriangle, Baby
 } from 'lucide-react';
 import { Participant } from '../types';
 import { QRScannerModal } from './QRScannerModal';
@@ -45,11 +45,16 @@ export default function ReceptionArea({ participants, onCheckIn, onLogout }: Rec
     }
   };
 
-  // Compute stats in real time based on parent state!
+  // Compute stats in real time including dependents count!
   const totalInscritos = participants.length;
-  const presentes = participants.filter((p) => p.status === 'Presente').length;
-  const ausentes = totalInscritos - presentes;
-  const taxaPresenca = totalInscritos > 0 ? Math.round((presentes / totalInscritos) * 100) : 0;
+  const totalDependentes = participants.reduce((acc, p) => acc + (p.dependents?.length || 0), 0);
+  const totalIngressos = totalInscritos + totalDependentes;
+
+  const presentesInscritos = participants.filter((p) => p.status === 'Presente');
+  const presentesCount = presentesInscritos.length;
+  const presentesIngressos = presentesInscritos.reduce((acc, p) => acc + 1 + (p.dependents?.length || 0), 0);
+  const ausentesIngressos = totalIngressos - presentesIngressos;
+  const taxaPresenca = totalIngressos > 0 ? Math.round((presentesIngressos / totalIngressos) * 100) : 0;
 
   // Filter participants
   const filteredParticipants = participants.filter((p) => {
@@ -261,6 +266,31 @@ export default function ReceptionArea({ participants, onCheckIn, onLogout }: Rec
                       </p>
                     </div>
                   </div>
+
+                  {selectedPart.dependents && selectedPart.dependents.length > 0 && (
+                    <div className="bg-amber-50/90 border border-amber-200 p-3.5 rounded-2xl space-y-2">
+                      <div className="flex items-center justify-between text-xs font-bold text-amber-950">
+                        <span className="flex items-center gap-1.5">
+                          <Baby className="w-4 h-4 text-amber-700" />
+                          <span>Dependentes ({selectedPart.dependents.length} criança(s))</span>
+                        </span>
+                        <span className="bg-amber-200/80 text-amber-900 px-2 py-0.5 rounded text-[10px] font-mono">
+                          {1 + selectedPart.dependents.length} Ingressos
+                        </span>
+                      </div>
+                      <ul className="text-xs text-amber-950 space-y-1 font-light divide-y divide-amber-200/60">
+                        {selectedPart.dependents.map((dep, idx) => (
+                          <li key={dep.id} className="pt-1 flex items-center justify-between">
+                            <span>{idx + 1}. <strong>{dep.name}</strong></span>
+                            <span className="text-[10px] text-amber-800 font-mono">Nasc: {dep.birthDate.split('-').reverse().join('/')}</span>
+                          </li>
+                        ))}
+                      </ul>
+                      <p className="text-[10px] text-amber-800 italic mt-1 leading-snug">
+                        Validação unificada: A entrada do pai/responsável libera o acesso de todas as crianças listadas acima.
+                      </p>
+                    </div>
+                  )}
                 </div>
 
                 {/* QR Code and Check-in action */}
@@ -310,18 +340,21 @@ export default function ReceptionArea({ participants, onCheckIn, onLogout }: Rec
                   <Users className="w-4 h-4 sm:w-5 sm:h-5" />
                 </div>
                 <div className="min-w-0">
-                  <span className="text-[9px] sm:text-[10px] text-slate-400 font-mono uppercase block truncate">Total Inscritos</span>
-                  <strong className="text-base sm:text-xl font-bold text-slate-800 font-display block leading-none mt-1">{totalInscritos}</strong>
+                  <span className="text-[9px] sm:text-[10px] text-slate-400 font-mono uppercase block truncate">Total Ingressos</span>
+                  <div className="flex items-baseline space-x-1 mt-1">
+                    <strong className="text-base sm:text-xl font-bold text-slate-800 font-display block leading-none">{totalIngressos}</strong>
+                    <span className="text-[10px] text-slate-400 font-mono hidden xl:inline">({totalInscritos}+{totalDependentes} dep)</span>
+                  </div>
                 </div>
               </div>
 
               <div className="bg-white p-3.5 sm:p-5 rounded-2xl border border-slate-200 shadow-xs flex items-center space-x-2.5 sm:space-x-4">
                 <div className="p-2.5 sm:p-3 bg-app-gold/10 text-app-deep rounded-xl shrink-0">
-                  <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5" />
+                  <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-app-medium" />
                 </div>
                 <div className="min-w-0">
-                  <span className="text-[9px] sm:text-[10px] text-slate-400 font-mono uppercase block truncate">Presentes</span>
-                  <strong className="text-base sm:text-xl font-bold text-slate-800 font-display block leading-none mt-1">{presentes}</strong>
+                  <span className="text-[9px] sm:text-[10px] text-slate-400 font-mono uppercase block truncate">Credenciados</span>
+                  <strong className="text-base sm:text-xl font-bold text-slate-800 font-display block leading-none mt-1">{presentesIngressos}</strong>
                 </div>
               </div>
 
@@ -331,7 +364,7 @@ export default function ReceptionArea({ participants, onCheckIn, onLogout }: Rec
                 </div>
                 <div className="min-w-0">
                   <span className="text-[9px] sm:text-[10px] text-slate-400 font-mono uppercase block truncate">Ausentes</span>
-                  <strong className="text-base sm:text-xl font-bold text-slate-800 font-display block leading-none mt-1">{ausentes}</strong>
+                  <strong className="text-base sm:text-xl font-bold text-slate-800 font-display block leading-none mt-1">{ausentesIngressos}</strong>
                 </div>
               </div>
 
@@ -412,7 +445,15 @@ export default function ReceptionArea({ participants, onCheckIn, onLogout }: Rec
                               </div>
                               <div>
                                 <span className="font-semibold text-slate-800 block group-hover:text-app-medium transition-colors">{part.name}</span>
-                                <span className="text-slate-400 text-[10px]">{part.email}</span>
+                                <div className="flex items-center gap-1.5 mt-0.5">
+                                  <span className="text-slate-400 text-[10px]">{part.email}</span>
+                                  {part.dependents && part.dependents.length > 0 && (
+                                    <span className="inline-flex items-center space-x-1 px-1.5 py-0.5 rounded bg-amber-100/80 text-amber-900 text-[9px] font-mono font-bold">
+                                      <Baby className="w-2.5 h-2.5 text-amber-700" />
+                                      <span>+{part.dependents.length} dep</span>
+                                    </span>
+                                  )}
+                                </div>
                               </div>
                             </div>
                           </td>

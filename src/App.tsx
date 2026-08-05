@@ -285,6 +285,11 @@ export default function App() {
     setCurrentView('landing');
   };
 
+  const handleUpdateCurrentUser = (updatedUser: Participant) => {
+    setCurrentUser(updatedUser);
+    updateParticipantInFirestore(updatedUser.id, updatedUser);
+  };
+
   // Render the current view based on active role and view states
   const renderActiveView = () => {
     if (!splashCompleted && currentView === 'splash') {
@@ -376,6 +381,7 @@ export default function App() {
               schedule={MOCK_SCHEDULE}
               onLogout={handleLogout}
               onNavigate={handleNavigate}
+              onUpdateUser={handleUpdateCurrentUser}
             />
           );
         }

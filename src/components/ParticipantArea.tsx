@@ -4,25 +4,135 @@
  */
 
 import React, { useState } from 'react';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { QRCodeSVG } from 'qrcode.react';
 import { 
   User, Mail, Phone, MapPin, QrCode, Calendar, Clock, LogOut, 
   Map, Bell, ShieldAlert, CheckCircle, ChevronLeft, Search, Music, Sparkles,
-  Menu, X
+  Menu, X, Baby, Plus, Trash2, Edit3, Users, AlertCircle, ShieldCheck
 } from 'lucide-react';
-import { Participant, ScheduleItem } from '../types';
+import { Participant, ScheduleItem, Dependent } from '../types';
 
 interface ParticipantAreaProps {
   currentUser: Participant;
   schedule: ScheduleItem[];
   onLogout: () => void;
   onNavigate: (view: string, role?: 'public' | 'participant' | 'reception' | 'organizer') => void;
+  onUpdateUser?: (updatedUser: Participant) => void;
 }
 
-export default function ParticipantArea({ currentUser, schedule, onLogout, onNavigate }: ParticipantAreaProps) {
-  const [activeTab, setActiveTab] = useState<'home' | 'meus-dados'>('home');
+function calculateAge(birthDateStr: string): string {
+  if (!birthDateStr) return '0 anos';
+  const birthDate = new Date(birthDateStr);
+  const today = new Date();
+  if (isNaN(birthDate.getTime())) return '0 anos';
+  let age = today.getFullYear() - birthDate.getFullYear();
+  const monthDiff = today.getMonth() - birthDate.getMonth();
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+    age--;
+  }
+  if (age <= 0) {
+    return 'Menor de 1 ano';
+  }
+  return `${age} ${age === 1 ? 'ano' : 'anos'}`;
+}
+
+function formatDateBR(dateStr: string): string {
+  if (!dateStr) return '';
+  const parts = dateStr.split('-');
+  if (parts.length === 3) {
+    return `${parts[2]}/${parts[1]}/${parts[0]}`;
+  }
+  return dateStr;
+}
+
+export default function ParticipantArea({ currentUser, schedule, onLogout, onNavigate, onUpdateUser }: ParticipantAreaProps) {
+  const [activeTab, setActiveTab] = useState<'home' | 'dependentes' | 'meus-dados'>('home');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  // Modal & Form States for Dependents
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingDependent, setEditingDependent] = useState<Dependent | null>(null);
+  const [deletingDependent, setDeletingDependent] = useState<Dependent | null>(null);
+  
+  const [depName, setDepName] = useState('');
+  const [depBirthDate, setDepBirthDate] = useState('');
+  const [formError, setFormError] = useState<string | null>(null);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  const showToast = (msg: string) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(null), 3500);
+  };
+
+  const handleOpenAddModal = () => {
+    setEditingDependent(null);
+    setDepName('');
+    setDepBirthDate('');
+    setFormError(null);
+    setIsModalOpen(true);
+  };
+
+  const handleOpenEditModal = (dep: Dependent) => {
+    setEditingDependent(dep);
+    setDepName(dep.name);
+    setDepBirthDate(dep.birthDate);
+    setFormError(null);
+    setIsModalOpen(true);
+  };
+
+  const handleSaveDependent = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!depName.trim()) {
+      setFormError('Por favor, informe o nome completo da criança.');
+      return;
+    }
+    if (!depBirthDate) {
+      setFormError('Por favor, informe a data de nascimento.');
+      return;
+    }
+
+    const currentDeps = currentUser.dependents || [];
+
+    if (editingDependent) {
+      // Update existing dependent
+      const updatedDeps = currentDeps.map(d => 
+        d.id === editingDependent.id 
+          ? { ...d, name: depName.trim(), birthDate: depBirthDate } 
+          : d
+      );
+      if (onUpdateUser) {
+        onUpdateUser({ ...currentUser, dependents: updatedDeps });
+      }
+      showToast(`Cadastro de ${depName.trim()} atualizado com sucesso!`);
+    } else {
+      // Add new dependent
+      const newDep: Dependent = {
+        id: 'dep-' + Date.now() + '-' + Math.random().toString(36).substring(2, 6),
+        name: depName.trim(),
+        birthDate: depBirthDate,
+        addedAt: new Date().toISOString()
+      };
+      const updatedDeps = [...currentDeps, newDep];
+      if (onUpdateUser) {
+        onUpdateUser({ ...currentUser, dependents: updatedDeps });
+      }
+      showToast(`Ingresso infantil de ${depName.trim()} cadastrado!`);
+    }
+
+    setIsModalOpen(false);
+  };
+
+  const handleConfirmDelete = () => {
+    if (!deletingDependent) return;
+    const currentDeps = currentUser.dependents || [];
+    const updatedDeps = currentDeps.filter(d => d.id !== deletingDependent.id);
+    if (onUpdateUser) {
+      onUpdateUser({ ...currentUser, dependents: updatedDeps });
+    }
+    showToast(`Dependente ${deletingDependent.name} removido.`);
+    setDeletingDependent(null);
+  };
 
   return (
     <>
@@ -85,6 +195,27 @@ export default function ParticipantArea({ currentUser, schedule, onLogout, onNav
             </button>
 
             <button
+              onClick={() => { setActiveTab('dependentes'); setMobileMenuOpen(false); }}
+              className={`w-full px-4 py-3 text-sm font-medium rounded-xl flex items-center justify-between transition-colors cursor-pointer ${
+                activeTab === 'dependentes'
+                  ? 'bg-app-gold text-app-deep font-bold shadow-lg shadow-app-gold/15'
+                  : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
+              }`}
+            >
+              <div className="flex items-center space-x-3">
+                <Baby className="w-4 h-4 shrink-0" />
+                <span>Dependentes / Crianças</span>
+              </div>
+              {currentUser.dependents && currentUser.dependents.length > 0 && (
+                <span className={`px-2 py-0.5 text-[10px] font-mono font-bold rounded-full ${
+                  activeTab === 'dependentes' ? 'bg-app-deep text-app-gold' : 'bg-slate-800 text-app-gold'
+                }`}>
+                  {currentUser.dependents.length}
+                </span>
+              )}
+            </button>
+
+            <button
               onClick={() => { setActiveTab('meus-dados'); setMobileMenuOpen(false); }}
               className={`w-full px-4 py-3 text-sm font-medium rounded-xl flex items-center space-x-3 transition-colors cursor-pointer ${
                 activeTab === 'meus-dados'
@@ -119,6 +250,7 @@ export default function ParticipantArea({ currentUser, schedule, onLogout, onNav
             <span className="text-xs font-bold text-app-medium uppercase tracking-widest font-mono">Painel do Participante</span>
             <h1 className="text-2xl font-black text-slate-900 tracking-tight font-display sm:text-3xl">
               {activeTab === 'home' && 'Bem-vindo à Convenção!'}
+              {activeTab === 'dependentes' && 'Inscrição de Crianças & Dependentes'}
               {activeTab === 'meus-dados' && 'Meus Dados Cadastrais'}
             </h1>
           </div>
@@ -212,6 +344,31 @@ export default function ParticipantArea({ currentUser, schedule, onLogout, onNav
                     Apresente este QR Code no credenciamento ao chegar ao auditório.
                   </p>
                 </div>
+
+                {/* Linked Dependents Indicator in Ticket Card */}
+                {currentUser.dependents && currentUser.dependents.length > 0 && (
+                  <div className="w-[88%] mx-auto bg-slate-900/90 p-3.5 rounded-2xl border border-slate-800 text-xs text-slate-300 space-y-2 mb-4">
+                    <div className="flex items-center justify-between text-[10px] font-mono uppercase font-bold text-app-gold">
+                      <span className="flex items-center gap-1.5">
+                        <Users className="w-3.5 h-3.5" />
+                        <span>Ingressos da Família ({1 + currentUser.dependents.length})</span>
+                      </span>
+                      <span className="bg-app-gold/20 text-app-gold px-1.5 py-0.5 rounded text-[9px]">VÁLIDOS</span>
+                    </div>
+                    <ul className="text-[11px] space-y-1 divide-y divide-slate-800/60 font-light">
+                      <li className="pt-1 flex items-center justify-between">
+                        <span className="text-slate-200 font-medium truncate max-w-[150px]">1. {currentUser.name}</span>
+                        <span className="text-app-gold text-[10px] font-mono">Titular</span>
+                      </li>
+                      {currentUser.dependents.map((dep, idx) => (
+                        <li key={dep.id} className="pt-1 flex items-center justify-between">
+                          <span className="text-slate-300 truncate max-w-[150px]">{idx + 2}. {dep.name}</span>
+                          <span className="text-amber-300 text-[10px] font-mono">{calculateAge(dep.birthDate)}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
               </motion.div>
 
               {/* Quick visual ticket action */}
@@ -285,6 +442,121 @@ export default function ParticipantArea({ currentUser, schedule, onLogout, onNav
               </div>
 
             </div>
+          </div>
+        )}
+
+        {/* TAB 2: DEPENDENTES / CRIANÇAS */}
+        {activeTab === 'dependentes' && (
+          <div className="space-y-6">
+            {/* Header Info Banner */}
+            <div className="bg-gradient-to-r from-slate-900 via-app-deep to-slate-900 text-white p-6 sm:p-8 rounded-3xl shadow-xl relative overflow-hidden flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 border border-slate-800">
+              <div className="space-y-2 max-w-xl z-10">
+                <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-app-gold/15 border border-app-gold/30 text-app-gold text-xs font-mono uppercase font-bold">
+                  <Baby className="w-3.5 h-3.5" />
+                  <span>Gestão de Ingressos Infantis</span>
+                </div>
+                <h2 className="text-2xl font-black font-display tracking-tight text-white">
+                  Dependentes & Crianças
+                </h2>
+                <p className="text-xs text-slate-300 font-light leading-relaxed">
+                  Cadastre seus filhos para assegurar seus ingressos na 9ª Convenção Municipal de Quartetos. Cada criança cadastrada gera 1 ingresso infantil vinculado ao seu QR Code principal.
+                </p>
+              </div>
+
+              <button
+                onClick={handleOpenAddModal}
+                className="px-5 py-3 bg-app-gold hover:bg-amber-400 text-app-deep font-bold text-xs rounded-2xl flex items-center space-x-2 cursor-pointer transition-all shadow-lg shadow-app-gold/20 active:scale-95 shrink-0 z-10"
+              >
+                <Plus className="w-4 h-4 stroke-[3]" />
+                <span>Cadastrar Criança</span>
+              </button>
+
+              <div className="absolute -right-10 -bottom-10 w-48 h-48 bg-app-gold/10 rounded-full blur-2xl pointer-events-none" />
+            </div>
+
+            {/* Summary Badge Box */}
+            <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 rounded-xl bg-app-medium/10 text-app-medium flex items-center justify-center font-bold shrink-0">
+                  <Users className="w-5 h-5 text-app-medium" />
+                </div>
+                <div>
+                  <h4 className="text-sm font-bold text-slate-800">Resumo de Ingressos da Família</h4>
+                  <p className="text-xs text-slate-500 font-light">
+                    1 Titular ({currentUser.name}) + {currentUser.dependents?.length || 0} Dependente(s)
+                  </p>
+                </div>
+              </div>
+              <div className="px-4 py-2 bg-slate-900 text-app-gold rounded-xl font-mono text-xs font-bold border border-slate-800 text-center self-start sm:self-auto">
+                Total: {1 + (currentUser.dependents?.length || 0)} Ingressos
+              </div>
+            </div>
+
+            {/* List of Dependents */}
+            {(!currentUser.dependents || currentUser.dependents.length === 0) ? (
+              <div className="bg-white rounded-3xl p-8 sm:p-12 text-center border border-slate-200/80 shadow-xs space-y-4 max-w-xl mx-auto my-8">
+                <div className="w-16 h-16 bg-amber-50 text-amber-600 rounded-full flex items-center justify-center mx-auto border border-amber-200/60">
+                  <Baby className="w-8 h-8" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-slate-800 font-display">Nenhuma criança cadastrada ainda</h3>
+                  <p className="text-xs text-slate-500 font-light mt-1.5 leading-relaxed">
+                    Se você pretende levar seus filhos ao evento, clique no botão abaixo para adicionar os dados delas. No dia da convenção, apenas apresente o seu QR Code principal para liberar a entrada de todos.
+                  </p>
+                </div>
+                <button
+                  onClick={handleOpenAddModal}
+                  className="px-6 py-3 bg-app-medium hover:bg-app-dark text-white font-bold text-xs rounded-2xl inline-flex items-center space-x-2 transition-all cursor-pointer shadow-md"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>Cadastrar Primeira Criança</span>
+                </button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {currentUser.dependents.map((dep) => (
+                  <div
+                    key={dep.id}
+                    className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between hover:border-app-medium/30 transition-all group"
+                  >
+                    <div className="flex items-center space-x-4">
+                      <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-100 to-amber-200 text-amber-900 border border-amber-300/50 flex items-center justify-center font-bold shrink-0">
+                        <Baby className="w-6 h-6 text-app-deep" />
+                      </div>
+                      <div className="space-y-1">
+                        <h4 className="text-sm font-bold text-slate-900">{dep.name}</h4>
+                        <div className="flex items-center space-x-2 text-xs text-slate-500">
+                          <span className="font-medium text-slate-700">{calculateAge(dep.birthDate)}</span>
+                          <span>•</span>
+                          <span>Nasc: {formatDateBR(dep.birthDate)}</span>
+                        </div>
+                        <div className="inline-flex items-center space-x-1 text-[10px] font-mono text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200/60">
+                          <CheckCircle className="w-3 h-3 text-emerald-600" />
+                          <span>Ingresso Infantil Válido</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center space-x-1">
+                      <button
+                        onClick={() => handleOpenEditModal(dep)}
+                        className="p-2 text-slate-400 hover:text-app-medium hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
+                        title="Editar dados"
+                      >
+                        <Edit3 className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => setDeletingDependent(dep)}
+                        className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors cursor-pointer"
+                        title="Excluir dependente"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
@@ -511,6 +783,167 @@ export default function ParticipantArea({ currentUser, schedule, onLogout, onNav
           Fundamentado na Lei Municipal nº 16.894, de 14 de maio de 2018 • Realização e Apoio Institucional: Secretaria Municipal de Cultura
         </span>
       </div>
+      {/* Toast Notification */}
+      <AnimatePresence>
+        {toastMessage && (
+          <motion.div
+            initial={{ opacity: 0, y: 50, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.9 }}
+            className="fixed bottom-6 right-6 z-50 bg-slate-900 text-white px-5 py-3.5 rounded-2xl shadow-2xl border border-slate-700 flex items-center space-x-3 text-xs font-medium"
+          >
+            <div className="w-2 h-2 rounded-full bg-app-gold animate-ping" />
+            <span>{toastMessage}</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Modal Add/Edit Dependent */}
+      <AnimatePresence>
+        {isModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsModalOpen(false)}
+              className="fixed inset-0 bg-slate-950/70 backdrop-blur-xs"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 15 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 15 }}
+              className="relative w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-100 z-10 my-8"
+            >
+              <div className="bg-slate-900 px-6 py-5 text-white flex items-center justify-between border-b border-slate-800">
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 rounded-2xl bg-app-gold/15 border border-app-gold/30 flex items-center justify-center">
+                    <Baby className="w-5 h-5 text-app-gold" />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-bold font-display text-white">
+                      {editingDependent ? 'Editar Dados da Criança' : 'Cadastrar Ingresso Infantil'}
+                    </h3>
+                    <p className="text-[10px] text-app-gold font-mono uppercase tracking-wider">
+                      Vínculo Direto com Responsável
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setIsModalOpen(false)}
+                  className="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white flex items-center justify-center transition-colors cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              <form onSubmit={handleSaveDependent} className="p-6 space-y-4">
+                {formError && (
+                  <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-xs rounded-xl flex items-center space-x-2">
+                    <AlertCircle className="w-4 h-4 shrink-0 text-red-500" />
+                    <span>{formError}</span>
+                  </div>
+                )}
+
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-bold text-slate-700">
+                    Nome Completo da Criança *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={depName}
+                    onChange={(e) => setDepName(e.target.value)}
+                    placeholder="Ex: Gabriel Silva"
+                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:outline-hidden focus:border-app-medium text-xs font-medium"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-bold text-slate-700">
+                    Data de Nascimento *
+                  </label>
+                  <input
+                    type="date"
+                    required
+                    value={depBirthDate}
+                    onChange={(e) => setDepBirthDate(e.target.value)}
+                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:outline-hidden focus:border-app-medium text-xs font-medium"
+                  />
+                </div>
+
+                <div className="bg-amber-50/80 border border-amber-200/70 p-3.5 rounded-2xl text-[11px] text-amber-950 font-light leading-relaxed flex items-start space-x-2.5">
+                  <ShieldCheck className="w-4 h-4 text-app-gold shrink-0 mt-0.5" />
+                  <p>
+                    Ao cadastrar a criança, o ingresso estará unificado na sua conta (<strong>{currentUser.name}</strong>). Não é necessário e-mail ou celular para a criança.
+                  </p>
+                </div>
+
+                <div className="pt-2 flex items-center space-x-2">
+                  <button
+                    type="button"
+                    onClick={() => setIsModalOpen(false)}
+                    className="flex-1 py-2.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition-colors cursor-pointer"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    className="flex-1 py-2.5 px-4 bg-app-medium hover:bg-app-dark text-white font-bold text-xs rounded-xl transition-colors cursor-pointer shadow-md"
+                  >
+                    {editingDependent ? 'Atualizar Dados' : 'Salvar Ingresso'}
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Delete Confirmation Modal */}
+      <AnimatePresence>
+        {deletingDependent && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-y-auto">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setDeletingDependent(null)}
+              className="fixed inset-0 bg-slate-950/70 backdrop-blur-xs"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="relative w-full max-w-sm bg-white rounded-3xl shadow-2xl p-6 text-center space-y-4 z-10 border border-slate-100"
+            >
+              <div className="w-12 h-12 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto">
+                <Trash2 className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-slate-900 font-display">Remover Dependente?</h3>
+                <p className="text-xs text-slate-500 font-light mt-1 leading-relaxed">
+                  Tem certeza que deseja apagar o registro de <strong>{deletingDependent.name}</strong>? O ingresso infantil vinculado será cancelado.
+                </p>
+              </div>
+              <div className="flex items-center space-x-2 pt-2">
+                <button
+                  onClick={() => setDeletingDependent(null)}
+                  className="flex-1 py-2.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition-colors cursor-pointer"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleConfirmDelete}
+                  className="flex-1 py-2.5 px-4 bg-red-600 hover:bg-red-700 text-white font-bold text-xs rounded-xl transition-colors cursor-pointer shadow-md"
+                >
+                  Sim, Remover
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   </>
 );
