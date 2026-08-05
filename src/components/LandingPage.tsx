@@ -68,7 +68,7 @@ export default function LandingPage({ eventConfig, onNavigate, participantsCount
           
           <div className="flex items-center space-x-2 sm:space-x-4 shrink-0">
             <span className="hidden lg:inline text-[10px] text-slate-400 font-mono tracking-wider font-semibold">
-              #CuidandoDePessoas
+              #MissãoEmCadaCanção
             </span>
             <button
               onClick={() => onNavigate('login')}
@@ -135,14 +135,14 @@ export default function LandingPage({ eventConfig, onNavigate, participantsCount
               </h2>
               <div className="mt-3 text-center w-full max-w-full px-1">
                 <span className="text-[8.5px] min-[380px]:text-[10px] sm:text-xs font-semibold text-app-gold tracking-normal sm:tracking-wider uppercase font-mono text-center whitespace-nowrap block">
-                  Edição Temática 2026 • Inspirada pelo projeto Roupão da Fé
+                  Edição Temática 2026
                 </span>
               </div>
             </motion.div>
 
             {/* Brief event description */}
             <p className="text-sm sm:text-base text-slate-200 font-light mb-8 max-w-3xl leading-relaxed">
-              O maior encontro de música vocal harmônica e quartetos do município. Venha adorar e se inspirar com apresentações marcantes, capacitação técnica e o tradicional grande coro de vozes. Participe deste momento inesquecível de louvor e desenvolvimento vocal focado em conectar pessoas.
+              O maior encontro de música vocal gospel harmônica de quartetos vocais do município. Venha adorar e se inspirar com apresentações marcantes, capacitação técnica e o tradicional grande coro de vozes. Participe deste momento inesquecível de louvor e adoração focado em conectar pessoas.
             </p>
 
             {/* Seção Institucional: Vozes em Missão */}
@@ -299,7 +299,7 @@ export default function LandingPage({ eventConfig, onNavigate, participantsCount
             transition={{ duration: 0.7 }}
             className="text-center max-w-2xl mx-auto mb-16 relative z-10"
           >
-            <span className="text-[10px] font-bold text-app-gold uppercase tracking-widest font-mono">Quartetos Confirmados • Vozes em Missão</span>
+            <span className="text-[10px] font-bold text-app-gold uppercase tracking-widest font-mono">Quartetos Confirmados</span>
             <h2 className="text-3xl sm:text-5xl font-black font-display tracking-tight text-white mt-2">
               Quartetos Convidados
             </h2>
@@ -604,7 +604,7 @@ export default function LandingPage({ eventConfig, onNavigate, participantsCount
                 </h2>
                 
                 <p className="text-slate-300 text-xs sm:text-sm font-light mt-3 leading-relaxed">
-                  A Convenção Municipal de Quartetos é um projeto voluntário. Sua contribuição de qualquer valor nos apoia com custos de transporte, logística técnica, e possibilita trazer grupos talentosos de várias partes do estado.
+                  A Convenção Municipal de Quartetos é um projeto voluntário. Sua contribuição de qualquer valor nos apoia com custos de transporte, logística técnica, e possibilita trazer grupos talentosos de várias partes do Brasil, e quem sabe um dia, do mundo.
                 </p>
                 
                 <motion.p 
@@ -612,7 +612,7 @@ export default function LandingPage({ eventConfig, onNavigate, participantsCount
                   transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
                   className="text-app-gold text-xs mt-4 font-black font-mono uppercase tracking-widest block drop-shadow-[0_1px_1px_rgba(0,0,0,0.1)]"
                 >
-                  #CuidandoDePessoas
+                  #MissãoEmCadaCanção
                 </motion.p>
               </div>
 
@@ -672,7 +672,7 @@ export default function LandingPage({ eventConfig, onNavigate, participantsCount
             </div>
             
             <p className="relative z-10 text-xl sm:text-2xl font-display font-medium text-slate-100 italic tracking-wide leading-relaxed max-w-2xl mx-auto">
-              "O palco é apenas o começo. Nossa missão continua onde há uma alma esperando por Cristo."
+              "Nossa missão não termina com o último acorde, ela continua até que cada alma conheça a Cristo."
             </p>
             
             <div className="relative z-10 mt-6 flex items-center justify-center space-x-2">
@@ -694,7 +694,7 @@ export default function LandingPage({ eventConfig, onNavigate, participantsCount
               <span className="font-extrabold text-sm font-display uppercase tracking-wider">9ª Convenção</span>
             </div>
             <p className="text-xs text-slate-300 leading-relaxed font-light">
-              Uma iniciativa para incentivo, apoio, resgate e desenvolvimento da música vocal harmônica de quartetos.
+              Uma iniciativa para incentivo, apoio, resgate e desenvolvimento da música vocal harmônica cristã de quartetos.
             </p>
           </div>
 
@@ -736,15 +736,7 @@ export default function LandingPage({ eventConfig, onNavigate, participantsCount
         <div className="max-w-7xl mx-auto pt-6 border-t border-app-medium/20 flex flex-col md:flex-row justify-between items-center text-xs text-slate-400 font-mono gap-4">
           <span className="text-center md:text-left">© 2026 9ª Convenção Municipal de Quartetos. Todos os direitos reservados.</span>
           <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-6 text-center">
-            <span className="uppercase tracking-widest text-app-gold font-bold">#CuidandoDePessoas</span>
-            <span className="hidden sm:inline text-slate-600">|</span>
-            <button
-              onClick={() => onNavigate('cadastro-quarteto')}
-              className="text-slate-400 hover:text-app-gold transition-colors font-bold flex items-center space-x-1 uppercase tracking-widest text-[11px] cursor-pointer"
-              title="Área de Cadastro dos Quartetos Participantes"
-            >
-              <span>[ Cadastro de Quartetos ]</span>
-            </button>
+            <span className="uppercase tracking-widest text-app-gold font-bold">#MissãoEmCadaCanção</span>
             <span className="hidden sm:inline text-slate-600">|</span>
             <button
               onClick={() => setShowPrivacyModal(true)}

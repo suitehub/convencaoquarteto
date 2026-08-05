@@ -492,7 +492,7 @@ export default function Cadastro({
           {/* Hashtag discreta em local estratégico */}
           <div className="mt-8 pt-4 border-t border-slate-100 text-center">
             <span className="text-[10px] text-slate-400 font-mono uppercase tracking-widest block select-none">
-              #CuidandoDePessoas
+              #MissãoEmCadaCanção
             </span>
           </div>
 

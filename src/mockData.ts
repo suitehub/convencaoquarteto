@@ -11,7 +11,7 @@ export const INITIAL_EVENT_CONFIG: EventConfig = {
   time: '18h00',
   location: 'IASD Nova Semente - R. Cubatão, 48 - Paraíso, São Paulo - SP, 04013-040',
   maxParticipants: 500,
-  description: 'O maior encontro de música vocal harmônica e quartetos do município. Venha adorar e se inspirar com apresentações marcantes, capacitação técnica e o tradicional grande coro de vozes sob a hashtag #CuidandoDePessoas.'
+  description: 'O maior encontro de música vocal gospel harmônica de quartetos vocais do município. Venha adorar e se inspirar com apresentações marcantes, capacitação técnica e o tradicional grande coro de vozes. Participe deste momento inesquecível de louvor e adoração focado em conectar pessoas.'
 };
 
 export const MOCK_SCHEDULE: ScheduleItem[] = [
