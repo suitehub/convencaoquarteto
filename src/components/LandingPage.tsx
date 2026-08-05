@@ -131,8 +131,8 @@ export default function LandingPage({ eventConfig, onNavigate, participantsCount
               <h2 className="text-2xl sm:text-4xl font-black font-display text-app-gold tracking-widest uppercase filter drop-shadow-[0_2px_8px_rgba(234,179,8,0.2)]">
                 Vozes em Missão
               </h2>
-              <div className="mt-3 text-center max-w-lg">
-                <span className="text-[10px] sm:text-xs font-semibold text-app-gold tracking-wider uppercase font-mono text-center">
+              <div className="mt-3 text-center w-full max-w-full px-1">
+                <span className="text-[8.5px] min-[380px]:text-[10px] sm:text-xs font-semibold text-app-gold tracking-normal sm:tracking-wider uppercase font-mono text-center whitespace-nowrap block">
                   Edição Temática 2026 • Inspirada pelo projeto Roupão da Fé
                 </span>
               </div>
