@@ -9,6 +9,7 @@ import { User, Mail, Phone, ArrowLeft, Ticket, CheckCircle, ShieldCheck, Lock, A
 import { Participant } from '../types';
 import { checkRateLimit, recordAttempt, clearRateLimit, sanitizeInput, isValidEmail, isValidPhone, evaluatePassword } from '../utils/security';
 import { ReCaptcha } from './ReCaptcha';
+import { PrivacyPolicyModal } from './PrivacyPolicyModal';
 
 interface CadastroProps {
   initialType?: 'Público' | 'Participante';
@@ -33,6 +34,7 @@ export default function Cadastro({
   });
   const [showPassword, setShowPassword] = useState(false);
   const [privacyChecked, setPrivacyChecked] = useState(false);
+  const [showPrivacyModal, setShowPrivacyModal] = useState(false);
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -386,7 +388,19 @@ export default function Cadastro({
                       className="mt-0.5 w-4.5 h-4.5 rounded-md border-slate-300 bg-white text-app-medium focus:ring-app-medium/30 focus:ring-offset-0 cursor-pointer"
                     />
                     <span className="leading-relaxed font-light">
-                      Li e concordo com a <strong className="text-app-medium font-semibold">Política de Privacidade</strong> e autorizo o armazenamento dos meus dados para utilização neste evento, incluindo futuras cookies ou comunicações relacionadas à Convenção.
+                      Declaro que li e concordo com a{' '}
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setShowPrivacyModal(true);
+                        }}
+                        className="text-app-medium font-bold underline hover:text-app-dark transition-colors inline-flex items-center gap-0.5 cursor-pointer"
+                      >
+                        Política de Privacidade
+                      </button>{' '}
+                      e autorizo o tratamento dos meus dados pessoais para fins de inscrição, organização da 9ª Convenção Municipal de Quartetos e recebimento de comunicações institucionais relacionadas às futuras edições do evento.
                     </span>
                   </label>
                 </div>
@@ -484,6 +498,13 @@ export default function Cadastro({
 
         </div>
       </div>
+
+      {/* Modal de Política de Privacidade e LGPD */}
+      <PrivacyPolicyModal
+        isOpen={showPrivacyModal}
+        onClose={() => setShowPrivacyModal(false)}
+        onAccept={() => setPrivacyChecked(true)}
+      />
     </div>
   );
 }

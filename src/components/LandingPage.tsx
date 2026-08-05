@@ -8,6 +8,7 @@ import { Calendar, Clock, MapPin, Ticket, LogIn, Music, Heart, Copy, Check, User
 import { motion } from 'motion/react';
 import { EventConfig } from '../types';
 import backgroundImg from './background.png';
+import { PrivacyPolicyModal } from './PrivacyPolicyModal';
 
 interface LandingPageProps {
   eventConfig: EventConfig;
@@ -17,6 +18,7 @@ interface LandingPageProps {
 
 export default function LandingPage({ eventConfig, onNavigate, participantsCount = 0 }: LandingPageProps) {
   const [copied, setCopied] = useState(false);
+  const [showPrivacyModal, setShowPrivacyModal] = useState(false);
 
   const handleCopyPix = () => {
     navigator.clipboard.writeText('11995449821');
@@ -744,6 +746,14 @@ export default function LandingPage({ eventConfig, onNavigate, participantsCount
               <span>[ Cadastro de Quartetos ]</span>
             </button>
             <span className="hidden sm:inline text-slate-600">|</span>
+            <button
+              onClick={() => setShowPrivacyModal(true)}
+              className="text-slate-400 hover:text-app-gold transition-colors font-semibold text-[11px] cursor-pointer"
+              title="Política de Privacidade e LGPD"
+            >
+              <span>Privacidade & LGPD</span>
+            </button>
+            <span className="hidden sm:inline text-slate-600">|</span>
             <span className="normal-case text-slate-300">
               Desenvolvido por{' '}
               <a 
@@ -759,6 +769,11 @@ export default function LandingPage({ eventConfig, onNavigate, participantsCount
         </div>
       </footer>
 
+      {/* Modal de Política de Privacidade e LGPD */}
+      <PrivacyPolicyModal
+        isOpen={showPrivacyModal}
+        onClose={() => setShowPrivacyModal(false)}
+      />
     </div>
   );
 }
