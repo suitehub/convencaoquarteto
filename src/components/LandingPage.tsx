@@ -190,7 +190,7 @@ export default function LandingPage({ eventConfig, onNavigate, participantsCount
                     <span>RESERVAR INGRESSO GRATUITO</span>
                   </button>
                   <span className="absolute top-full mt-2 left-0 right-0 text-center text-xs font-mono text-slate-300 font-medium">
-                    Garanta sua vaga! Apenas <strong className="text-app-gold">{Math.max(0, 415 - participantsCount)}</strong> ingressos restantes de 415.
+                    Garanta sua vaga! Apenas <strong className="text-app-gold">{Math.max(0, 415 - participantsCount)}</strong> ingressos disponíveis
                   </span>
                 </>
               )}

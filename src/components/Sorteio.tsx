@@ -5,8 +5,9 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Award, Sparkles, RefreshCw, Music, CheckCircle2, Volume2, Maximize2, Minimize2, AlertCircle, Trash2 } from 'lucide-react';
+import { Award, Sparkles, RefreshCw, CheckCircle2, Maximize2, Minimize2, AlertCircle, Trash2, Gift, Trophy, UserCheck } from 'lucide-react';
 import { Participant } from '../types';
+import bgImage from './background.png';
 
 interface SorteioProps {
   participants: Participant[];
@@ -16,7 +17,7 @@ export default function Sorteio({ participants }: SorteioProps) {
   const [shuffling, setShuffling] = useState(false);
   const [winner, setWinner] = useState<Participant | null>(null);
   const [tempName, setTempName] = useState('Clique para Sorteio');
-  const [particles, setParticles] = useState<Array<{ id: number; x: number; y: number; color: string; scale: number }>>([]);
+  const [particles, setParticles] = useState<Array<{ id: number; x: number; y: number; color: string; scale: number; speed: number }>>([]);
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
 
@@ -43,13 +44,14 @@ export default function Sorteio({ participants }: SorteioProps) {
   }, []);
 
   const triggerConfetti = () => {
-    const colors = ['#123A6D', '#2C6CBF', '#D4AF37', '#94a3b8', '#10b981'];
-    const newParticles = Array.from({ length: 150 }).map((_, i) => ({
+    const colors = ['#F59E0B', '#FCD34D', '#FFFFFF', '#D97706', '#FEF3C7', '#38BDF8'];
+    const newParticles = Array.from({ length: 180 }).map((_, i) => ({
       id: i,
-      x: Math.random() * 100 - 50, // relative to center
-      y: Math.random() * -100 - 10, // shoot upwards
+      x: Math.random() * 120 - 60, // relative to center
+      y: Math.random() * -110 - 20, // shoot upwards
       color: colors[Math.floor(Math.random() * colors.length)],
-      scale: Math.random() * 1.2 + 0.4
+      scale: Math.random() * 1.3 + 0.4,
+      speed: Math.random() * 2 + 3
     }));
     setParticles(newParticles);
   };
@@ -57,7 +59,7 @@ export default function Sorteio({ participants }: SorteioProps) {
   const handleStartRaffle = () => {
     if (participants.length === 0) return;
     
-    // Filter by present if any exist, to make it realistic!
+    // Filter by present if any exist
     const presentList = participants.filter((p) => p.status === 'Presente');
     const basePool = presentList.length > 0 ? presentList : participants;
 
@@ -74,7 +76,7 @@ export default function Sorteio({ participants }: SorteioProps) {
     setParticles([]);
 
     let iterations = 0;
-    const maxIterations = 35;
+    const maxIterations = 38;
     const interval = setInterval(() => {
       const randomIndex = Math.floor(Math.random() * drawingPool.length);
       setTempName(drawingPool[randomIndex].name);
@@ -101,7 +103,7 @@ export default function Sorteio({ participants }: SorteioProps) {
         localStorage.setItem('sorteio_drawn_ids', JSON.stringify(updatedDrawnIds));
         localStorage.setItem('sorteio_history', JSON.stringify(updatedHistory));
       }
-    }, 90);
+    }, 85);
   };
 
   const resetRaffle = () => {
@@ -122,6 +124,7 @@ export default function Sorteio({ participants }: SorteioProps) {
   };
 
   const maskPhone = (phone: string) => {
+    if (!phone) return '';
     return phone.slice(0, 9) + '****';
   };
 
@@ -133,79 +136,91 @@ export default function Sorteio({ participants }: SorteioProps) {
     const remainingCount = drawingPool.length;
 
     return (
-      <div className={`relative flex flex-col items-center justify-center text-center w-full max-w-2xl ${full ? 'py-10' : ''}`}>
+      <div className="relative w-full flex flex-col items-center justify-between min-h-full py-6 sm:py-8 px-4 sm:px-8 z-10 select-none">
         
         {/* Confetti particles */}
-        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute inset-0 pointer-events-none overflow-hidden z-20">
           {particles.map((p) => (
             <motion.div
               key={p.id}
-              initial={{ x: '50%', y: '80%', scale: 0, opacity: 1 }}
+              initial={{ x: '50%', y: '85%', scale: 0, opacity: 1 }}
               animate={{ 
                 x: `calc(50% + ${p.x}vw)`, 
-                y: `calc(80% + ${p.y}vh)`, 
+                y: `calc(85% + ${p.y}vh)`, 
                 scale: p.scale,
-                opacity: [1, 1, 0.8, 0],
-                rotate: Math.random() * 720
+                opacity: [1, 1, 0.9, 0],
+                rotate: Math.random() * 1080
               }}
-              transition={{ duration: 4, ease: 'easeOut' }}
-              className="absolute w-3.5 h-3.5 rounded-sm"
+              transition={{ duration: p.speed, ease: 'easeOut' }}
+              className="absolute w-3.5 h-3.5 shadow-lg"
               style={{ 
                 backgroundColor: p.color,
-                borderRadius: Math.random() > 0.5 ? '50%' : '2px'
+                borderRadius: Math.random() > 0.4 ? '50%' : '3px'
               }}
             />
           ))}
         </div>
 
-        <span className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 rounded-full text-[10px] font-bold bg-app-gold/10 border border-app-gold/20 text-app-deep mb-6 font-mono uppercase tracking-widest">
-          <Sparkles className="w-3.5 h-3.5 text-app-gold animate-pulse" />
-          <span>Sorteador Eletrônico Oficial</span>
-        </span>
+        {/* TOP HEADER: SORTEIO Header with Gifts/Sparkles matching reference */}
+        <div className="flex flex-col items-center text-center space-y-2 mt-2 sm:mt-4">
+          <motion.div
+            initial={{ y: -20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            className="inline-flex items-center space-x-3 bg-black/60 backdrop-blur-md px-6 py-2 rounded-full border border-amber-500/30 shadow-[0_0_20px_rgba(245,158,11,0.2)]"
+          >
+            <Gift className="w-5 h-5 text-amber-400 animate-bounce" />
+            <span className="text-sm sm:text-base font-black font-mono tracking-[0.35em] text-amber-300 uppercase drop-shadow-[0_0_10px_rgba(245,158,11,0.5)]">
+              SORTEIO
+            </span>
+            <Gift className="w-5 h-5 text-amber-400 animate-bounce" />
+          </motion.div>
 
-        {/* Mixer board Card */}
-        <div className={`w-full bg-white border border-slate-200 rounded-3xl p-6 sm:p-10 shadow-xl relative mb-8 backdrop-blur-md ${full ? 'max-w-2xl' : 'max-w-lg'}`}>
-          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-app-medium via-app-gold to-app-medium" />
+          <p className="text-xs sm:text-sm font-semibold tracking-widest text-slate-200 uppercase font-display drop-shadow-md">
+            {shuffling ? 'EMBARALHANDO PARTICIPANTES...' : winner ? 'E O GANHADOR É...' : 'PRÓXIMO GANHADOR'}
+          </p>
+        </div>
+
+        {/* CENTER STAGE: FLOATING NAME DISPLAY */}
+        <div className={`my-8 sm:my-12 w-full flex flex-col items-center justify-center relative ${full ? 'min-h-[280px] sm:min-h-[360px]' : 'min-h-[220px] sm:min-h-[280px]'}`}>
           
-          {/* Top visualizer indicator bar */}
-          <div className="flex justify-between items-center border-b border-slate-100 pb-4 mb-6">
-            <div className="flex items-center space-x-2">
-              <Volume2 className="w-4 h-4 text-slate-400" />
-              <span className="text-[10px] text-slate-500 font-mono uppercase">STATUS: {shuffling ? 'EMBARALHANDO...' : winner ? 'SORTEADO!' : remainingCount === 0 ? 'ESGOTADO' : 'PRONTO'}</span>
-            </div>
-            
-            <div className="flex space-x-1">
-              <div className={`w-2.5 h-2.5 rounded-full ${shuffling ? 'bg-app-gold animate-ping' : winner ? 'bg-emerald-500' : remainingCount === 0 ? 'bg-red-500' : 'bg-slate-300'}`} />
-              <div className="w-2.5 h-2.5 rounded-full bg-slate-200" />
-            </div>
-          </div>
+          {/* Spotlight beam effect behind winner */}
+          <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-96 h-96 bg-gradient-to-b from-amber-300/20 via-amber-500/5 to-transparent blur-2xl rounded-full pointer-events-none" />
 
-          {/* Shuffling Screen display */}
-          <div className={`bg-app-deep border border-app-medium/20 rounded-2xl p-6 flex flex-col items-center justify-center shadow-inner relative overflow-hidden ${full ? 'min-h-[220px]' : 'min-h-[150px]'}`}>
-            <div className="absolute inset-0 bg-radial from-app-gold/5 to-transparent pointer-events-none" />
-            
+          {/* Floating animated container */}
+          <motion.div
+            animate={{ 
+              y: shuffling ? [-3, 3, -3] : winner ? [-12, 12, -12] : [-6, 6, -6],
+              scale: shuffling ? [0.98, 1.02, 0.98] : winner ? [1, 1.03, 1] : [1, 1.01, 1]
+            }}
+            transition={{ 
+              duration: shuffling ? 0.2 : winner ? 3.5 : 4, 
+              repeat: Infinity, 
+              ease: "easeInOut" 
+            }}
+            className="relative z-10 text-center max-w-4xl px-4"
+          >
             <AnimatePresence mode="wait">
               {shuffling ? (
-                <motion.div 
+                <motion.div
                   key="shuffling"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="space-y-4 w-full"
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 1.1 }}
+                  className="space-y-4"
                 >
-                  <p className={`font-black font-display text-app-gold tracking-tight truncate ${full ? 'text-4xl' : 'text-2xl'}`}>
+                  <h2 className={`font-black font-display tracking-tight text-amber-300 drop-shadow-[0_0_35px_rgba(245,158,11,0.8)] uppercase truncate ${full ? 'text-5xl sm:text-7xl md:text-8xl' : 'text-4xl sm:text-6xl'}`}>
                     {tempName}
-                  </p>
+                  </h2>
                   
-                  {/* Pseudo signal frequencies */}
-                  <div className="flex justify-center items-center space-x-1.5 h-10">
-                    {[3, 9, 5, 10, 4, 8, 2, 9, 6, 8, 3].map((val, idx) => (
+                  {/* Equalizer frequency bars */}
+                  <div className="flex justify-center items-center space-x-1.5 h-8">
+                    {[4, 10, 6, 9, 3, 8, 5, 10, 7, 4, 9, 2].map((val, idx) => (
                       <div 
                         key={idx} 
-                        className="w-1.5 bg-gradient-to-t from-app-medium to-app-gold rounded-full" 
+                        className="w-1.5 sm:w-2 bg-gradient-to-t from-amber-600 via-amber-400 to-yellow-200 rounded-full shadow-[0_0_8px_rgba(251,191,36,0.6)]" 
                         style={{ 
                           height: `${val * 10}%`,
-                          animationDuration: `${0.2 + idx * 0.08}s`
+                          animationDuration: `${0.2 + idx * 0.05}s`
                         }} 
                       />
                     ))}
@@ -214,112 +229,131 @@ export default function Sorteio({ participants }: SorteioProps) {
               ) : winner ? (
                 <motion.div
                   key="winner"
-                  initial={{ scale: 0.9, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  className="space-y-4 text-center w-full"
+                  initial={{ scale: 0.5, opacity: 0, y: 30 }}
+                  animate={{ scale: 1, opacity: 1, y: 0 }}
+                  transition={{ type: "spring", stiffness: 200, damping: 15 }}
+                  className="space-y-4 flex flex-col items-center"
                 >
-                  <div className="w-14 h-14 rounded-full bg-app-gold/10 border border-app-gold/30 text-app-gold flex items-center justify-center mx-auto shadow-lg">
-                    <Award className="w-8 h-8" />
+                  {/* Glowing winner badge header */}
+                  <div className="inline-flex items-center space-x-2 bg-gradient-to-r from-amber-500/20 via-yellow-400/30 to-amber-500/20 border border-amber-400/50 px-4 py-1.5 rounded-full backdrop-blur-md shadow-[0_0_20px_rgba(251,191,36,0.4)]">
+                    <Trophy className="w-5 h-5 text-yellow-300 animate-pulse" />
+                    <span className="text-xs font-bold font-mono tracking-widest text-yellow-200 uppercase">
+                      NOVO GANHADOR CONFIRMADO
+                    </span>
                   </div>
-                  
-                  <div>
-                    <h3 className={`font-black text-white font-display tracking-tight leading-tight ${full ? 'text-4xl' : 'text-2xl'}`}>
-                      {winner.name}
-                    </h3>
+
+                  {/* Winner Name in Metallic Gold Typography */}
+                  <h2 className={`font-black font-display tracking-tight bg-gradient-to-b from-yellow-100 via-amber-300 to-amber-600 bg-clip-text text-transparent drop-shadow-[0_10px_35px_rgba(245,158,11,0.9)] uppercase leading-none py-2 ${full ? 'text-6xl sm:text-8xl md:text-9xl' : 'text-5xl sm:text-7xl'}`}>
+                    {winner.name}
+                  </h2>
+
+                  {/* Winner metadata details pill */}
+                  <motion.div 
+                    initial={{ opacity: 0, y: 15 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3 }}
+                    className="bg-black/75 backdrop-blur-md border border-amber-500/40 px-6 py-3 rounded-2xl shadow-2xl flex flex-wrap items-center justify-center gap-3 text-xs sm:text-sm text-slate-200"
+                  >
                     {winner.city && (
-                      <p className="text-slate-300 text-sm font-light mt-1">
-                        {winner.city}
-                      </p>
+                      <span className="font-medium text-amber-200">
+                        📍 {winner.city}
+                      </span>
                     )}
-                    <p className="text-xs text-app-gold font-mono tracking-widest mt-2 uppercase font-bold">
-                      {maskPhone(winner.phone)} • {winner.registrationType || 'Público'}
-                    </p>
-                  </div>
+                    {winner.phone && (
+                      <span className="font-mono text-slate-300">
+                        📞 {maskPhone(winner.phone)}
+                      </span>
+                    )}
+                    <span className="bg-amber-400/20 text-amber-300 font-mono font-bold text-[11px] px-2.5 py-0.5 rounded-full border border-amber-400/30 uppercase">
+                      {winner.registrationType || 'Público'}
+                    </span>
+                  </motion.div>
                 </motion.div>
               ) : remainingCount === 0 ? (
                 <motion.div
                   key="empty"
-                  className="text-center space-y-2"
+                  className="bg-black/80 backdrop-blur-md p-6 rounded-3xl border border-red-500/40 text-center max-w-sm space-y-3 shadow-2xl"
                 >
-                  <AlertCircle className="w-10 h-10 text-red-400 mx-auto mb-2" />
-                  <p className="text-sm text-red-200 font-mono uppercase tracking-wider font-semibold">
-                    Todos os Nomes Sorteados
+                  <AlertCircle className="w-12 h-12 text-red-400 mx-auto" />
+                  <p className="text-base text-red-200 font-mono font-bold uppercase tracking-wider">
+                    Nenhum participante restante
                   </p>
-                  <p className="text-xs text-slate-400 max-w-xs mx-auto">
-                    Não restam participantes elegíveis na urna. Clique no botão de reset abaixo para reiniciar.
+                  <p className="text-xs text-slate-300 font-light">
+                    Todos os nomes disponíveis já foram sorteados. Clique no botão de reset abaixo para reiniciar a urna.
                   </p>
                 </motion.div>
               ) : (
                 <motion.div
                   key="idle"
-                  className="text-center"
+                  className="space-y-3"
                 >
-                  <Music className="w-10 h-10 text-slate-500 mx-auto mb-3" />
-                  <p className="text-sm text-slate-300 font-mono uppercase tracking-wider font-semibold">
+                  <h2 className={`font-black font-display tracking-tight bg-gradient-to-b from-amber-100 via-amber-300 to-amber-500 bg-clip-text text-transparent drop-shadow-[0_0_30px_rgba(245,158,11,0.5)] uppercase ${full ? 'text-5xl sm:text-7xl md:text-8xl' : 'text-4xl sm:text-6xl'}`}>
                     {tempName}
-                  </p>
-                  <p className="text-[10px] text-slate-500 mt-1">
-                    {remainingCount} nomes restantes na urna
+                  </h2>
+                  <p className="text-xs sm:text-sm text-amber-200/80 font-mono uppercase tracking-widest bg-black/50 px-4 py-1.5 rounded-full inline-block backdrop-blur-sm border border-amber-500/20">
+                    {remainingCount} participantes prontos na urna
                   </p>
                 </motion.div>
               )}
             </AnimatePresence>
-          </div>
+          </motion.div>
+        </div>
 
-          {/* Action trigger button */}
-          <div className="mt-8">
+        {/* BOTTOM CONTROLS & STATS BAR */}
+        <div className="w-full max-w-3xl flex flex-col items-center space-y-4">
+          
+          {/* Main Raffle Button */}
+          <div className="w-full max-w-md">
             {!winner ? (
               <button
                 onClick={handleStartRaffle}
                 disabled={shuffling || remainingCount === 0}
-                className="w-full py-4.5 bg-app-gold disabled:opacity-40 disabled:cursor-not-allowed text-app-deep font-black rounded-2xl shadow-md hover:shadow-app-gold/10 cursor-pointer active:scale-98 transition-all flex items-center justify-center space-x-2.5 uppercase tracking-wide"
+                className="w-full py-4 sm:py-5 bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-500 hover:from-amber-300 hover:to-amber-400 disabled:opacity-40 disabled:cursor-not-allowed text-slate-950 font-black text-base sm:text-lg rounded-2xl shadow-[0_0_30px_rgba(245,158,11,0.6)] border border-amber-200 cursor-pointer active:scale-98 transition-all flex items-center justify-center space-x-3 uppercase tracking-wider"
               >
-                <RefreshCw className={`w-4 h-4 text-app-deep ${shuffling ? 'animate-spin' : ''}`} />
-                <span>{shuffling ? 'SORTEANDO AGORA...' : remainingCount === 0 ? 'SEM NOMES RESTANTES' : 'REALIZAR SORTEIO'}</span>
+                <RefreshCw className={`w-5 h-5 text-slate-950 ${shuffling ? 'animate-spin' : ''}`} />
+                <span>{shuffling ? 'SORTEANDO AGORA...' : remainingCount === 0 ? 'URNAS VAZIAS' : 'REALIZAR SORTEIO'}</span>
               </button>
             ) : (
               <button
                 onClick={resetRaffle}
-                className="w-full py-4 bg-app-light hover:bg-slate-200 text-slate-700 border border-slate-200 font-bold rounded-2xl cursor-pointer transition-all active:scale-98 flex items-center justify-center space-x-2"
+                className="w-full py-4 bg-black/80 hover:bg-black/90 text-amber-300 border border-amber-400/50 font-bold text-sm sm:text-base rounded-2xl cursor-pointer transition-all active:scale-98 flex items-center justify-center space-x-2 shadow-2xl backdrop-blur-md uppercase tracking-wide"
               >
-                <span>Realizar Novo Sorteio</span>
+                <Sparkles className="w-4 h-4 text-amber-400" />
+                <span>REALIZAR PRÓXIMO SORTEIO</span>
               </button>
             )}
           </div>
 
-        </div>
-
-        {/* Info label about subset eligibility */}
-        <div className="w-full max-w-lg space-y-4">
-          <div className="flex items-center space-x-3 text-slate-600 text-xs bg-app-light px-5 py-4 rounded-2xl border border-slate-200 shadow-xs">
-            <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
-            <p className="text-left leading-relaxed font-light">
-              O sorteador prioriza participantes marcados como <strong className="text-app-deep">"Presente"</strong> no credenciamento. (Elegíveis na urna: <strong className="text-app-deep">{remainingCount}</strong> de {eligibleCount}).
-            </p>
+          {/* Info pill about present eligibility */}
+          <div className="flex items-center space-x-2 text-[11px] sm:text-xs text-slate-300 bg-black/60 px-4 py-2 rounded-xl border border-white/10 backdrop-blur-sm">
+            <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+            <span>
+              Priorizando credenciados: <strong className="text-amber-300 font-bold">{remainingCount}</strong> elegíveis na urna de <strong className="text-white">{eligibleCount}</strong> presentes.
+            </span>
           </div>
 
-          {/* Sorteio History List Section */}
-          <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-5 text-left text-white">
-            <div className="flex items-center justify-between mb-4 pb-2 border-b border-slate-800">
-              <h4 className="text-xs font-bold text-app-gold uppercase tracking-widest font-mono flex items-center space-x-2">
-                <Award className="w-4 h-4 text-app-gold" />
+          {/* Sorteio History Accordion / Drawer */}
+          <div className="w-full bg-black/75 border border-amber-500/20 rounded-2xl p-4 sm:p-5 text-left text-white backdrop-blur-md shadow-2xl">
+            <div className="flex items-center justify-between mb-3 pb-2 border-b border-white/10">
+              <h4 className="text-xs font-bold text-amber-300 uppercase tracking-widest font-mono flex items-center space-x-2">
+                <Award className="w-4 h-4 text-amber-400" />
                 <span>Histórico de Sorteados ({history.length})</span>
               </h4>
               
               {history.length > 0 && (
-                <div className="flex items-center space-x-2">
+                <div>
                   {showResetConfirm ? (
-                    <div className="flex items-center space-x-1.5 bg-red-500/10 border border-red-500/20 px-2 py-1 rounded-xl">
-                      <span className="text-[9px] text-red-300 font-mono font-bold uppercase tracking-wider">Reiniciar?</span>
+                    <div className="flex items-center space-x-1.5 bg-red-500/20 border border-red-500/40 px-2 py-1 rounded-xl">
+                      <span className="text-[10px] text-red-200 font-mono font-bold uppercase">Reiniciar?</span>
                       <button
                         onClick={handleClearHistory}
-                        className="px-2 py-0.5 bg-red-600 hover:bg-red-500 text-white text-[9px] font-bold font-mono rounded-md transition-all cursor-pointer uppercase tracking-wider"
+                        className="px-2 py-0.5 bg-red-600 hover:bg-red-500 text-white text-[9px] font-bold font-mono rounded-md transition-all cursor-pointer uppercase"
                       >
                         Sim
                       </button>
                       <button
                         onClick={() => setShowResetConfirm(false)}
-                        className="px-2 py-0.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-[9px] font-bold font-mono rounded-md transition-all cursor-pointer uppercase tracking-wider"
+                        className="px-2 py-0.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-[9px] font-bold font-mono rounded-md transition-all cursor-pointer uppercase"
                       >
                         Não
                       </button>
@@ -327,10 +361,10 @@ export default function Sorteio({ participants }: SorteioProps) {
                   ) : (
                     <button
                       onClick={() => setShowResetConfirm(true)}
-                      className="flex items-center space-x-1 px-2.5 py-1 bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 border border-red-500/20 text-[9px] font-bold font-mono rounded-lg transition-all cursor-pointer uppercase tracking-wider"
+                      className="flex items-center space-x-1 px-2.5 py-1 bg-red-500/20 hover:bg-red-500/30 text-red-300 border border-red-500/30 text-[10px] font-bold font-mono rounded-lg transition-all cursor-pointer uppercase tracking-wider"
                     >
                       <Trash2 className="w-3 h-3" />
-                      <span>Resetar Sorteio</span>
+                      <span>Limpar Histórico</span>
                     </button>
                   )}
                 </div>
@@ -338,54 +372,56 @@ export default function Sorteio({ participants }: SorteioProps) {
             </div>
 
             {history.length > 0 ? (
-              <div className="space-y-2 max-h-48 overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-slate-800 scrollbar-track-transparent">
+              <div className="space-y-2 max-h-36 overflow-y-auto pr-1 scrollbar-thin scrollbar-thumb-amber-500/30 scrollbar-track-transparent">
                 {history.map((h, idx) => (
-                  <div key={h.id + '-' + idx} className="bg-white/5 border border-white/5 rounded-xl p-3 flex items-center justify-between hover:bg-white/10 transition-colors">
+                  <div key={h.id + '-' + idx} className="bg-white/5 border border-white/10 rounded-xl p-2.5 flex items-center justify-between hover:bg-white/10 transition-colors">
                     <div className="min-w-0 pr-2">
-                      <p className="text-sm font-bold text-white truncate">{h.name}</p>
+                      <p className="text-xs font-bold text-white truncate">{h.name}</p>
                       <p className="text-[10px] text-slate-400 font-mono mt-0.5">
                         {h.city || 'São Paulo - SP'} • {maskPhone(h.phone)}
                       </p>
                     </div>
-                    <span className="text-[9px] bg-app-gold/10 text-app-gold border border-app-gold/20 px-2 py-1 rounded-md font-mono font-bold shrink-0">
+                    <span className="text-[9px] bg-amber-400/20 text-amber-300 border border-amber-400/30 px-2 py-0.5 rounded-md font-mono font-bold shrink-0">
                       #{history.length - idx}º Sorteado
                     </span>
                   </div>
                 ))}
               </div>
             ) : (
-              <p className="text-xs text-slate-400 italic text-center py-6 border border-dashed border-slate-800 rounded-xl bg-slate-950/20">
+              <p className="text-xs text-slate-400 italic text-center py-4 border border-dashed border-white/10 rounded-xl bg-black/20">
                 Nenhum participante sorteado até o momento.
               </p>
             )}
           </div>
+
+          <span className="text-[10px] text-amber-200/60 font-mono uppercase tracking-widest pt-2 block">
+            #MissãoEmCadaCanção
+          </span>
         </div>
 
-        {/* Strategic Hashtag */}
-        <span className="text-[10px] text-slate-400 font-mono uppercase tracking-widest mt-8 block">
-          #CuidandoDePessoas
-        </span>
       </div>
     );
   };
 
   return (
     <>
-      {/* Standard embedded wrapper view */}
-      <div className="bg-app-deep text-white p-4 sm:p-8 rounded-3xl border border-app-medium/20 shadow-2xl relative overflow-hidden flex flex-col items-center justify-center min-h-[450px] sm:min-h-[500px]">
-        
+      {/* Standard embedded wrapper view using background.png */}
+      <div 
+        className="relative text-white rounded-3xl border border-amber-500/30 shadow-2xl overflow-hidden flex flex-col items-center justify-center min-h-[580px] sm:min-h-[640px] bg-cover bg-center bg-no-repeat"
+        style={{ backgroundImage: `url(${bgImage})` }}
+      >
+        {/* Dark stage vignette overlay */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/40 to-black/85 pointer-events-none" />
+
         {/* Fullscreen Trigger */}
         <button
           onClick={() => setIsFullScreen(true)}
-          className="absolute top-4 right-4 p-2 bg-white/5 hover:bg-white/10 rounded-xl border border-white/5 text-slate-300 hover:text-white transition-all cursor-pointer flex items-center space-x-1.5 text-xs font-bold"
+          className="absolute top-4 right-4 z-20 px-3.5 py-2 bg-black/80 hover:bg-black rounded-xl border border-amber-500/40 text-amber-300 transition-all cursor-pointer flex items-center space-x-1.5 text-xs font-bold backdrop-blur-md shadow-xl"
           title="Modo Tela Cheia"
         >
-          <Maximize2 className="w-4 h-4 text-app-gold" />
+          <Maximize2 className="w-4 h-4 text-amber-400" />
           <span className="hidden sm:inline font-mono">TELA CHEIA</span>
         </button>
-
-        {/* Ambient background glow */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] rounded-full bg-app-medium/10 blur-[100px] pointer-events-none" />
 
         {renderRaffleInterface(false)}
       </div>
@@ -397,20 +433,19 @@ export default function Sorteio({ participants }: SorteioProps) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-100 bg-app-deep text-white flex flex-col items-center justify-center p-6 overflow-y-auto"
+            className="fixed inset-0 z-50 text-white flex flex-col items-center justify-center p-4 sm:p-8 overflow-y-auto bg-cover bg-center bg-no-repeat"
+            style={{ backgroundImage: `url(${bgImage})` }}
           >
-            {/* Geometric grids and huge glowing spheres */}
-            <div className="absolute inset-0 bg-[linear-gradient(to_right,#1e293b_1px,transparent_1px),linear-gradient(to_bottom,#1e293b_1px,transparent_1px)] bg-[size:5rem_5rem] opacity-15 pointer-events-none" />
-            <div className="absolute top-1/4 left-1/4 w-[600px] h-[600px] rounded-full bg-app-medium/10 blur-[130px] pointer-events-none" />
-            <div className="absolute bottom-1/4 right-1/4 w-[600px] h-[600px] rounded-full bg-app-gold/10 blur-[130px] pointer-events-none" />
+            {/* Dark stage vignette overlay for full screen */}
+            <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/35 to-black/90 pointer-events-none" />
 
             {/* Exit Full Screen Floating trigger */}
             <button
               onClick={() => setIsFullScreen(false)}
-              className="absolute top-6 right-6 px-4 py-2.5 bg-slate-900 border border-white/10 text-slate-300 hover:text-white rounded-xl flex items-center space-x-2 cursor-pointer text-xs font-bold font-mono transition-colors shadow-2xl z-20"
+              className="absolute top-6 right-6 px-4 py-2.5 bg-black/85 border border-amber-500/40 text-amber-300 hover:text-white rounded-2xl flex items-center space-x-2 cursor-pointer text-xs font-bold font-mono transition-colors shadow-2xl z-30 backdrop-blur-md"
               title="Sair da Tela Cheia"
             >
-              <Minimize2 className="w-4 h-4 text-app-gold" />
+              <Minimize2 className="w-4 h-4 text-amber-400" />
               <span>SAIR DA TELA CHEIA (ESC)</span>
             </button>
 
@@ -421,3 +456,4 @@ export default function Sorteio({ participants }: SorteioProps) {
     </>
   );
 }
+
