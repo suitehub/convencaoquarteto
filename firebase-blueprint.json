@@ -14,7 +14,8 @@
         "status": { "type": "string", "enum": ["Pendente", "Presente"] },
         "checkInTime": { "type": "string" },
         "registrationDate": { "type": "string" },
-        "registrationType": { "type": "string", "enum": ["Público", "Participante"] }
+        "registrationType": { "type": "string", "enum": ["Público", "Participante"] },
+        "dependents": { "type": "array", "description": "List of children/dependents" }
       },
       "required": ["id", "name", "email", "phone", "status", "registrationDate", "registrationType"]
     },

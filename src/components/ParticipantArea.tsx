@@ -783,7 +783,9 @@ export default function ParticipantArea({ currentUser, schedule, onLogout, onNav
           Fundamentado na Lei Municipal nº 16.894, de 14 de maio de 2018 • Realização e Apoio Institucional: Secretaria Municipal de Cultura
         </span>
       </div>
-      {/* Toast Notification */}
+    </div>
+
+    {/* Toast Notification */}
       <AnimatePresence>
         {toastMessage && (
           <motion.div
@@ -944,7 +946,6 @@ export default function ParticipantArea({ currentUser, schedule, onLogout, onNav
           </div>
         )}
       </AnimatePresence>
-    </div>
   </>
 );
 }

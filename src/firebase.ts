@@ -185,7 +185,7 @@ export async function addParticipantInFirestore(participant: Participant) {
 export async function updateParticipantInFirestore(id: string, updates: Partial<Participant>) {
   const path = `participants/${id}`;
   try {
-    await updateDoc(doc(db, 'participants', id), updates);
+    await setDoc(doc(db, 'participants', id), updates, { merge: true });
   } catch (error) {
     handleFirestoreError(error, OperationType.WRITE, path);
   }

@@ -28,7 +28,9 @@ service cloud.firestore {
       allow create: if isValidId(participantId) && isValidParticipant(incoming(request));
       allow update: if isValidId(participantId) && isValidParticipant(incoming(request)) && (
         (incoming(request).diff(existing()).affectedKeys().hasOnly(['status', 'checkInTime'])) ||
-        (incoming(request).diff(existing()).affectedKeys().hasOnly(['name', 'phone', 'city', 'password', 'registrationType']))
+        (incoming(request).diff(existing()).affectedKeys().hasOnly(['name', 'phone', 'city', 'password', 'registrationType'])) ||
+        (incoming(request).diff(existing()).affectedKeys().hasOnly(['dependents'])) ||
+        (incoming(request).diff(existing()).affectedKeys().hasOnly(['name', 'phone', 'city', 'password', 'registrationType', 'dependents', 'status', 'checkInTime']))
       );
       allow delete: if false;
     }
@@ -50,7 +52,7 @@ service cloud.firestore {
     // Validation blueprints
     function isValidParticipant(data) {
       return data.keys().hasAll(['id', 'name', 'email', 'phone', 'status', 'registrationDate', 'registrationType'])
-        && data.keys().size() <= 10
+        && data.keys().size() <= 12
         && data.id is string && data.id.size() <= 128
         && data.name is string && data.name.size() > 0 && data.name.size() <= 150
         && data.email is string && data.email.size() > 0 && data.email.size() <= 150
@@ -60,7 +62,8 @@ service cloud.firestore {
         && (data.registrationType == 'Público' || data.registrationType == 'Participante')
         && (!data.keys().hasAny(['password']) || (data.password is string && data.password.size() <= 64))
         && (!data.keys().hasAny(['city']) || (data.city is string && data.city.size() <= 100))
-        && (!data.keys().hasAny(['checkInTime']) || (data.checkInTime is string && data.checkInTime.size() <= 30));
+        && (!data.keys().hasAny(['checkInTime']) || (data.checkInTime is string && data.checkInTime.size() <= 30))
+        && (!data.keys().hasAny(['dependents']) || (data.dependents is list && data.dependents.size() <= 20));
     }
 
     // Validation helper for staffUsers
