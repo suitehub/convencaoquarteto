@@ -149,7 +149,7 @@ export default function ParticipantArea({ currentUser, schedule, onLogout, onNav
                 <div className="p-6 bg-gradient-to-br from-app-deep to-app-medium text-white relative">
                   <div className="flex items-center justify-between mb-4">
                     <span className="text-[10px] font-bold uppercase tracking-widest border border-white/20 px-2 py-0.5 rounded text-app-gold">
-                      9ª Convenção Municipal
+                      9ª Convenção Municipal de Quartetos
                     </span>
                     <Music className="w-5 h-5 text-app-gold" />
                   </div>
@@ -380,7 +380,7 @@ export default function ParticipantArea({ currentUser, schedule, onLogout, onNav
             <div className="p-6 bg-gradient-to-br from-app-deep to-app-medium text-white relative">
               <div className="flex items-center justify-between mb-4">
                 <span className="text-[10px] font-bold uppercase tracking-widest border border-white/20 px-2 py-0.5 rounded text-app-gold font-mono">
-                  9ª Convenção Municipal
+                  9ª Convenção Municipal de Quartetos
                 </span>
                 <Music className="w-5 h-5 text-app-gold" />
               </div>
