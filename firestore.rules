@@ -32,14 +32,14 @@ service cloud.firestore {
         (incoming(request).diff(existing()).affectedKeys().hasOnly(['dependents'])) ||
         (incoming(request).diff(existing()).affectedKeys().hasOnly(['name', 'phone', 'city', 'password', 'registrationType', 'dependents', 'status', 'checkInTime']))
       );
-      allow delete: if false;
+      allow delete: if isValidId(participantId);
     }
 
     // 2. StaffUser Rules
     match /staffUsers/{staffUserId} {
       allow read: if true;
       allow create, update: if isValidId(staffUserId) && isValidStaffUser(incoming(request));
-      allow delete: if false;
+      allow delete: if isValidId(staffUserId);
     }
 
     // 3. EventConfig Rules
