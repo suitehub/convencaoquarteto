@@ -171,7 +171,7 @@ export default function App() {
   const handleAddParticipant = async (newPart: Omit<Participant, 'id' | 'status' | 'registrationDate'>) => {
     // Check total count before registering
     const currentCount = await getParticipantsCountSecure();
-    if (currentCount >= 415) {
+    if (currentCount >= 315) {
       throw new Error('CAPACITY_REACHED');
     }
 
