@@ -456,7 +456,7 @@ export default function ParticipantArea({ currentUser, schedule, onLogout, onNav
                     <p className="text-slate-500 text-xs mt-0.5 font-light">
                       {currentUser.status === 'Presente' 
                         ? 'Você já se credenciou na recepção oficial e sua entrada foi liberada! Excelente convenção!' 
-                        : 'Sua vaga está garantida de forma segura. Apresente o QR Code ao lado na portaria para realizar o credenciamento e liberar sua pulseira de acesso.'}
+                        : 'Sua vaga está garantida de forma segura. Apresente o QR Code ao lado na portaria para realizar o credenciamento.'}
                     </p>
                   </div>
                 </div>
