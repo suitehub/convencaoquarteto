@@ -176,3 +176,15 @@ export function evaluatePassword(password: string): {
   };
 }
 
+/**
+ * SHA-256 Password Hash Helper for Firestore
+ */
+export async function hashPassword(password: string): Promise<string> {
+  if (!password) return '';
+  const encoder = new TextEncoder();
+  const data = encoder.encode(`cmq_salt_2026_${password}`);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+

@@ -65,7 +65,7 @@ service cloud.firestore {
         && (data.status == 'Pendente' || data.status == 'Presente')
         && data.registrationDate is string && data.registrationDate.size() <= 20
         && (data.registrationType == 'Público' || data.registrationType == 'Participante')
-        && (!data.keys().hasAny(['password']) || (data.password is string && data.password.size() <= 64))
+        && (!data.keys().hasAny(['password']) || (data.password is string && data.password.size() <= 128))
         && (!data.keys().hasAny(['city']) || (data.city is string && data.city.size() <= 100))
         && (!data.keys().hasAny(['checkInTime']) || (data.checkInTime is string && data.checkInTime.size() <= 30))
         && (!data.keys().hasAny(['dependents']) || (data.dependents is list && data.dependents.size() <= 20));
@@ -79,7 +79,7 @@ service cloud.firestore {
         && data.name is string && data.name.size() > 0 && data.name.size() <= 150
         && data.username is string && data.username.size() > 0 && data.username.size() <= 50
         && data.createdAt is string && data.createdAt.size() <= 20
-        && (!data.keys().hasAny(['password']) || (data.password is string && data.password.size() <= 64));
+        && (!data.keys().hasAny(['password']) || (data.password is string && data.password.size() <= 128));
     }
 
     // Validation helper for eventConfigs

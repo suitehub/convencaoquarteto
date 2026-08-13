@@ -24,6 +24,7 @@ import {
 import firebaseConfig from '../firebase-applet-config.json';
 import { Participant, EventConfig, StaffUser } from './types';
 import { INITIAL_EVENT_CONFIG } from './mockData';
+import { hashPassword } from './utils/security';
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
@@ -163,7 +164,11 @@ export function subscribeStaffUsers(callback: (users: StaffUser[]) => void) {
 export async function addStaffUserInFirestore(staff: StaffUser) {
   const path = `staffUsers/${staff.id}`;
   try {
-    await setDoc(doc(db, 'staffUsers', staff.id), staff);
+    const dataToSave = { ...staff };
+    if (dataToSave.password && dataToSave.password.length !== 64) {
+      dataToSave.password = await hashPassword(dataToSave.password);
+    }
+    await setDoc(doc(db, 'staffUsers', staff.id), dataToSave);
   } catch (error) {
     handleFirestoreError(error, OperationType.WRITE, path);
   }
@@ -186,7 +191,11 @@ export function subscribeParticipants(callback: (participants: Participant[]) =>
 export async function addParticipantInFirestore(participant: Participant) {
   const path = `participants/${participant.id}`;
   try {
-    await setDoc(doc(db, 'participants', participant.id), participant);
+    const dataToSave = { ...participant };
+    if (dataToSave.password && dataToSave.password.length !== 64) {
+      dataToSave.password = await hashPassword(dataToSave.password);
+    }
+    await setDoc(doc(db, 'participants', participant.id), dataToSave);
   } catch (error) {
     handleFirestoreError(error, OperationType.WRITE, path);
   }
@@ -195,7 +204,11 @@ export async function addParticipantInFirestore(participant: Participant) {
 export async function updateParticipantInFirestore(id: string, updates: Partial<Participant>) {
   const path = `participants/${id}`;
   try {
-    await setDoc(doc(db, 'participants', id), updates, { merge: true });
+    const dataToSave = { ...updates };
+    if (dataToSave.password && dataToSave.password.length !== 64) {
+      dataToSave.password = await hashPassword(dataToSave.password);
+    }
+    await setDoc(doc(db, 'participants', id), dataToSave, { merge: true });
   } catch (error) {
     handleFirestoreError(error, OperationType.WRITE, path);
   }
@@ -247,7 +260,15 @@ export async function checkDuplicateParticipantSecure(email: string, phone: stri
     const emailSnap = await getDocs(emailQuery);
     const emailExists = !emailSnap.empty;
 
-    return { emailExists, phoneExists: false };
+    // Check phone
+    let phoneExists = false;
+    if (phone && phone.trim()) {
+      const phoneQuery = query(coll, where('phone', '==', phone.trim()), limit(1));
+      const phoneSnap = await getDocs(phoneQuery);
+      phoneExists = !phoneSnap.empty;
+    }
+
+    return { emailExists, phoneExists };
   } catch (error) {
     console.error('Error checking duplicates securely:', error);
     return { emailExists: false, phoneExists: false };
@@ -262,7 +283,8 @@ export async function loginStaffSecure(usernameInput: string, passwordInput: str
     
     if (!snap.empty) {
       const docData = snap.docs[0].data() as StaffUser;
-      if (docData.password === passwordInput) {
+      const hashedInput = await hashPassword(passwordInput);
+      if (docData.password === hashedInput || docData.password === passwordInput) {
         return docData;
       }
     }
@@ -290,7 +312,8 @@ export async function loginParticipantSecure(emailOrPhone: string, passwordInput
     
     if (!snap.empty) {
       const docData = snap.docs[0].data() as Participant;
-      if (docData.password === passwordInput) {
+      const hashedInput = await hashPassword(passwordInput);
+      if (docData.password === hashedInput || docData.password === passwordInput) {
         return docData;
       }
     }
