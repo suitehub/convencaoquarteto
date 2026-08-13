@@ -187,9 +187,7 @@ export default function ParticipantArea({ currentUser, schedule, onLogout, onNav
         {/* App Logo */}
         <div className="p-4 md:p-6 border-b border-slate-800/80 flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <div className="p-2 bg-app-gold rounded-xl text-app-deep">
-              <Music className="w-5 h-5" />
-            </div>
+            <img src="/CMQ.png" alt="CMQ Logo" className="w-10 h-10 object-contain filter drop-shadow-md shrink-0" />
             <div>
               <span className="text-[10px] font-bold text-app-gold tracking-wider block uppercase">9ª Convenção</span>
               <span className="text-xs font-black tracking-widest text-slate-100 uppercase font-display">DE QUARTETOS</span>

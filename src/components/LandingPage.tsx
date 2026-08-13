@@ -53,9 +53,7 @@ export default function LandingPage({ eventConfig, onNavigate, participantsCount
       <header className="sticky top-0 z-30 bg-app-deep/90 backdrop-blur-md border-b border-app-medium/20 px-4 py-3 sm:px-6 sm:py-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-2">
           <div className="flex items-center space-x-2 sm:space-x-3 cursor-pointer min-w-0 shrink" onClick={() => onNavigate('landing')}>
-            <div className="p-2 sm:p-2.5 rounded-xl bg-gradient-to-br from-app-medium to-app-gold text-white shadow-lg shadow-app-medium/10 shrink-0">
-              <Music className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
-            </div>
+            <img src="/CMQ.png" alt="CMQ Logo" className="w-9 h-9 sm:w-12 sm:h-12 object-contain shrink-0 filter drop-shadow-md" />
             <div className="min-w-0">
               <span className="text-[9px] sm:text-[10px] font-bold text-app-gold uppercase tracking-wider block leading-tight font-mono truncate">
                 9ª Convenção<span className="hidden sm:inline"> Municipal</span>
@@ -689,8 +687,8 @@ export default function LandingPage({ eventConfig, onNavigate, participantsCount
       <footer className="bg-app-deep border-t border-app-medium/30 py-12 px-6 text-white/90">
         <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
           <div>
-            <div className="flex items-center space-x-2 text-white mb-4">
-              <Music className="w-6 h-6 text-app-gold" />
+            <div className="flex items-center space-x-3 text-white mb-4">
+              <img src="/CMQ.png" alt="CMQ Logo" className="w-10 h-10 sm:w-12 sm:h-12 object-contain filter drop-shadow-md" />
               <span className="font-extrabold text-sm font-display uppercase tracking-wider">9ª Convenção</span>
             </div>
             <p className="text-xs text-slate-300 leading-relaxed font-light">

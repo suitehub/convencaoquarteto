@@ -36,23 +36,14 @@ export default function Splash({ onComplete }: SplashProps) {
       <div className="absolute bottom-1/4 left-1/2 -translate-x-1/2 translate-y-1/2 w-[300px] h-[300px] rounded-full bg-app-gold/10 blur-[80px]" />
 
       <div className="relative z-10 flex flex-col items-center max-w-sm px-6 text-center">
-        {/* Animated music visualizer bar emblem */}
+        {/* CMQ Logo without background square */}
         <motion.div
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ duration: 1, ease: 'easeOut' }}
-          className="relative mb-6 flex items-center justify-center w-24 h-24 rounded-3xl bg-gradient-to-br from-app-medium via-app-gold to-app-medium shadow-2xl shadow-app-medium/20"
+          className="relative -mb-4 flex items-center justify-center"
         >
-          {/* Decorative rotating disc behind logo */}
-          <motion.div 
-            animate={{ rotate: 360 }}
-            transition={{ duration: 12, repeat: Infinity, ease: "linear" }}
-            className="absolute inset-1 rounded-full border border-white/10 flex items-center justify-center"
-          >
-            <div className="w-16 h-16 rounded-full border border-dashed border-white/20" />
-          </motion.div>
-
-          <Music className="w-12 h-12 text-white relative z-10 animate-bounce" style={{ animationDuration: '2s' }} />
+          <img src="/CMQ.png" alt="CMQ Logo" className="w-52 h-52 sm:w-64 sm:h-64 object-contain filter drop-shadow-[0_0_25px_rgba(212,175,55,0.45)]" />
         </motion.div>
 
         {/* Title and subtitle */}
