@@ -42,7 +42,7 @@ export default function Cadastro({
 
   const passwordEvaluation = evaluatePassword(formData.password);
 
-  if (participantsCount >= 315) {
+  if (participantsCount >= 316) {
     return (
       <div className="min-h-screen bg-app-deep flex flex-col justify-center items-center px-4 py-20 relative overflow-hidden">
         {/* Immersive brand glow elements */}
@@ -75,17 +75,17 @@ export default function Cadastro({
               <h2 className="text-2xl font-black text-app-deep font-display tracking-tight">Inscrições Encerradas!</h2>
               
               <p className="text-slate-600 text-sm mt-3 font-light leading-relaxed">
-                Desculpe! O limite máximo de <strong className="text-app-medium font-semibold">315 ingressos</strong> foi atingido e as inscrições foram encerradas para este evento.
+                Desculpe! O limite máximo de <strong className="text-app-medium font-semibold">316 ingressos</strong> foi atingido e as inscrições foram encerradas para este evento.
               </p>
               
               <div className="bg-app-light p-4 rounded-2xl border border-slate-200 my-6 text-left space-y-2">
                 <div className="text-xs text-slate-500 font-mono flex justify-between">
                   <span>CAPACIDADE MÁXIMA:</span>
-                  <span className="text-red-600 font-bold">315 INGRESSOS</span>
+                  <span className="text-red-600 font-bold">316 INGRESSOS</span>
                 </div>
                 <div className="text-xs text-slate-500 font-mono flex justify-between">
                   <span>RESERVAS ATIVAS:</span>
-                  <span className="text-app-deep font-bold">{participantsCount} / 315</span>
+                  <span className="text-app-deep font-bold">{participantsCount} / 316</span>
                 </div>
                 <div className="text-xs text-slate-500 font-mono flex justify-between">
                   <span>STATUS EVENTO:</span>
@@ -116,8 +116,8 @@ export default function Cadastro({
     e.preventDefault();
     setErrorMsg('');
 
-    if (participantsCount >= 315) {
-      setErrorMsg('Desculpe, o limite máximo de 315 ingressos foi atingido.');
+    if (participantsCount >= 316) {
+      setErrorMsg('Desculpe, o limite máximo de 316 ingressos foi atingido.');
       return;
     }
 
@@ -186,7 +186,7 @@ export default function Cadastro({
       console.error('Registration failed:', err);
       recordAttempt('registration');
       if (err?.message === 'CAPACITY_REACHED') {
-        setErrorMsg('Desculpe! O limite máximo de 315 ingressos foi atingido e não há mais vagas disponíveis no momento.');
+        setErrorMsg('Desculpe! O limite máximo de ingressos foi atingido e não há mais vagas disponíveis no momento.');
       } else if (err?.message === 'EMAIL_EXISTS') {
         setErrorMsg('Já existe um cadastro realizado com este e-mail. Se você já possui uma inscrição, acesse a Área do Participante.');
       } else {
