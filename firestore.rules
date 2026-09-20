@@ -54,6 +54,14 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    // 4. WhatsApp Test Messages Rules
+    match /whatsappTestMessages/{testId} {
+      allow read: if true;
+      allow create: if isValidId(testId) && isValidWhatsAppTestMessage(incoming(request));
+      allow update: if isValidId(testId);
+      allow delete: if false;
+    }
+
     // Validation blueprints
     function isValidParticipant(data) {
       return data.keys().hasAll(['id', 'name', 'email', 'phone', 'status', 'registrationDate', 'registrationType'])
@@ -92,6 +100,17 @@ service cloud.firestore {
         && data.location is string && data.location.size() <= 300
         && data.maxParticipants is int && data.maxParticipants >= 0 && data.maxParticipants <= 100000
         && data.description is string && data.description.size() <= 1000;
+    }
+
+    // Validation helper for whatsappTestMessages
+    function isValidWhatsAppTestMessage(data) {
+      return data.keys().hasAll(['userId', 'destinationPhone', 'templateName', 'languageCode', 'status', 'createdAt', 'updatedAt'])
+        && data.keys().size() <= 14
+        && data.userId is string && data.userId.size() <= 128
+        && data.destinationPhone is string && data.destinationPhone.size() <= 30
+        && data.templateName is string && data.templateName.size() <= 100
+        && data.languageCode is string && data.languageCode.size() <= 20
+        && (data.status == 'pending' || data.status == 'sent' || data.status == 'failed' || data.status == 'uncertain');
     }
   }
 }

@@ -55,4 +55,30 @@ export interface StaffUser {
 export type PublicView = 'splash' | 'landing' | 'cadastro' | 'login';
 export type ParticipantView = 'home' | 'programacao' | 'meus-dados';
 export type ReceptionView = 'login' | 'dashboard' | 'detalhes-participante';
-export type OrganizerView = 'dashboard' | 'participantes' | 'estatisticas' | 'sorteio' | 'configuracoes';
+export type OrganizerView = 'dashboard' | 'participantes' | 'estatisticas' | 'sorteio' | 'equipe' | 'configuracoes' | 'whatsapp-test';
+
+export interface WhatsAppTestMessage {
+  id: string;
+  userId: string;
+  destinationPhone: string;
+  templateName: string;
+  languageCode: string;
+  parameters: string[];
+  status: 'pending' | 'sent' | 'failed' | 'uncertain';
+  wamid?: string;
+  errorCode?: string | number;
+  errorMessage?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface WhatsAppSendTestResponse {
+  success: boolean;
+  status: 'sent' | 'failed' | 'uncertain';
+  wamid?: string;
+  message: string;
+  errorCode?: string | number;
+  errorMessage?: string;
+  metaMessage?: string;
+  timestamp: string;
+}

@@ -4,22 +4,14 @@
  */
 
 import React, { useState } from 'react';
-import { ShieldAlert, KeyRound, ArrowRight, Eye, EyeOff, Music, Lock } from 'lucide-react';
+import { ShieldAlert, KeyRound, ArrowRight, Eye, EyeOff, Lock } from 'lucide-react';
 import { motion } from 'motion/react';
 import { checkRateLimit, recordAttempt, clearRateLimit, sanitizeInput } from '../utils/security';
+import { auth } from '../firebase';
 
 interface AdminLockProps {
   onUnlockSuccess: () => void;
   onCancel: () => void;
-}
-
-// Helper function to hash a string to SHA-256 for cryptographic security
-async function sha256(message: string): Promise<string> {
-  const msgBuffer = new TextEncoder().encode(message);
-  const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-  return hashHex;
 }
 
 export default function AdminLock({ onUnlockSuccess, onCancel }: AdminLockProps) {
@@ -28,11 +20,11 @@ export default function AdminLock({ onUnlockSuccess, onCancel }: AdminLockProps)
   const [errorMsg, setErrorMsg] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg('');
-    
-    // Check Rate Limiter for admin_lock
+
+    // Check Client Rate Limiter for admin_lock
     const rateCheck = checkRateLimit('admin_lock');
     if (!rateCheck.allowed) {
       setErrorMsg(`Muitas tentativas incorretas. Por segurança, aguarde ${rateCheck.remainingSeconds}s antes de tentar novamente.`);
@@ -43,14 +35,26 @@ export default function AdminLock({ onUnlockSuccess, onCancel }: AdminLockProps)
     if (!cleanCode) return;
 
     setLoading(true);
-    
-    // Cryptographic verification against secure hash
-    sha256(cleanCode).then((hashedCode) => {
-      const targetHash = 'c9fd0cfd73186249d7ebc3ed9d67aacf94eb2f9c43e62134e960ab32e85fefbf';
-      
-      if (hashedCode === targetHash) {
+
+    try {
+      // Authenticate against the backend server endpoint
+      // No hash or secrets are stored in the client bundle
+      const res = await fetch('/api/admin/verify', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ code: cleanCode }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok && data.success) {
         clearRateLimit('admin_lock');
         sessionStorage.setItem('admin_authenticated', 'true');
+        if (data.token) {
+          sessionStorage.setItem('admin_token', data.token);
+        }
         onUnlockSuccess();
       } else {
         recordAttempt('admin_lock');
@@ -58,17 +62,17 @@ export default function AdminLock({ onUnlockSuccess, onCancel }: AdminLockProps)
         if (!updatedCheck.allowed) {
           setErrorMsg(`Bloqueado por segurança! Aguarde ${updatedCheck.remainingSeconds}s para tentar novamente.`);
         } else {
-          setErrorMsg('Código incorreto. Acesso negado.');
+          setErrorMsg(data.error || 'Código incorreto. Acesso negado.');
         }
         setLoading(false);
         setCode('');
       }
-    }).catch((err) => {
-      console.error('Crypto error:', err);
+    } catch (err) {
+      console.error('Admin authentication error:', err);
       recordAttempt('admin_lock');
-      setErrorMsg('Erro de validação de segurança.');
+      setErrorMsg('Falha ao comunicar com o servidor de autenticação.');
       setLoading(false);
-    });
+    }
   };
 
   return (
@@ -95,7 +99,7 @@ export default function AdminLock({ onUnlockSuccess, onCancel }: AdminLockProps)
             Painel do Organizador
           </h2>
           <p className="text-xs text-slate-400 mt-2 font-light max-w-xs">
-            Esta é uma área administrativa restrita. Por favor, insira seu código de credenciamento.
+            Esta é uma área administrativa restrita. Insira o código de acesso dos organizadores.
           </p>
         </div>
 
@@ -181,7 +185,7 @@ export default function AdminLock({ onUnlockSuccess, onCancel }: AdminLockProps)
         {/* Security watermark */}
         <div className="mt-8 flex items-center justify-center space-x-2 text-[10px] text-slate-500 font-mono">
           <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
-          <span>SESSÃO PROTEGIDA POR SSL</span>
+          <span>AUTENTICAÇÃO COM VERIFICAÇÃO NO SERVIDOR</span>
         </div>
       </motion.div>
     </div>

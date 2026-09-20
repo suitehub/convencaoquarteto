@@ -22,7 +22,7 @@ import {
   limit
 } from 'firebase/firestore';
 import firebaseConfig from '../firebase-applet-config.json';
-import { Participant, EventConfig, StaffUser } from './types';
+import { Participant, EventConfig, StaffUser, WhatsAppTestMessage } from './types';
 import { INITIAL_EVENT_CONFIG } from './mockData';
 import { hashPassword } from './utils/security';
 
@@ -323,3 +323,39 @@ export async function loginParticipantSecure(emailOrPhone: string, passwordInput
     return null;
   }
 }
+
+/**
+ * Real-time subscription to WhatsApp test message logs.
+ */
+export function subscribeWhatsAppTestMessages(onUpdate: (messages: WhatsAppTestMessage[]) => void) {
+  const coll = collection(db, 'whatsappTestMessages');
+  return onSnapshot(
+    coll,
+    (snapshot) => {
+      const list = snapshot.docs.map((d) => ({
+        id: d.id,
+        ...d.data(),
+      })) as WhatsAppTestMessage[];
+      // Sort newest first
+      list.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
+      onUpdate(list);
+    },
+    (error) => {
+      handleFirestoreError(error, OperationType.LIST, 'whatsappTestMessages');
+    }
+  );
+}
+
+/**
+ * Save or record a WhatsApp test message log document into Firestore.
+ */
+export async function saveWhatsAppTestLog(logData: Omit<WhatsAppTestMessage, 'id'> & { id?: string }): Promise<string> {
+  const docId = logData.id || `msg_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+  const docRef = doc(db, 'whatsappTestMessages', docId);
+  await setDoc(docRef, {
+    ...logData,
+    id: docId,
+  }, { merge: true });
+  return docId;
+}
+

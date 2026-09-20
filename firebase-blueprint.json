@@ -45,6 +45,26 @@
         "createdAt": { "type": "string" }
       },
       "required": ["id", "name", "username", "password", "createdAt"]
+    },
+    "WhatsAppTestMessage": {
+      "title": "WhatsAppTestMessage",
+      "description": "Log of individual WhatsApp test message sent via Meta Cloud API",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "destinationPhone": { "type": "string" },
+        "templateName": { "type": "string" },
+        "languageCode": { "type": "string" },
+        "parameters": { "type": "array" },
+        "status": { "type": "string", "enum": ["pending", "sent", "failed", "uncertain"] },
+        "wamid": { "type": "string" },
+        "errorCode": { "type": "string" },
+        "errorMessage": { "type": "string" },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["userId", "destinationPhone", "templateName", "languageCode", "status", "createdAt", "updatedAt"]
     }
   },
   "firestore": {
@@ -59,6 +79,10 @@
     "/eventConfigs/{configId}": {
       "schema": "EventConfig",
       "description": "Configuration profiles for active events"
+    },
+    "/whatsappTestMessages/{testId}": {
+      "schema": "WhatsAppTestMessage",
+      "description": "Records of test messages dispatched via Meta Cloud API"
     }
   }
 }

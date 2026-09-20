@@ -13,10 +13,11 @@ import {
   LayoutDashboard, Users, BarChart3, Settings, Gift, Music, Search, 
   SlidersHorizontal, CheckCircle2, AlertCircle, Save, Calendar, Clock, 
   MapPin, Sliders, ArrowUpRight, Check, Menu, X, UserPlus, Key, Download, FileSpreadsheet,
-  Trash2
+  Trash2, MessageSquare, Send
 } from 'lucide-react';
 import { Participant, EventConfig, StaffUser } from '../types';
 import Sorteio from './Sorteio';
+import WhatsAppTestModule from './WhatsAppTestModule';
 import { evaluatePassword } from '../utils/security';
 
 interface OrganizerAreaProps {
@@ -40,7 +41,7 @@ export default function OrganizerArea({
   onCheckIn, 
   onLogout 
 }: OrganizerAreaProps) {
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'participantes' | 'estatisticas' | 'sorteio' | 'equipe' | 'configuracoes'>('dashboard');
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'participantes' | 'estatisticas' | 'sorteio' | 'equipe' | 'configuracoes' | 'whatsapp_test'>('dashboard');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   
   // Settings form local state
@@ -290,6 +291,18 @@ export default function OrganizerArea({
               <Settings className="w-4 h-4" />
               <span>Configurações</span>
             </button>
+
+            <button
+              onClick={() => { setActiveTab('whatsapp_test'); setMobileMenuOpen(false); }}
+              className={`w-full px-4 py-3 text-sm font-medium rounded-xl flex items-center space-x-3 transition-colors cursor-pointer ${
+                activeTab === 'whatsapp_test'
+                  ? 'bg-emerald-500 text-slate-950 font-bold shadow-lg shadow-emerald-500/15'
+                  : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
+              }`}
+            >
+              <MessageSquare className="w-4 h-4" />
+              <span>Teste de WhatsApp</span>
+            </button>
           </nav>
 
           {/* Exit and logout block */}
@@ -318,6 +331,7 @@ export default function OrganizerArea({
               {activeTab === 'sorteio' && 'Painel de Sorteio'}
               {activeTab === 'equipe' && 'Controle de Equipe & Recepção'}
               {activeTab === 'configuracoes' && 'Configurações Globais'}
+              {activeTab === 'whatsapp_test' && 'Teste de WhatsApp (Meta Cloud API)'}
             </h1>
           </div>
 
@@ -980,6 +994,11 @@ export default function OrganizerArea({
             </div>
 
           </div>
+        )}
+
+        {/* TAB 7: WHATSAPP TEST MODULE */}
+        {activeTab === 'whatsapp_test' && (
+          <WhatsAppTestModule participants={participants} />
         )}
 
       </main>
