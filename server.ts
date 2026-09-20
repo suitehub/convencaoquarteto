@@ -80,6 +80,25 @@ async function startServer() {
     });
   });
 
+  // Verify Firebase Auth ID Token or Admin Session Token
+  app.post('/api/admin/verify-token', async (req, res) => {
+    const authHeader = req.headers.authorization?.replace(/^Bearer\s+/i, '') || req.body?.token;
+    const authorizedUser = await authenticateAndAuthorizeAdmin(authHeader);
+
+    if (!authorizedUser) {
+      return res.status(403).json({
+        success: false,
+        error: 'Token inválido ou usuário não possui permissão de organizador/administrador.'
+      });
+    }
+
+    res.json({
+      success: true,
+      user: authorizedUser,
+      message: 'Token administrativo verificado com sucesso.'
+    });
+  });
+
   // Status of Meta WhatsApp credentials (Protected: Admin / Organizer authorization required)
   app.get('/api/whatsapp/config-status', async (req, res) => {
     const clientIp = req.ip || req.socket.remoteAddress || 'unknown';

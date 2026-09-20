@@ -448,3 +448,50 @@ export const sendWhatsAppTestMessage = onRequest(
     }
   }
 );
+
+/**
+ * Cloud Function: verifyAdminCode
+ * Securely verifies temporary administrator access code without exposing hash to client.
+ */
+export const verifyAdminCode = onRequest(
+  {
+    secrets: [adminAccessHash],
+    cors: true,
+    region: "us-central1",
+  },
+  async (req, res) => {
+    if (req.method !== "POST") {
+      res.status(405).json({ error: "Método não permitido. Utilize POST." });
+      return;
+    }
+
+    const { code } = req.body || {};
+    if (!code || typeof code !== "string" || !code.trim()) {
+      res.status(400).json({ success: false, error: "Código de acesso não fornecido." });
+      return;
+    }
+
+    const envHash = adminAccessHash.value()?.trim();
+    if (!envHash || envHash.length < 32) {
+      res.status(503).json({
+        success: false,
+        error: "ADMIN_ACCESS_HASH não está configurado nas variáveis de ambiente do servidor. Defina a variável para habilitar o acesso com código.",
+      });
+      return;
+    }
+
+    const hashedInput = crypto.createHash("sha256").update(code.trim()).digest("hex").toLowerCase();
+    const isValid = timingSafeEqual(hashedInput, envHash.toLowerCase()) || timingSafeEqual(code.trim(), envHash);
+
+    if (!isValid) {
+      res.status(401).json({ success: false, error: "Código de acesso incorreto." });
+      return;
+    }
+
+    res.json({
+      success: true,
+      token: envHash,
+      message: "Autenticação administrativa concedida com sucesso.",
+    });
+  }
+);
