@@ -4,10 +4,10 @@
  */
 
 import React, { useState } from 'react';
-import { ShieldAlert, KeyRound, ArrowRight, Eye, EyeOff, Lock, UserCheck } from 'lucide-react';
+import { ShieldAlert, KeyRound, ArrowRight, Eye, EyeOff, Lock, UserCheck, ShieldCheck } from 'lucide-react';
 import { motion } from 'motion/react';
 import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
-import { checkRateLimit, recordAttempt, clearRateLimit, sanitizeInput } from '../utils/security';
+import { checkRateLimit, recordAttempt, clearRateLimit, sanitizeInput, isAllowedAdminEmail, ALLOWED_ADMIN_EMAILS } from '../utils/security';
 import { auth } from '../firebase';
 
 interface AdminLockProps {
@@ -30,9 +30,23 @@ export default function AdminLock({ onUnlockSuccess, onCancel }: AdminLockProps)
       provider.setCustomParameters({ prompt: 'select_account' });
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
+      const userEmail = (user.email || '').toLowerCase().trim();
+
+      // STRICT AUTHORIZATION CHECK: Only allow the 2 specified admin emails
+      if (!isAllowedAdminEmail(userEmail)) {
+        await auth.signOut();
+        sessionStorage.removeItem('admin_authenticated');
+        sessionStorage.removeItem('admin_token');
+        sessionStorage.removeItem('admin_email');
+        setErrorMsg(
+          `Acesso não autorizado para a conta "${userEmail}". Apenas os 2 e-mails cadastrados (${ALLOWED_ADMIN_EMAILS.join(' e ')}) possuem permissão de administrador.`
+        );
+        return;
+      }
+
       const idToken = await user.getIdToken();
 
-      // Verify token with backend if server is online
+      // Verify token with backend server
       try {
         const res = await fetch('/api/admin/verify-token', {
           method: 'POST',
@@ -49,18 +63,27 @@ export default function AdminLock({ onUnlockSuccess, onCancel }: AdminLockProps)
             clearRateLimit('admin_lock');
             sessionStorage.setItem('admin_authenticated', 'true');
             sessionStorage.setItem('admin_token', idToken);
+            sessionStorage.setItem('admin_email', userEmail);
             onUnlockSuccess();
+            return;
+          }
+        } else {
+          const errData = await res.json().catch(() => null);
+          if (errData?.error) {
+            await auth.signOut();
+            setErrorMsg(errData.error);
             return;
           }
         }
       } catch (serverErr) {
-        console.warn('Backend verification unavailable, proceeding with Firebase Auth session:', serverErr);
+        console.warn('Backend verification unavailable, proceeding with validated Firebase Auth session:', serverErr);
       }
 
       // If backend verification isn't running or passed, persist session
       clearRateLimit('admin_lock');
       sessionStorage.setItem('admin_authenticated', 'true');
       sessionStorage.setItem('admin_token', idToken);
+      sessionStorage.setItem('admin_email', userEmail);
       onUnlockSuccess();
     } catch (err: any) {
       console.error('Google sign-in error:', err);
@@ -213,9 +236,16 @@ export default function AdminLock({ onUnlockSuccess, onCancel }: AdminLockProps)
               </svg>
               <span>Entrar com Conta Google (Admin)</span>
             </button>
-            <p className="text-[10px] text-center text-slate-500 mt-2 font-mono">
-              Recomendado: seguro via Firebase Authentication (RBAC)
-            </p>
+            <div className="mt-3 p-2.5 rounded-xl bg-slate-950/80 border border-slate-800 text-[10px] text-slate-400 space-y-1">
+              <div className="flex items-center space-x-1.5 text-app-gold font-bold font-mono">
+                <ShieldCheck className="w-3.5 h-3.5" />
+                <span>E-mails Exclusivamente Autorizados:</span>
+              </div>
+              <p className="font-mono text-slate-300 select-all">
+                • rickyjorgecastro@gmail.com<br />
+                • convencaomunicipaldequartetos@gmail.com
+              </p>
+            </div>
           </div>
 
           {/* Divider */}

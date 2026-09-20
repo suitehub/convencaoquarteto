@@ -188,3 +188,21 @@ export async function hashPassword(password: string): Promise<string> {
   return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
+/**
+ * Whitelist of exclusively authorized administrator e-mails.
+ * Only these two e-mails can access the admin dashboard.
+ */
+export const ALLOWED_ADMIN_EMAILS: readonly string[] = Object.freeze([
+  'rickyjorgecastro@gmail.com',
+  'convencaomunicipaldequartetos@gmail.com',
+]);
+
+/**
+ * Validates if an e-mail belongs to the authorized administrator list.
+ */
+export function isAllowedAdminEmail(email?: string | null): boolean {
+  if (!email || typeof email !== 'string') return false;
+  const clean = email.toLowerCase().trim();
+  return ALLOWED_ADMIN_EMAILS.includes(clean);
+}
+

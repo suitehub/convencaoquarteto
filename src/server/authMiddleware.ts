@@ -34,6 +34,15 @@ export interface AuthenticatedAdminUser {
 }
 
 /**
+ * Whitelist of exclusively authorized administrator e-mails.
+ * Only these two accounts are granted administrative access.
+ */
+export const ALLOWED_ADMIN_EMAILS: readonly string[] = Object.freeze([
+  'rickyjorgecastro@gmail.com',
+  'convencaomunicipaldequartetos@gmail.com',
+]);
+
+/**
  * In-memory sliding window rate limiter for security-sensitive routes.
  */
 interface RateLimitRecord {
@@ -120,64 +129,10 @@ export async function authenticateAndAuthorizeAdmin(tokenCandidate?: string): Pr
     const decoded = await authAdmin.verifyIdToken(cleanToken);
 
     if (decoded && decoded.uid) {
-      const email = decoded.email?.toLowerCase();
-      const hasDirectClaim = decoded.role === 'admin' || decoded.role === 'organizer' || decoded.admin === true;
+      const email = decoded.email?.toLowerCase().trim();
 
-      if (hasDirectClaim) {
-        return {
-          userId: decoded.uid,
-          userEmail: email,
-          authType: 'firebase_auth',
-          role: decoded.role === 'admin' ? 'admin' : 'organizer',
-        };
-      }
-
-      // Check if user is registered with organizer role in Firestore staffUsers or admins collection
-      try {
-        const firestore = getFirestore(app, firebaseConfig.firestoreDatabaseId);
-        const staffDoc = await firestore.collection('staffUsers').doc(decoded.uid).get();
-        if (staffDoc.exists) {
-          const staffData = staffDoc.data();
-          if (staffData?.role === 'organizer' || staffData?.role === 'admin') {
-            return {
-              userId: decoded.uid,
-              userEmail: email || staffData?.email,
-              authType: 'firebase_auth',
-              role: staffData.role,
-            };
-          }
-        }
-
-        // Check by email in staffUsers if query matches
-        if (email) {
-          const staffQuery = await firestore.collection('staffUsers').where('email', '==', email).limit(1).get();
-          if (!staffQuery.empty) {
-            const data = staffQuery.docs[0].data();
-            if (data?.role === 'organizer' || data?.role === 'admin') {
-              return {
-                userId: decoded.uid,
-                userEmail: email,
-                authType: 'firebase_auth',
-                role: data.role,
-              };
-            }
-          }
-        }
-      } catch (firestoreErr) {
-        console.warn('Could not verify staff role via Firestore Admin:', firestoreErr);
-      }
-
-      // Check against owner email or optional ADMIN_EMAILS environment variable
-      const adminEmails = (process.env.ADMIN_EMAILS || '')
-        .split(',')
-        .map((e) => e.trim().toLowerCase())
-        .filter(Boolean);
-
-      const isOwnerOrAdmin =
-        (email && email === 'rickyjorgecastro@gmail.com') ||
-        (email && adminEmails.includes(email));
-
-      if (isOwnerOrAdmin) {
+      // STRICT POLICY: Only the 2 designated admin emails are granted access
+      if (email && ALLOWED_ADMIN_EMAILS.includes(email)) {
         return {
           userId: decoded.uid,
           userEmail: email,
@@ -185,6 +140,10 @@ export async function authenticateAndAuthorizeAdmin(tokenCandidate?: string): Pr
           role: 'admin',
         };
       }
+
+      // Any other Firebase Auth email is strictly unauthorized
+      console.warn(`[Security] Unauthorized admin access attempt from: ${email} (UID: ${decoded.uid})`);
+      return null;
     }
   } catch {
     // If not a valid Firebase ID Token, proceed to check temporary admin secret

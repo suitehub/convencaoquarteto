@@ -88,7 +88,7 @@ async function startServer() {
     if (!authorizedUser) {
       return res.status(403).json({
         success: false,
-        error: 'Token inválido ou usuário não possui permissão de organizador/administrador.'
+        error: 'Acesso negado: apenas os e-mails autorizados (rickyjorgecastro@gmail.com e convencaomunicipaldequartetos@gmail.com) possuem permissão de administrador.'
       });
     }
 

@@ -62,20 +62,11 @@ async function authenticateCaller(token?: string): Promise<AuthenticatedCaller |
   try {
     const decoded = await admin.auth().verifyIdToken(cleanToken);
     if (decoded && decoded.uid) {
-      const email = decoded.email?.toLowerCase();
-      const hasDirectClaim = decoded.role === "admin" || decoded.role === "organizer" || decoded.admin === true;
+      const email = decoded.email?.toLowerCase().trim();
+      const allowedEmails = ["rickyjorgecastro@gmail.com", "convencaomunicipaldequartetos@gmail.com"];
 
-      if (hasDirectClaim) {
-        return {
-          userId: decoded.uid,
-          userEmail: email,
-          role: decoded.role === "admin" ? "admin" : "organizer",
-          authType: "firebase_auth",
-        };
-      }
-
-      // Authorize owner email
-      if (email === "rickyjorgecastro@gmail.com") {
+      // STRICT AUTHORIZATION: Only allow the 2 designated admin emails
+      if (email && allowedEmails.includes(email)) {
         return {
           userId: decoded.uid,
           userEmail: email,
@@ -84,38 +75,8 @@ async function authenticateCaller(token?: string): Promise<AuthenticatedCaller |
         };
       }
 
-      // Check Firestore staffUsers collection
-      try {
-        const staffDoc = await admin.firestore().collection("staffUsers").doc(decoded.uid).get();
-        if (staffDoc.exists) {
-          const staffData = staffDoc.data();
-          if (staffData?.role === "organizer" || staffData?.role === "admin") {
-            return {
-              userId: decoded.uid,
-              userEmail: email || staffData?.email,
-              role: staffData.role,
-              authType: "firebase_auth",
-            };
-          }
-        }
-
-        if (email) {
-          const q = await admin.firestore().collection("staffUsers").where("email", "==", email).limit(1).get();
-          if (!q.empty) {
-            const d = q.docs[0].data();
-            if (d?.role === "organizer" || d?.role === "admin") {
-              return {
-                userId: decoded.uid,
-                userEmail: email,
-                role: d.role,
-                authType: "firebase_auth",
-              };
-            }
-          }
-        }
-      } catch (dbErr) {
-        console.warn("Could not query staffUsers in Cloud Function:", dbErr);
-      }
+      // Any other email attempting admin access is rejected
+      return null;
     }
   } catch {
     // If not a Firebase ID Token, proceed to secret check

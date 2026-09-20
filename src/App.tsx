@@ -4,9 +4,12 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { onAuthStateChanged } from 'firebase/auth';
 import { Participant, EventConfig, UserRole, StaffUser } from './types';
 import { INITIAL_EVENT_CONFIG, INITIAL_PARTICIPANTS, MOCK_SCHEDULE } from './mockData';
+import { isAllowedAdminEmail } from './utils/security';
 import {
+  auth,
   seedInitialDataIfNeeded,
   subscribeEventConfig,
   subscribeStaffUsers,
@@ -85,6 +88,27 @@ export default function App() {
   useEffect(() => {
     fetchParticipantsCount();
   }, []);
+
+  // Continuous Auth Guard: Ensure only authorized emails can retain organizer role
+  useEffect(() => {
+    const unsubAuth = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        const email = user.email?.toLowerCase().trim();
+        if (!isAllowedAdminEmail(email)) {
+          // If a logged-in user is not in the whitelist of 2 emails, remove admin session
+          sessionStorage.removeItem('admin_authenticated');
+          sessionStorage.removeItem('admin_token');
+          sessionStorage.removeItem('admin_email');
+          if (currentRole === 'organizer') {
+            setCurrentRole('public');
+            setCurrentView('admin-lock');
+          }
+        }
+      }
+    });
+
+    return () => unsubAuth();
+  }, [currentRole]);
 
   // Initialize and subscribe to Firestore collections securely based on the user role
   useEffect(() => {

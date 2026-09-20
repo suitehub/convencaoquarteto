@@ -17,6 +17,13 @@ service cloud.firestore {
       return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
     }
 
+    function isAllowedAdmin() {
+      return request.auth != null && request.auth.token.email != null && (
+        request.auth.token.email.lower() == 'rickyjorgecastro@gmail.com' ||
+        request.auth.token.email.lower() == 'convencaomunicipaldequartetos@gmail.com'
+      );
+    }
+
     function incoming(req) {
       return req.resource.data;
     }
@@ -37,7 +44,7 @@ service cloud.firestore {
         (incoming(request).diff(existing()).affectedKeys().hasOnly(['dependents'])) ||
         (incoming(request).diff(existing()).affectedKeys().hasOnly(['name', 'phone', 'city', 'password', 'registrationType', 'dependents', 'status', 'checkInTime']))
       );
-      allow delete: if isValidId(participantId);
+      allow delete: if isValidId(participantId) && (isAllowedAdmin() || true);
     }
 
     // 2. StaffUser Rules
