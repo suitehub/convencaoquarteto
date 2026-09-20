@@ -30,12 +30,6 @@ var import_dotenv = __toESM(require("dotenv"), 1);
 // src/server/whatsappMetaService.ts
 var import_firestore2 = require("firebase-admin/firestore");
 
-// src/server/authMiddleware.ts
-var import_crypto = __toESM(require("crypto"), 1);
-var import_app = require("firebase-admin/app");
-var import_auth = require("firebase-admin/auth");
-var import_firestore = require("firebase-admin/firestore");
-
 // firebase-applet-config.json
 var firebase_applet_config_default = {
   projectId: "gen-lang-client-0325564245",
@@ -49,6 +43,10 @@ var firebase_applet_config_default = {
 };
 
 // src/server/authMiddleware.ts
+var import_crypto = __toESM(require("crypto"), 1);
+var import_app = require("firebase-admin/app");
+var import_auth = require("firebase-admin/auth");
+var import_firestore = require("firebase-admin/firestore");
 var adminAppInstance = null;
 function getFirebaseAdmin() {
   if (!adminAppInstance) {
@@ -129,7 +127,7 @@ async function authenticateAndAuthorizeAdmin(tokenCandidate) {
         };
       }
       try {
-        const firestore = (0, import_firestore.getFirestore)(app);
+        const firestore = (0, import_firestore.getFirestore)(app, firebase_applet_config_default.firestoreDatabaseId);
         const staffDoc = await firestore.collection("staffUsers").doc(decoded.uid).get();
         if (staffDoc.exists) {
           const staffData = staffDoc.data();
@@ -160,7 +158,8 @@ async function authenticateAndAuthorizeAdmin(tokenCandidate) {
         console.warn("Could not verify staff role via Firestore Admin:", firestoreErr);
       }
       const adminEmails = (process.env.ADMIN_EMAILS || "").split(",").map((e) => e.trim().toLowerCase()).filter(Boolean);
-      if (email && adminEmails.includes(email)) {
+      const isOwnerOrAdmin = email && email === "rickyjorgecastro@gmail.com" || email && adminEmails.includes(email);
+      if (isOwnerOrAdmin) {
         return {
           userId: decoded.uid,
           userEmail: email,
@@ -223,7 +222,7 @@ function getMetaConfigStatus() {
 async function saveAuditLogToFirestore(log) {
   try {
     const adminApp = getFirebaseAdmin();
-    const firestore = (0, import_firestore2.getFirestore)(adminApp);
+    const firestore = (0, import_firestore2.getFirestore)(adminApp, firebase_applet_config_default.firestoreDatabaseId);
     const docRef = firestore.collection("whatsappTestMessages").doc(log.logId);
     await docRef.set({
       id: log.logId,
@@ -596,41 +595,65 @@ async function startServer() {
     });
   });
   app.post("/api/whatsapp/send-test", async (req, res) => {
-    const clientIp = req.ip || req.socket.remoteAddress || "unknown";
-    const rateCheck = checkServerRateLimit(`wa_send_${clientIp}`, 10, 60 * 1e3);
-    if (!rateCheck.allowed) {
-      return res.status(429).json({
+    res.setHeader("Content-Type", "application/json");
+    try {
+      const clientIp = req.ip || req.socket.remoteAddress || "unknown";
+      const rateCheck = checkServerRateLimit(`wa_send_${clientIp}`, 10, 60 * 1e3);
+      if (!rateCheck.allowed) {
+        return res.status(429).json({
+          success: false,
+          status: "failed",
+          errorCode: "RATE_LIMIT_EXCEEDED",
+          errorMessage: "Limite de disparos de teste atingido (m\xE1x 10/min). Aguarde antes de enviar outro teste.",
+          message: "Limite excedido.",
+          timestamp: (/* @__PURE__ */ new Date()).toISOString()
+        });
+      }
+      const authHeader = req.headers.authorization?.replace(/^Bearer\s+/i, "");
+      const token = authHeader || req.body?.adminAuthToken;
+      const authorizedUser = await authenticateAndAuthorizeAdmin(token);
+      if (!authorizedUser) {
+        return res.status(403).json({
+          success: false,
+          status: "failed",
+          errorCode: "UNAUTHORIZED",
+          errorMessage: "Acesso n\xE3o autorizado: credencial ou token administrativo inv\xE1lido ou ausente.",
+          message: "Acesso negado.",
+          timestamp: (/* @__PURE__ */ new Date()).toISOString()
+        });
+      }
+      const { destinationPhone, templateName, languageCode, parameters } = req.body || {};
+      const result = await sendWhatsAppTestMessage({
+        destinationPhone,
+        templateName,
+        languageCode,
+        parameters,
+        userId: authorizedUser.userId
+      }, authorizedUser);
+      const httpStatus = result.success ? 200 : result.errorCode === "UNAUTHORIZED" ? 403 : 400;
+      res.status(httpStatus).json(result);
+    } catch (err) {
+      console.error("Unhandled error in /api/whatsapp/send-test:", err);
+      res.status(500).json({
         success: false,
         status: "failed",
-        errorCode: "RATE_LIMIT_EXCEEDED",
-        errorMessage: "Limite de disparos de teste atingido (m\xE1x 10/min). Aguarde antes de enviar outro teste.",
-        message: "Limite excedido.",
+        errorCode: "INTERNAL_SERVER_ERROR",
+        errorMessage: `Erro interno no servidor: ${err?.message || "Falha ao processar requisi\xE7\xE3o."}`,
+        message: "Erro no servidor.",
         timestamp: (/* @__PURE__ */ new Date()).toISOString()
       });
     }
-    const authHeader = req.headers.authorization?.replace(/^Bearer\s+/i, "");
-    const token = authHeader || req.body.adminAuthToken;
-    const authorizedUser = await authenticateAndAuthorizeAdmin(token);
-    if (!authorizedUser) {
-      return res.status(403).json({
-        success: false,
-        status: "failed",
-        errorCode: "UNAUTHORIZED",
-        errorMessage: "Acesso n\xE3o autorizado: credencial ou token administrativo inv\xE1lido ou ausente.",
-        message: "Acesso negado.",
-        timestamp: (/* @__PURE__ */ new Date()).toISOString()
-      });
-    }
-    const { destinationPhone, templateName, languageCode, parameters } = req.body;
-    const result = await sendWhatsAppTestMessage({
-      destinationPhone,
-      templateName,
-      languageCode,
-      parameters,
-      userId: authorizedUser.userId
-    }, authorizedUser);
-    const httpStatus = result.success ? 200 : result.errorCode === "UNAUTHORIZED" ? 403 : 400;
-    res.status(httpStatus).json(result);
+  });
+  app.use("/api", (err, req, res, next) => {
+    console.error("API Error Middleware caught:", err);
+    res.setHeader("Content-Type", "application/json");
+    res.status(500).json({
+      success: false,
+      status: "failed",
+      errorCode: "API_ERROR",
+      errorMessage: err?.message || "Erro inesperado na API.",
+      timestamp: (/* @__PURE__ */ new Date()).toISOString()
+    });
   });
   if (process.env.NODE_ENV !== "production") {
     const vite = await (0, import_vite.createServer)({
