@@ -28,7 +28,7 @@ var import_vite = require("vite");
 var import_dotenv = __toESM(require("dotenv"), 1);
 
 // src/server/whatsappMetaService.ts
-var import_firestore2 = require("firebase-admin/firestore");
+var import_firestore = require("firebase-admin/firestore");
 
 // firebase-applet-config.json
 var firebase_applet_config_default = {
@@ -46,7 +46,6 @@ var firebase_applet_config_default = {
 var import_crypto = __toESM(require("crypto"), 1);
 var import_app = require("firebase-admin/app");
 var import_auth = require("firebase-admin/auth");
-var import_firestore = require("firebase-admin/firestore");
 var adminAppInstance = null;
 function getFirebaseAdmin() {
   if (!adminAppInstance) {
@@ -61,6 +60,10 @@ function getFirebaseAdmin() {
   }
   return adminAppInstance;
 }
+var ALLOWED_ADMIN_EMAILS = Object.freeze([
+  "rickyjorgecastro@gmail.com",
+  "convencaomunicipaldequartetos@gmail.com"
+]);
 var rateLimitMap = /* @__PURE__ */ new Map();
 var cleanupInterval = setInterval(() => {
   const now = Date.now();
@@ -116,50 +119,8 @@ async function authenticateAndAuthorizeAdmin(tokenCandidate) {
     const authAdmin = (0, import_auth.getAuth)(app);
     const decoded = await authAdmin.verifyIdToken(cleanToken);
     if (decoded && decoded.uid) {
-      const email = decoded.email?.toLowerCase();
-      const hasDirectClaim = decoded.role === "admin" || decoded.role === "organizer" || decoded.admin === true;
-      if (hasDirectClaim) {
-        return {
-          userId: decoded.uid,
-          userEmail: email,
-          authType: "firebase_auth",
-          role: decoded.role === "admin" ? "admin" : "organizer"
-        };
-      }
-      try {
-        const firestore = (0, import_firestore.getFirestore)(app, firebase_applet_config_default.firestoreDatabaseId);
-        const staffDoc = await firestore.collection("staffUsers").doc(decoded.uid).get();
-        if (staffDoc.exists) {
-          const staffData = staffDoc.data();
-          if (staffData?.role === "organizer" || staffData?.role === "admin") {
-            return {
-              userId: decoded.uid,
-              userEmail: email || staffData?.email,
-              authType: "firebase_auth",
-              role: staffData.role
-            };
-          }
-        }
-        if (email) {
-          const staffQuery = await firestore.collection("staffUsers").where("email", "==", email).limit(1).get();
-          if (!staffQuery.empty) {
-            const data = staffQuery.docs[0].data();
-            if (data?.role === "organizer" || data?.role === "admin") {
-              return {
-                userId: decoded.uid,
-                userEmail: email,
-                authType: "firebase_auth",
-                role: data.role
-              };
-            }
-          }
-        }
-      } catch (firestoreErr) {
-        console.warn("Could not verify staff role via Firestore Admin:", firestoreErr);
-      }
-      const adminEmails = (process.env.ADMIN_EMAILS || "").split(",").map((e) => e.trim().toLowerCase()).filter(Boolean);
-      const isOwnerOrAdmin = email && email === "rickyjorgecastro@gmail.com" || email && adminEmails.includes(email);
-      if (isOwnerOrAdmin) {
+      const email = decoded.email?.toLowerCase().trim();
+      if (email && ALLOWED_ADMIN_EMAILS.includes(email)) {
         return {
           userId: decoded.uid,
           userEmail: email,
@@ -167,6 +128,8 @@ async function authenticateAndAuthorizeAdmin(tokenCandidate) {
           role: "admin"
         };
       }
+      console.warn(`[Security] Unauthorized admin access attempt from: ${email} (UID: ${decoded.uid})`);
+      return null;
     }
   } catch {
   }
@@ -222,7 +185,7 @@ function getMetaConfigStatus() {
 async function saveAuditLogToFirestore(log) {
   try {
     const adminApp = getFirebaseAdmin();
-    const firestore = (0, import_firestore2.getFirestore)(adminApp, firebase_applet_config_default.firestoreDatabaseId);
+    const firestore = (0, import_firestore.getFirestore)(adminApp, firebase_applet_config_default.firestoreDatabaseId);
     const docRef = firestore.collection("whatsappTestMessages").doc(log.logId);
     await docRef.set({
       id: log.logId,
@@ -565,7 +528,7 @@ async function startServer() {
     if (!authorizedUser) {
       return res.status(403).json({
         success: false,
-        error: "Token inv\xE1lido ou usu\xE1rio n\xE3o possui permiss\xE3o de organizador/administrador."
+        error: "Acesso negado: apenas os e-mails autorizados (rickyjorgecastro@gmail.com e convencaomunicipaldequartetos@gmail.com) possuem permiss\xE3o de administrador."
       });
     }
     res.json({
