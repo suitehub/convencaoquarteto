@@ -560,6 +560,21 @@ async function startServer() {
       message: "Autentica\xE7\xE3o administrativa concedida com sucesso."
     });
   });
+  app.post("/api/admin/verify-token", async (req, res) => {
+    const authHeader = req.headers.authorization?.replace(/^Bearer\s+/i, "") || req.body?.token;
+    const authorizedUser = await authenticateAndAuthorizeAdmin(authHeader);
+    if (!authorizedUser) {
+      return res.status(403).json({
+        success: false,
+        error: "Token inv\xE1lido ou usu\xE1rio n\xE3o possui permiss\xE3o de organizador/administrador."
+      });
+    }
+    res.json({
+      success: true,
+      user: authorizedUser,
+      message: "Token administrativo verificado com sucesso."
+    });
+  });
   app.get("/api/whatsapp/config-status", async (req, res) => {
     const clientIp = req.ip || req.socket.remoteAddress || "unknown";
     const rateCheck = checkServerRateLimit(`wa_status_${clientIp}`, 30, 60 * 1e3);
