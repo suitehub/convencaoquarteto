@@ -134,7 +134,7 @@ export async function authenticateAndAuthorizeAdmin(tokenCandidate?: string): Pr
 
       // Check if user is registered with organizer role in Firestore staffUsers or admins collection
       try {
-        const firestore = getFirestore(app);
+        const firestore = getFirestore(app, firebaseConfig.firestoreDatabaseId);
         const staffDoc = await firestore.collection('staffUsers').doc(decoded.uid).get();
         if (staffDoc.exists) {
           const staffData = staffDoc.data();
@@ -167,13 +167,17 @@ export async function authenticateAndAuthorizeAdmin(tokenCandidate?: string): Pr
         console.warn('Could not verify staff role via Firestore Admin:', firestoreErr);
       }
 
-      // Check against optional ADMIN_EMAILS environment variable
+      // Check against owner email or optional ADMIN_EMAILS environment variable
       const adminEmails = (process.env.ADMIN_EMAILS || '')
         .split(',')
         .map((e) => e.trim().toLowerCase())
         .filter(Boolean);
 
-      if (email && adminEmails.includes(email)) {
+      const isOwnerOrAdmin =
+        (email && email === 'rickyjorgecastro@gmail.com') ||
+        (email && adminEmails.includes(email));
+
+      if (isOwnerOrAdmin) {
         return {
           userId: decoded.uid,
           userEmail: email,

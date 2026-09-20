@@ -126,48 +126,75 @@ async function startServer() {
 
   // Send single WhatsApp test message (Protected: Admin / Organizer authorization required)
   app.post('/api/whatsapp/send-test', async (req, res) => {
-    const clientIp = req.ip || req.socket.remoteAddress || 'unknown';
-    const rateCheck = checkServerRateLimit(`wa_send_${clientIp}`, 10, 60 * 1000);
-    if (!rateCheck.allowed) {
-      return res.status(429).json({
+    res.setHeader('Content-Type', 'application/json');
+
+    try {
+      const clientIp = req.ip || req.socket.remoteAddress || 'unknown';
+      const rateCheck = checkServerRateLimit(`wa_send_${clientIp}`, 10, 60 * 1000);
+      if (!rateCheck.allowed) {
+        return res.status(429).json({
+          success: false,
+          status: 'failed',
+          errorCode: 'RATE_LIMIT_EXCEEDED',
+          errorMessage: 'Limite de disparos de teste atingido (máx 10/min). Aguarde antes de enviar outro teste.',
+          message: 'Limite excedido.',
+          timestamp: new Date().toISOString()
+        });
+      }
+
+      const authHeader = req.headers.authorization?.replace(/^Bearer\s+/i, '');
+      const token = authHeader || req.body?.adminAuthToken;
+
+      const authorizedUser = await authenticateAndAuthorizeAdmin(token);
+
+      if (!authorizedUser) {
+        return res.status(403).json({
+          success: false,
+          status: 'failed',
+          errorCode: 'UNAUTHORIZED',
+          errorMessage: 'Acesso não autorizado: credencial ou token administrativo inválido ou ausente.',
+          message: 'Acesso negado.',
+          timestamp: new Date().toISOString()
+        });
+      }
+
+      const { destinationPhone, templateName, languageCode, parameters } = req.body || {};
+      
+      // Dispatch test with verified user identity
+      const result = await sendWhatsAppTestMessage({
+        destinationPhone,
+        templateName,
+        languageCode,
+        parameters,
+        userId: authorizedUser.userId
+      }, authorizedUser);
+
+      const httpStatus = result.success ? 200 : (result.errorCode === 'UNAUTHORIZED' ? 403 : 400);
+      res.status(httpStatus).json(result);
+    } catch (err: any) {
+      console.error('Unhandled error in /api/whatsapp/send-test:', err);
+      res.status(500).json({
         success: false,
         status: 'failed',
-        errorCode: 'RATE_LIMIT_EXCEEDED',
-        errorMessage: 'Limite de disparos de teste atingido (máx 10/min). Aguarde antes de enviar outro teste.',
-        message: 'Limite excedido.',
+        errorCode: 'INTERNAL_SERVER_ERROR',
+        errorMessage: `Erro interno no servidor: ${err?.message || 'Falha ao processar requisição.'}`,
+        message: 'Erro no servidor.',
         timestamp: new Date().toISOString()
       });
     }
+  });
 
-    const authHeader = req.headers.authorization?.replace(/^Bearer\s+/i, '');
-    const token = authHeader || req.body.adminAuthToken;
-
-    const authorizedUser = await authenticateAndAuthorizeAdmin(token);
-
-    if (!authorizedUser) {
-      return res.status(403).json({
-        success: false,
-        status: 'failed',
-        errorCode: 'UNAUTHORIZED',
-        errorMessage: 'Acesso não autorizado: credencial ou token administrativo inválido ou ausente.',
-        message: 'Acesso negado.',
-        timestamp: new Date().toISOString()
-      });
-    }
-
-    const { destinationPhone, templateName, languageCode, parameters } = req.body;
-    
-    // Dispatch test with verified user identity
-    const result = await sendWhatsAppTestMessage({
-      destinationPhone,
-      templateName,
-      languageCode,
-      parameters,
-      userId: authorizedUser.userId
-    }, authorizedUser);
-
-    const httpStatus = result.success ? 200 : (result.errorCode === 'UNAUTHORIZED' ? 403 : 400);
-    res.status(httpStatus).json(result);
+  // Ensure all API errors return JSON rather than default HTML error pages
+  app.use('/api', (err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+    console.error('API Error Middleware caught:', err);
+    res.setHeader('Content-Type', 'application/json');
+    res.status(500).json({
+      success: false,
+      status: 'failed',
+      errorCode: 'API_ERROR',
+      errorMessage: err?.message || 'Erro inesperado na API.',
+      timestamp: new Date().toISOString()
+    });
   });
 
   // Vite middleware for development

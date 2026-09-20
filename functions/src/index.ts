@@ -74,6 +74,16 @@ async function authenticateCaller(token?: string): Promise<AuthenticatedCaller |
         };
       }
 
+      // Authorize owner email
+      if (email === "rickyjorgecastro@gmail.com") {
+        return {
+          userId: decoded.uid,
+          userEmail: email,
+          role: "admin",
+          authType: "firebase_auth",
+        };
+      }
+
       // Check Firestore staffUsers collection
       try {
         const staffDoc = await admin.firestore().collection("staffUsers").doc(decoded.uid).get();

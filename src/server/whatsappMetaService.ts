@@ -4,6 +4,7 @@
  */
 
 import { getFirestore } from 'firebase-admin/firestore';
+import firebaseConfig from '../../firebase-applet-config.json';
 import { 
   getFirebaseAdmin, 
   authenticateAndAuthorizeAdmin, 
@@ -104,7 +105,7 @@ async function saveAuditLogToFirestore(log: {
 }): Promise<void> {
   try {
     const adminApp = getFirebaseAdmin();
-    const firestore = getFirestore(adminApp);
+    const firestore = getFirestore(adminApp, firebaseConfig.firestoreDatabaseId);
     const docRef = firestore.collection('whatsappTestMessages').doc(log.logId);
 
     await docRef.set({

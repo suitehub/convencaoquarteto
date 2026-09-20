@@ -54,7 +54,12 @@ export async function checkWhatsAppConfigStatus(): Promise<WhatsAppConfigStatus>
     });
 
     if (res.ok) {
-      return await res.json() as WhatsAppConfigStatus;
+      const text = await res.text();
+      try {
+        return JSON.parse(text) as WhatsAppConfigStatus;
+      } catch {
+        console.warn('Config status returned non-JSON body');
+      }
     }
     return {
       hasToken: false,
@@ -103,15 +108,58 @@ export async function sendWhatsAppTest(payload: {
       })
     });
 
-    const data = await response.json() as WhatsAppSendTestResponse;
-    return data;
+    const responseText = await response.text();
+    let data: WhatsAppSendTestResponse | null = null;
+
+    try {
+      if (responseText && responseText.trim()) {
+        data = JSON.parse(responseText) as WhatsAppSendTestResponse;
+      }
+    } catch {
+      data = null;
+    }
+
+    if (data) {
+      return data;
+    }
+
+    // If server responded with HTML (e.g. 502/503/504 Bad Gateway / Service Unavailable)
+    let friendlyMessage = `O servidor respondeu com status ${response.status} (${response.statusText || 'Erro'}).`;
+    let statusType: 'failed' | 'uncertain' = 'uncertain';
+
+    if (response.status === 502 || response.status === 503) {
+      friendlyMessage = 'O servidor backend estava reiniciando ou temporariamente indisponível. Aguarde alguns segundos e tente novamente.';
+      statusType = 'uncertain';
+    } else if (response.status === 504) {
+      friendlyMessage = 'Tempo limite de resposta esgotado no gateway do servidor (504 Gateway Timeout). Não foi possível confirmar o envio.';
+      statusType = 'uncertain';
+    } else if (response.status === 404) {
+      friendlyMessage = 'A rota de envio (/api/whatsapp/send-test) não foi encontrada no servidor. Verifique a execução do backend.';
+      statusType = 'failed';
+    } else if (response.status === 401 || response.status === 403) {
+      friendlyMessage = 'Acesso não autorizado: credencial ou token administrativo inválido ou ausente.';
+      statusType = 'failed';
+    }
+
+    return {
+      success: false,
+      status: statusType,
+      errorCode: `HTTP_${response.status}`,
+      errorMessage: friendlyMessage,
+      message: 'Não foi possível concluir o envio com o servidor.',
+      timestamp
+    };
   } catch (error: unknown) {
     const errorMsg = error instanceof Error ? error.message : String(error);
+    const isNetwork = errorMsg.toLowerCase().includes('fetch') || errorMsg.toLowerCase().includes('failed to fetch');
+
     const fallbackResult: WhatsAppSendTestResponse = {
       success: false,
       status: 'uncertain',
       errorCode: 'CLIENT_NETWORK_ERROR',
-      errorMessage: `Falha na comunicação com o servidor: ${errorMsg}. Status incerto.`,
+      errorMessage: isNetwork
+        ? 'Não foi possível conectar ao servidor backend (/api/whatsapp/send-test). Verifique a conexão e tente novamente.'
+        : `Falha na comunicação com o servidor: ${errorMsg}. Status incerto.`,
       message: 'Não foi possível confirmar o envio.',
       timestamp
     };
