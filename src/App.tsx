@@ -21,6 +21,8 @@ import {
   updateParticipantInFirestore,
   updateEventConfig,
   getParticipantsCountSecure,
+  getSecretBatchCountSecure,
+  subscribeSecretBatchCount,
   checkDuplicateParticipantSecure,
   loginStaffSecure,
   loginParticipantSecure
@@ -51,14 +53,31 @@ export default function App() {
     );
   };
 
+  // Check if the current URL points to the secret registration batch (/secret)
+  const checkIsSecretRoute = (): boolean => {
+    if (typeof window === 'undefined') return false;
+    const path = window.location.pathname.toLowerCase();
+    const hash = window.location.hash.toLowerCase();
+    return (
+      path === '/secret' ||
+      path === '/secret/' ||
+      path.endsWith('/secret') ||
+      path.endsWith('/secret/') ||
+      hash === '#/secret' ||
+      hash === '#secret' ||
+      hash.includes('secret')
+    );
+  };
+
   // Application states
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [eventConfig, setEventConfig] = useState<EventConfig>(INITIAL_EVENT_CONFIG);
   const [staffUsers, setStaffUsers] = useState<StaffUser[]>([]);
   const [secureCount, setSecureCount] = useState<number>(0);
+  const [secretCount, setSecretCount] = useState<number>(0);
   
   // Navigation states - initialized dynamically based on the current URL route
-  const [splashCompleted, setSplashCompleted] = useState<boolean>(() => checkIsAdminRoute());
+  const [splashCompleted, setSplashCompleted] = useState<boolean>(() => checkIsAdminRoute() || checkIsSecretRoute());
   const [currentRole, setCurrentRole] = useState<UserRole>(() => {
     if (checkIsAdminRoute()) {
       const isAuth = sessionStorage.getItem('admin_authenticated') === 'true';
@@ -70,6 +89,9 @@ export default function App() {
     if (checkIsAdminRoute()) {
       const isAuth = sessionStorage.getItem('admin_authenticated') === 'true';
       return isAuth ? 'dashboard' : 'admin-lock';
+    }
+    if (checkIsSecretRoute()) {
+      return 'cadastro-secret';
     }
     return 'splash';
   });
@@ -85,8 +107,25 @@ export default function App() {
     }
   };
 
+  // Fetch secret batch count securely
+  const fetchSecretCount = async () => {
+    try {
+      const count = await getSecretBatchCountSecure();
+      setSecretCount(count);
+    } catch (err) {
+      console.error('Error fetching secret count securely:', err);
+    }
+  };
+
   useEffect(() => {
     fetchParticipantsCount();
+    fetchSecretCount();
+
+    // Setup listener for secret batch registrations
+    const unsubSecret = subscribeSecretBatchCount((count) => {
+      setSecretCount(count);
+    });
+    return () => unsubSecret();
   }, []);
 
   // Continuous Auth Guard: Ensure only authorized emails can retain organizer role
@@ -145,7 +184,7 @@ export default function App() {
     };
   }, [currentRole]);
 
-  // Hash/Path routing listener for admin
+  // Hash/Path routing listener for admin and secret batch
   useEffect(() => {
     const handleRouteUpdate = () => {
       if (checkIsAdminRoute()) {
@@ -158,6 +197,10 @@ export default function App() {
           setCurrentRole('public');
           setCurrentView('admin-lock');
         }
+      } else if (checkIsSecretRoute()) {
+        setSplashCompleted(true);
+        setCurrentRole('public');
+        setCurrentView('cadastro-secret');
       } else {
         // If they navigate away from admin manually, go to landing
         if (currentView === 'admin-lock') {
@@ -192,10 +235,19 @@ export default function App() {
   };
 
   // Helper action: Register new participant
-  const handleAddParticipant = async (newPart: Omit<Participant, 'id' | 'status' | 'registrationDate'>) => {
-    // Check total count before registering
-    const currentCount = await getParticipantsCountSecure();
-    if (currentCount >= 316) {
+  const handleAddParticipant = async (
+    newPart: Omit<Participant, 'id' | 'status' | 'registrationDate'>,
+    isSecretBatch: boolean = false
+  ) => {
+    if (isSecretBatch) {
+      // Check secret batch limit: maximum 11 people
+      const currentSecretCount = await getSecretBatchCountSecure();
+      const peopleToAdd = 1 + (Array.isArray(newPart.dependents) ? newPart.dependents.length : 0);
+      if (currentSecretCount >= 11 || currentSecretCount + peopleToAdd > 11) {
+        throw new Error('SECRET_BATCH_FULL');
+      }
+    } else {
+      // Public regular registration is closed
       throw new Error('CAPACITY_REACHED');
     }
 
@@ -209,12 +261,14 @@ export default function App() {
       ...newPart,
       id: `part-${Date.now()}`,
       status: 'Pendente',
-      registrationDate: new Date().toLocaleDateString('pt-BR')
+      registrationDate: new Date().toLocaleDateString('pt-BR'),
+      isSecretBatch: isSecretBatch ? true : false,
     };
     await addParticipantInFirestore(freshParticipant);
     
     // Refresh public registration count securely
     await fetchParticipantsCount();
+    await fetchSecretCount();
   };
 
   // Helper action: Delete/Cancel participant registration
@@ -287,9 +341,20 @@ export default function App() {
     }
 
     if (view === 'landing' || view === 'home') {
-      if (window.location.hash.includes('admin')) {
+      if (window.location.hash.includes('admin') || window.location.hash.includes('secret')) {
         window.location.hash = '';
       }
+      if (typeof window !== 'undefined' && window.location.pathname.includes('/secret')) {
+        window.history.pushState(null, '', '/');
+      }
+    }
+
+    if (view === 'cadastro-secret' || view === 'secret') {
+      window.location.hash = '#/secret';
+      setSplashCompleted(true);
+      setCurrentRole('public');
+      setCurrentView('cadastro-secret');
+      return;
     }
 
     if (view === 'login-reception') {
@@ -348,6 +413,19 @@ export default function App() {
             />
           );
         }
+        if (currentView === 'cadastro-secret') {
+          return (
+            <Cadastro
+              initialType="Público"
+              onAddParticipant={handleAddParticipant}
+              onNavigate={handleNavigate}
+              participantsCount={secureCount}
+              participants={[]}
+              isSecretMode={true}
+              secretBatchCount={secretCount}
+            />
+          );
+        }
         if (currentView === 'cadastro' || currentView === 'cadastro-quarteto') {
           return (
             <Cadastro
@@ -356,6 +434,8 @@ export default function App() {
               onNavigate={handleNavigate}
               participantsCount={secureCount}
               participants={[]}
+              isSecretMode={false}
+              secretBatchCount={secretCount}
             />
           );
         }

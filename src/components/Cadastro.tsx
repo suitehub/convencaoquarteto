@@ -13,10 +13,12 @@ import { PrivacyPolicyModal } from './PrivacyPolicyModal';
 
 interface CadastroProps {
   initialType?: 'Público' | 'Participante';
-  onAddParticipant: (newPart: Omit<Participant, 'id' | 'status' | 'registrationDate'>) => Promise<void>;
+  onAddParticipant: (newPart: Omit<Participant, 'id' | 'status' | 'registrationDate'>, isSecret?: boolean) => Promise<void>;
   onNavigate: (view: string, role?: 'public' | 'participant' | 'reception' | 'organizer') => void;
   participantsCount?: number;
   participants?: Participant[];
+  isSecretMode?: boolean;
+  secretBatchCount?: number;
 }
 
 export default function Cadastro({ 
@@ -24,7 +26,9 @@ export default function Cadastro({
   onAddParticipant, 
   onNavigate, 
   participantsCount = 0,
-  participants = []
+  participants = [],
+  isSecretMode = false,
+  secretBatchCount = 0
 }: CadastroProps) {
   const [formData, setFormData] = useState({
     name: '',
@@ -42,7 +46,11 @@ export default function Cadastro({
 
   const passwordEvaluation = evaluatePassword(formData.password);
 
-  if (participantsCount >= 316) {
+  const SECRET_BATCH_LIMIT = 11;
+  const secretRemaining = Math.max(0, SECRET_BATCH_LIMIT - secretBatchCount);
+
+  // If accessed normally from public page (not via /secret), keep registration strictly CLOSED / SOLD OUT
+  if (!isSecretMode) {
     return (
       <div className="min-h-screen bg-app-deep flex flex-col justify-center items-center px-4 py-20 relative overflow-hidden">
         {/* Immersive brand glow elements */}
@@ -75,27 +83,111 @@ export default function Cadastro({
               <h2 className="text-2xl font-black text-app-deep font-display tracking-tight">Inscrições Encerradas!</h2>
               
               <p className="text-slate-600 text-sm mt-3 font-light leading-relaxed">
-                Desculpe! O limite máximo de <strong className="text-app-medium font-semibold">316 ingressos</strong> foi atingido e as inscrições foram encerradas para este evento.
+                Desculpe! O limite de vagas públicas abertas foi atingido e as inscrições na página principal estão <strong className="text-red-600 font-semibold">esgotadas</strong> para este evento.
               </p>
               
               <div className="bg-app-light p-4 rounded-2xl border border-slate-200 my-6 text-left space-y-2">
                 <div className="text-xs text-slate-500 font-mono flex justify-between">
-                  <span>CAPACIDADE MÁXIMA:</span>
-                  <span className="text-red-600 font-bold">316 INGRESSOS</span>
+                  <span>STATUS DO EVENTO:</span>
+                  <span className="text-red-600 font-bold">ESGOTADO</span>
                 </div>
                 <div className="text-xs text-slate-500 font-mono flex justify-between">
-                  <span>RESERVAS ATIVAS:</span>
-                  <span className="text-app-deep font-bold">{participantsCount} / 316</span>
+                  <span>INSCRIÇÕES CONFIRMADAS:</span>
+                  <span className="text-app-deep font-bold">{participantsCount} Participantes</span>
                 </div>
                 <div className="text-xs text-slate-500 font-mono flex justify-between">
-                  <span>STATUS EVENTO:</span>
-                  <span className="text-red-600 font-bold">LOTADO</span>
+                  <span>ACESSO:</span>
+                  <span className="text-slate-600 font-semibold">Apenas membros cadastrados</span>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <button
+                  onClick={() => onNavigate('login')}
+                  className="w-full px-6 py-3.5 bg-app-gold text-app-deep font-black text-sm rounded-2xl cursor-pointer transition-all hover:shadow-lg active:scale-95"
+                >
+                  Já Possuo Inscrição (Fazer Login)
+                </button>
+                <button
+                  onClick={() => onNavigate('landing')}
+                  className="w-full px-6 py-3.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-sm rounded-2xl cursor-pointer transition-all active:scale-95"
+                >
+                  Voltar para Início
+                </button>
+              </div>
+            </div>
+            
+            <div className="mt-8 pt-4 border-t border-slate-100 text-center">
+              <span className="text-[10px] text-slate-400 font-mono uppercase tracking-widest block select-none">
+                #MissãoEmCadaCanção
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // If accessed via /secret, check if the 11 secret spots are already taken!
+  if (isSecretMode && secretBatchCount >= SECRET_BATCH_LIMIT) {
+    return (
+      <div className="min-h-screen bg-app-deep flex flex-col justify-center items-center px-4 py-20 relative overflow-hidden">
+        {/* Immersive brand glow elements */}
+        <div className="absolute top-0 right-0 w-[600px] h-[600px] rounded-full bg-app-medium/10 blur-[130px] -translate-y-1/2 translate-x-1/3" />
+        <div className="absolute bottom-0 left-0 w-[500px] h-[500px] rounded-full bg-app-gold/10 blur-[120px] translate-y-1/2 -translate-x-1/3" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] rounded-full bg-app-medium/5 blur-[100px] pointer-events-none" />
+
+        {/* Elegant geometric line grid */}
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#1e293b_1px,transparent_1px),linear-gradient(to_bottom,#1e293b_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)] opacity-20 pointer-events-none" />
+
+        {/* Back button */}
+        <button
+          onClick={() => onNavigate('landing')}
+          className="absolute top-6 left-6 text-slate-300 hover:text-white flex items-center space-x-2 text-sm font-medium font-mono cursor-pointer transition-colors z-20"
+        >
+          <ArrowLeft className="w-4 h-4 text-app-gold" />
+          <span>Voltar para Início</span>
+        </button>
+
+        {/* Card Form */}
+        <div className="relative z-10 w-full max-w-md">
+          <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 shadow-2xl overflow-hidden relative">
+            <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-amber-500 via-red-500 to-amber-500" />
+            
+            <div className="text-center py-4">
+              <div className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-amber-50 text-amber-800 border border-amber-200 text-[11px] font-mono font-bold mb-4 uppercase">
+                <Lock className="w-3.5 h-3.5 text-amber-600" />
+                <span>Lote Secreto Encerrado</span>
+              </div>
+
+              <div className="w-16 h-16 rounded-full bg-red-50 border border-red-200 text-red-600 flex items-center justify-center mx-auto mb-4">
+                <AlertCircle className="w-10 h-10" />
+              </div>
+              
+              <h2 className="text-2xl font-black text-app-deep font-display tracking-tight">Vagas Esgotadas!</h2>
+              
+              <p className="text-slate-600 text-sm mt-3 font-light leading-relaxed">
+                Todas as <strong className="text-app-medium font-bold">11 vagas exclusivas</strong> disponibilizadas para este lote secreto foram preenchidas com sucesso. O sistema bloqueou novos registros automaticamente.
+              </p>
+              
+              <div className="bg-app-light p-4 rounded-2xl border border-slate-200 my-6 text-left space-y-2">
+                <div className="text-xs text-slate-500 font-mono flex justify-between">
+                  <span>LOTE SECRETO:</span>
+                  <span className="text-red-600 font-bold">11 / 11 PREENCHIDAS</span>
+                </div>
+                <div className="text-xs text-slate-500 font-mono flex justify-between">
+                  <span>STATUS DO LINK:</span>
+                  <span className="text-red-600 font-bold">BLOQUEADO</span>
+                </div>
+                <div className="text-xs text-slate-500 font-mono flex justify-between">
+                  <span>TOTAL NO EVENTO:</span>
+                  <span className="text-app-deep font-bold">{participantsCount} Participantes</span>
                 </div>
               </div>
 
               <button
                 onClick={() => onNavigate('landing')}
-                className="w-full px-6 py-4 bg-app-medium text-white font-bold text-sm rounded-2xl cursor-pointer transition-all active:scale-95"
+                className="w-full px-6 py-4 bg-app-medium hover:bg-app-dark text-white font-bold text-sm rounded-2xl cursor-pointer transition-all active:scale-95 shadow-md"
               >
                 Voltar para Início
               </button>
@@ -116,8 +208,13 @@ export default function Cadastro({
     e.preventDefault();
     setErrorMsg('');
 
-    if (participantsCount >= 316) {
-      setErrorMsg('Desculpe, o limite máximo de 316 ingressos foi atingido.');
+    if (isSecretMode && secretBatchCount >= SECRET_BATCH_LIMIT) {
+      setErrorMsg('Desculpe, o limite de 11 vagas do lote secreto foi atingido.');
+      return;
+    }
+
+    if (!isSecretMode) {
+      setErrorMsg('Desculpe, as inscrições gerais estão encerradas.');
       return;
     }
 
@@ -179,14 +276,14 @@ export default function Cadastro({
         phone: cleanPhone,
         password: cleanPassword,
         registrationType: initialType
-      });
+      }, isSecretMode);
       recordAttempt('registration');
       setSuccess(true);
     } catch (err: any) {
       console.error('Registration failed:', err);
       recordAttempt('registration');
-      if (err?.message === 'CAPACITY_REACHED') {
-        setErrorMsg('Desculpe! O limite máximo de ingressos foi atingido e não há mais vagas disponíveis no momento.');
+      if (err?.message === 'SECRET_BATCH_FULL' || err?.message === 'CAPACITY_REACHED') {
+        setErrorMsg('Desculpe! O limite de vagas deste lote secreto foi atingido e não há mais vagas disponíveis.');
       } else if (err?.message === 'EMAIL_EXISTS') {
         setErrorMsg('Já existe um cadastro realizado com este e-mail. Se você já possui uma inscrição, acesse a Área do Participante.');
       } else {
@@ -245,24 +342,60 @@ export default function Cadastro({
           {!success ? (
             <>
               <div className="mb-6 text-center">
-                <span className="text-[10px] font-bold text-app-gold tracking-widest block uppercase mb-1.5 font-mono">
-                  9ª Convenção Municipal de Quartetos
-                </span>
-                
-                <div className="w-12 h-12 rounded-2xl bg-app-light border border-slate-200 text-app-medium flex items-center justify-center mx-auto mb-4 shadow-sm">
-                  <Ticket className="w-6 h-6 text-app-medium" />
-                </div>
-                
-                <h2 className="text-2xl font-black text-app-deep font-display tracking-tight">
-                  {initialType === 'Participante' ? 'Inscrição de Quarteto' : 'Reserva de Ingresso'}
-                </h2>
-                
-                <p className="text-slate-500 text-xs mt-2 font-light leading-relaxed">
-                  {initialType === 'Participante' 
-                    ? 'Módulo exclusivo para quartetos, trios e grupos vocais participantes realizarem o cadastro.'
-                    : 'Garanta sua cadeira gratuita no maior evento musical de quartetos do município.'
-                  }
-                </p>
+                {isSecretMode ? (
+                  <>
+                    <div className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-amber-500/10 text-amber-700 border border-amber-500/30 text-[11px] font-mono font-bold mb-3 uppercase tracking-wider">
+                      <Lock className="w-3.5 h-3.5 text-amber-600" />
+                      <span>✨ Link Exclusivo • Lote Secreto</span>
+                    </div>
+
+                    <h2 className="text-2xl font-black text-app-deep font-display tracking-tight">
+                      Inscrição Exclusiva
+                    </h2>
+
+                    <p className="text-slate-600 text-xs mt-1.5 font-light leading-relaxed">
+                      Você acessou o lote especial com <strong>11 vagas secretas</strong>. Complete seu cadastro abaixo para garantir a sua vaga!
+                    </p>
+
+                    {/* Vagas restantes progress indicator */}
+                    <div className="mt-4 p-3 rounded-2xl bg-amber-50/70 border border-amber-200/80 text-left">
+                      <div className="flex items-center justify-between text-xs font-mono font-bold">
+                        <span className="text-amber-900">VAGAS NESTE LOTE:</span>
+                        <span className="text-amber-700">{secretRemaining} de {SECRET_BATCH_LIMIT} restantes</span>
+                      </div>
+                      <div className="w-full bg-amber-200/60 rounded-full h-2 mt-2 overflow-hidden">
+                        <div 
+                          className="bg-gradient-to-r from-amber-500 to-app-gold h-2 rounded-full transition-all duration-500"
+                          style={{ width: `${Math.min(100, Math.round((secretBatchCount / SECRET_BATCH_LIMIT) * 100))}%` }}
+                        />
+                      </div>
+                      <span className="text-[10px] text-amber-800/80 block mt-1.5 font-mono">
+                        {secretBatchCount} pessoa{secretBatchCount === 1 ? '' : 's'} inscrita{secretBatchCount === 1 ? '' : 's'} neste lote (limite: 11).
+                      </span>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <span className="text-[10px] font-bold text-app-gold tracking-widest block uppercase mb-1.5 font-mono">
+                      9ª Convenção Municipal de Quartetos
+                    </span>
+                    
+                    <div className="w-12 h-12 rounded-2xl bg-app-light border border-slate-200 text-app-medium flex items-center justify-center mx-auto mb-4 shadow-sm">
+                      <Ticket className="w-6 h-6 text-app-medium" />
+                    </div>
+                    
+                    <h2 className="text-2xl font-black text-app-deep font-display tracking-tight">
+                      {initialType === 'Participante' ? 'Inscrição de Quarteto' : 'Reserva de Ingresso'}
+                    </h2>
+                    
+                    <p className="text-slate-500 text-xs mt-2 font-light leading-relaxed">
+                      {initialType === 'Participante' 
+                        ? 'Módulo exclusivo para quartetos, trios e grupos vocais participantes realizarem o cadastro.'
+                        : 'Garanta sua cadeira gratuita no maior evento musical de quartetos do município.'
+                      }
+                    </p>
+                  </>
+                )}
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-4">
@@ -459,10 +592,15 @@ export default function Cadastro({
                 <CheckCircle className="w-10 h-10" />
               </div>
               
-              <h2 className="text-2xl font-black text-app-deep font-display">Inscrição Efetuada!</h2>
+              <h2 className="text-2xl font-black text-app-deep font-display">
+                {isSecretMode ? 'Vaga Secreta Confirmada!' : 'Inscrição Efetuada!'}
+              </h2>
               
               <p className="text-slate-600 text-sm mt-3 font-light leading-relaxed">
-                Excelente! Sua vaga para a <strong className="text-app-medium font-semibold">9ª Convenção Municipal de Quartetos</strong> está garantida com sucesso.
+                {isSecretMode 
+                  ? <>Excelente! Sua vaga exclusiva do <strong>Lote Secreto</strong> para a <strong className="text-app-medium font-semibold">9ª Convenção Municipal de Quartetos</strong> foi reservada e computada com sucesso.</>
+                  : <>Excelente! Sua vaga para a <strong className="text-app-medium font-semibold">9ª Convenção Municipal de Quartetos</strong> está garantida com sucesso.</>
+                }
               </p>
               
               <div className="bg-app-light p-4 rounded-2xl border border-slate-200 my-6 text-left space-y-2">
@@ -472,7 +610,9 @@ export default function Cadastro({
                 </div>
                 <div className="text-xs text-slate-500 font-mono flex justify-between">
                   <span>TIPO DE CADASTRO:</span>
-                  <span className="text-app-medium font-bold uppercase">{initialType}</span>
+                  <span className="text-app-medium font-bold uppercase">
+                    {isSecretMode ? `${initialType} (LOTE SECRETO)` : initialType}
+                  </span>
                 </div>
                 <div className="text-xs text-slate-500 font-mono flex justify-between">
                   <span>STATUS RESERVA:</span>

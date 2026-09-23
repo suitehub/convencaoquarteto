@@ -166,13 +166,14 @@ export default function OrganizerArea({
   };
 
   const handleExportLeads = () => {
-    const headers = ['Nome', 'Email', 'Telefone', 'Cidade', 'Tipo Inscrição', 'Status Presença', 'Data Registro'];
+    const headers = ['Nome', 'Email', 'Telefone', 'Cidade', 'Tipo Inscrição', 'Lote', 'Status Presença', 'Data Registro'];
     const rows = participants.map((p) => [
       p.name,
       p.email,
       p.phone,
       p.city || 'Não informado',
       p.registrationType || 'Público',
+      p.isSecretBatch ? 'Lote Secreto (11 vagas)' : 'Geral',
       p.status,
       p.registrationDate || ''
     ]);
@@ -549,6 +550,11 @@ export default function OrganizerArea({
                             }`}>
                               {p.registrationType || 'Público'}
                             </span>
+                            {p.isSecretBatch && (
+                              <span className="ml-1.5 inline-flex items-center px-1.5 py-0.5 rounded-full text-[8px] font-bold bg-amber-100 text-amber-800 border border-amber-300">
+                                Lote Secreto
+                              </span>
+                            )}
                           </td>
                           <td className="py-4 px-6 text-center">
                             <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold bg-blue-50 text-blue-700 border border-blue-100 uppercase tracking-wider font-mono">

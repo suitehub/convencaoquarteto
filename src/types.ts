@@ -22,6 +22,7 @@ export interface Participant {
   registrationDate: string;
   registrationType: 'Público' | 'Participante';
   dependents?: Dependent[];
+  isSecretBatch?: boolean;
 }
 
 export interface EventConfig {

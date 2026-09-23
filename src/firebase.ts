@@ -251,6 +251,51 @@ export async function getParticipantsCountSecure(): Promise<number> {
   }
 }
 
+/**
+ * Secret Batch Counter:
+ * Calculates total people (main registrants + dependents) enrolled through the secret batch URL.
+ */
+export async function getSecretBatchCountSecure(): Promise<number> {
+  try {
+    const coll = collection(db, 'participants');
+    const q = query(coll, where('isSecretBatch', '==', true));
+    const snapshot = await getDocs(q);
+    let total = 0;
+    snapshot.forEach((docSnap) => {
+      const data = docSnap.data();
+      total += 1;
+      if (Array.isArray(data.dependents)) {
+        total += data.dependents.length;
+      }
+    });
+    return total;
+  } catch (error) {
+    console.error('Error fetching secret batch count securely:', error);
+    return 0;
+  }
+}
+
+/**
+ * Real-time listener for secret batch registrations count.
+ */
+export function subscribeSecretBatchCount(callback: (count: number) => void) {
+  const coll = collection(db, 'participants');
+  const q = query(coll, where('isSecretBatch', '==', true));
+  return onSnapshot(q, (snapshot) => {
+    let total = 0;
+    snapshot.forEach((docSnap) => {
+      const data = docSnap.data();
+      total += 1;
+      if (Array.isArray(data.dependents)) {
+        total += data.dependents.length;
+      }
+    });
+    callback(total);
+  }, (error) => {
+    console.error('Error in subscribeSecretBatchCount:', error);
+  });
+}
+
 export async function checkDuplicateParticipantSecure(email: string, phone: string): Promise<{ emailExists: boolean, phoneExists: boolean }> {
   try {
     const coll = collection(db, 'participants');

@@ -78,10 +78,11 @@ export default function LandingPage({ eventConfig, onNavigate, participantsCount
             </button>
             <button
               onClick={() => onNavigate('cadastro')}
-              className="px-3 py-2 sm:px-5 sm:py-2.5 text-xs font-bold font-mono bg-app-gold hover:bg-app-gold/90 text-app-deep shadow-lg shadow-app-gold/15 active:scale-95 rounded-xl transition-all cursor-pointer flex items-center space-x-1.5 sm:space-x-2 font-black shrink-0"
+              className="px-3 py-2 sm:px-5 sm:py-2.5 text-xs font-bold font-mono bg-red-500/20 text-red-300 border border-red-500/40 hover:bg-red-500/30 rounded-xl transition-all cursor-pointer flex items-center space-x-1.5 sm:space-x-2 font-black shrink-0"
+              title="Inscrições Esgotadas"
             >
-              <Ticket className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-app-deep shrink-0" />
-              <span>RESERVAR<span className="hidden sm:inline"> INGRESSO</span></span>
+              <Ticket className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-red-400 shrink-0" />
+              <span>INSCRIÇÕES ESGOTADAS</span>
             </button>
           </div>
         </div>
@@ -167,31 +168,21 @@ export default function LandingPage({ eventConfig, onNavigate, participantsCount
               </div>
             </motion.div>
 
-            {/* Main CTA button: Large, prominent, glowing, pulse anim */}
-            <div className="relative group mb-16">
-              {participantsCount >= 316 ? (
-                <button
-                  onClick={() => onNavigate('cadastro')}
-                  className="relative w-full sm:w-auto px-10 py-5 text-base bg-red-600 hover:bg-red-700 text-white rounded-2xl shadow-2xl border border-red-500 transition-all flex items-center justify-center space-x-3.5 font-black uppercase tracking-wide cursor-pointer"
-                >
-                  <Ticket className="w-6 h-6 text-white animate-bounce" />
-                  <span>INSCRIÇÕES ENCERRADAS (LOTADO)</span>
-                </button>
-              ) : (
-                <>
-                  <div className="absolute -inset-1 bg-gradient-to-r from-app-medium via-app-gold to-app-medium rounded-2xl blur-lg opacity-60 group-hover:opacity-100 transition duration-1000 group-hover:duration-200 animate-pulse" />
-                  <button
-                    onClick={() => onNavigate('cadastro')}
-                    className="relative w-full sm:w-auto px-10 py-5 text-base bg-app-gold hover:bg-app-gold/95 text-app-deep rounded-2xl shadow-2xl hover:shadow-app-gold/20 transition-all cursor-pointer active:scale-98 flex items-center justify-center space-x-3.5 font-black"
-                  >
-                    <Ticket className="w-6 h-6 text-app-deep" />
-                    <span>RESERVAR INGRESSO GRATUITO</span>
-                  </button>
-                  <span className="absolute top-full mt-2 left-0 right-0 text-center text-xs font-mono text-slate-300 font-medium">
-                    Garanta sua vaga! Apenas <strong className="text-app-gold">{Math.max(0, 316 - participantsCount)}</strong> ingressos disponíveis
-                  </span>
-                </>
-              )}
+            {/* Main CTA button: Kept sold out on main page as requested */}
+            <div className="relative group mb-16 flex flex-col items-center">
+              <button
+                onClick={() => onNavigate('cadastro')}
+                className="relative w-full sm:w-auto px-10 py-5 text-base bg-red-600 hover:bg-red-700 text-white rounded-2xl shadow-2xl border border-red-500 transition-all flex items-center justify-center space-x-3.5 font-black uppercase tracking-wide cursor-pointer active:scale-98 shadow-red-600/30"
+              >
+                <Ticket className="w-6 h-6 text-white animate-bounce" />
+                <span>INSCRIÇÕES ENCERRADAS (LOTADO)</span>
+              </button>
+              <span className="mt-3 text-center text-xs font-mono text-slate-300 font-medium flex items-center space-x-2">
+                <span className="inline-block w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+                <span>
+                  Lotação máxima atingida • <strong className="text-app-gold font-bold">{participantsCount}</strong> inscrições confirmadas
+                </span>
+              </span>
             </div>
           </motion.div>
 

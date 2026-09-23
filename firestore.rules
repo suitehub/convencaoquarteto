@@ -72,7 +72,7 @@ service cloud.firestore {
     // Validation blueprints
     function isValidParticipant(data) {
       return data.keys().hasAll(['id', 'name', 'email', 'phone', 'status', 'registrationDate', 'registrationType'])
-        && data.keys().size() <= 12
+        && data.keys().size() <= 15
         && data.id is string && data.id.size() <= 128
         && data.name is string && data.name.size() > 0 && data.name.size() <= 150
         && data.email is string && data.email.size() > 0 && data.email.size() <= 150
@@ -83,7 +83,8 @@ service cloud.firestore {
         && (!data.keys().hasAny(['password']) || (data.password is string && data.password.size() <= 128))
         && (!data.keys().hasAny(['city']) || (data.city is string && data.city.size() <= 100))
         && (!data.keys().hasAny(['checkInTime']) || (data.checkInTime is string && data.checkInTime.size() <= 30))
-        && (!data.keys().hasAny(['dependents']) || (data.dependents is list && data.dependents.size() <= 20));
+        && (!data.keys().hasAny(['dependents']) || (data.dependents is list && data.dependents.size() <= 20))
+        && (!data.keys().hasAny(['isSecretBatch']) || (data.isSecretBatch is bool));
     }
 
     // Validation helper for staffUsers
