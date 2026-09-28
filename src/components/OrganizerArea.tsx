@@ -13,7 +13,7 @@ import {
   LayoutDashboard, Users, BarChart3, Settings, Gift, Music, Search, 
   SlidersHorizontal, CheckCircle2, AlertCircle, Save, Calendar, Clock, 
   MapPin, Sliders, ArrowUpRight, Check, Menu, X, UserPlus, Key, Download, FileSpreadsheet,
-  Trash2, MessageSquare, Send
+  Trash2, MessageSquare, Send, Baby
 } from 'lucide-react';
 import { Participant, EventConfig, StaffUser } from '../types';
 import Sorteio from './Sorteio';
@@ -83,7 +83,8 @@ export default function OrganizerArea({
   const filteredParts = participants.filter((p) => {
     const matchesSearch = p.name.toLowerCase().includes(search.toLowerCase()) || 
                           p.email.toLowerCase().includes(search.toLowerCase()) ||
-                          p.phone.includes(search);
+                          p.phone.includes(search) ||
+                          Boolean(p.dependents && p.dependents.some((d) => d.name.toLowerCase().includes(search.toLowerCase())));
     const matchesStatus = statusFilter === 'Todos' || p.status === statusFilter;
     const matchesCity = cityFilter === 'Todas' || (p.city && p.city.startsWith(cityFilter));
     return matchesSearch && matchesStatus && matchesCity;
@@ -166,17 +167,23 @@ export default function OrganizerArea({
   };
 
   const handleExportLeads = () => {
-    const headers = ['Nome', 'Email', 'Telefone', 'Cidade', 'Tipo Inscrição', 'Lote', 'Status Presença', 'Data Registro'];
-    const rows = participants.map((p) => [
-      p.name,
-      p.email,
-      p.phone,
-      p.city || 'Não informado',
-      p.registrationType || 'Público',
-      p.isSecretBatch ? 'Lote Secreto (11 vagas)' : 'Geral',
-      p.status,
-      p.registrationDate || ''
-    ]);
+    const headers = ['Nome', 'Email', 'Telefone', 'Cidade', 'Tipo Inscrição', 'Dependentes', 'Lote', 'Status Presença', 'Data Registro'];
+    const rows = participants.map((p) => {
+      const dependentsInfo = (p.dependents && p.dependents.length > 0)
+        ? p.dependents.map((d) => `${d.name} (${d.birthDate || 'S/D'})`).join('; ')
+        : 'Nenhum';
+      return [
+        p.name,
+        p.email,
+        p.phone,
+        p.city || 'Não informado',
+        p.registrationType || 'Público',
+        dependentsInfo,
+        p.isSecretBatch ? 'Lote Secreto (11 vagas)' : 'Geral',
+        p.status,
+        p.registrationDate || ''
+      ];
+    });
 
     const csvContent = '\uFEFF' + [
       headers.join(','),
@@ -536,32 +543,66 @@ export default function OrganizerArea({
                     {filteredParts.length > 0 ? (
                       filteredParts.map((p) => (
                         <tr key={p.id} className="hover:bg-slate-50/40 transition-colors">
-                          <td className="py-4 px-6">
+                          <td className="py-4 px-6 align-top">
                             <span className="font-semibold text-slate-800 block">{p.name}</span>
                             <span className="text-slate-400 text-[10px]">{p.email}</span>
-                          </td>
-                          <td className="py-4 px-6 font-mono text-slate-600">{p.phone}</td>
-                          <td className="py-4 px-6 text-slate-500">{p.city || 'Não informado'}</td>
-                          <td className="py-4 px-6">
-                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold ${
-                              p.registrationType === 'Participante'
-                                ? 'bg-purple-100 text-purple-700 border border-purple-200' 
-                                : 'bg-slate-100 text-slate-700 border border-slate-200'
-                            }`}>
-                              {p.registrationType || 'Público'}
-                            </span>
-                            {p.isSecretBatch && (
-                              <span className="ml-1.5 inline-flex items-center px-1.5 py-0.5 rounded-full text-[8px] font-bold bg-amber-100 text-amber-800 border border-amber-300">
-                                Lote Secreto
-                              </span>
+
+                            {/* Dependentes vinculados na mesma linha do participante */}
+                            {p.dependents && p.dependents.length > 0 && (
+                              <div className="mt-2.5 pt-2 border-t border-slate-100 space-y-1.5">
+                                {p.dependents.map((dep, idx) => (
+                                  <div
+                                    key={dep.id || idx}
+                                    className="flex items-center gap-1.5 flex-wrap bg-amber-50/80 border border-amber-200/90 rounded-lg px-2 py-1 text-slate-700 w-fit"
+                                  >
+                                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider bg-amber-200/90 text-amber-900 border border-amber-300">
+                                      <Baby className="w-2.5 h-2.5 text-amber-800 shrink-0" />
+                                      Dependente
+                                    </span>
+                                    <span className="font-semibold text-[11px] text-slate-800">
+                                      {dep.name}
+                                    </span>
+                                    {dep.birthDate && (
+                                      <span className="text-[10px] text-slate-500 font-mono">
+                                        • Nasc: {dep.birthDate}
+                                      </span>
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
                             )}
                           </td>
-                          <td className="py-4 px-6 text-center">
+                          <td className="py-4 px-6 font-mono text-slate-600 align-top">{p.phone}</td>
+                          <td className="py-4 px-6 text-slate-500 align-top">{p.city || 'Não informado'}</td>
+                          <td className="py-4 px-6 align-top">
+                            <div className="flex flex-col gap-1 items-start">
+                              <div className="flex items-center flex-wrap gap-1">
+                                <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold ${
+                                  p.registrationType === 'Participante'
+                                    ? 'bg-purple-100 text-purple-700 border border-purple-200' 
+                                    : 'bg-slate-100 text-slate-700 border border-slate-200'
+                                }`}>
+                                  {p.registrationType || 'Público'}
+                                </span>
+                                {p.isSecretBatch && (
+                                  <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[8px] font-bold bg-amber-100 text-amber-800 border border-amber-300">
+                                    Lote Secreto
+                                  </span>
+                                )}
+                              </div>
+                              {p.dependents && p.dependents.length > 0 && (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold bg-amber-100/90 text-amber-800 border border-amber-200">
+                                  +{p.dependents.length} {p.dependents.length === 1 ? 'dependente' : 'dependentes'}
+                                </span>
+                              )}
+                            </div>
+                          </td>
+                          <td className="py-4 px-6 text-center align-top">
                             <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold bg-blue-50 text-blue-700 border border-blue-100 uppercase tracking-wider font-mono">
                               Confirmada
                             </span>
                           </td>
-                          <td className="py-4 px-6 text-center">
+                          <td className="py-4 px-6 text-center align-top">
                             <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider font-mono ${
                               p.status === 'Presente'
                                 ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' 
@@ -570,7 +611,7 @@ export default function OrganizerArea({
                               {p.status}
                             </span>
                           </td>
-                          <td className="py-4 px-6 text-right">
+                          <td className="py-4 px-6 text-right align-top">
                             {p.status === 'Pendente' ? (
                               <button
                                 onClick={() => handleToggleParticipantStatus(p)}
