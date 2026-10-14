@@ -13,12 +13,14 @@ import { PrivacyPolicyModal } from './PrivacyPolicyModal';
 
 interface CadastroProps {
   initialType?: 'Público' | 'Participante';
-  onAddParticipant: (newPart: Omit<Participant, 'id' | 'status' | 'registrationDate'>, isSecret?: boolean) => Promise<void>;
+  onAddParticipant: (newPart: Omit<Participant, 'id' | 'status' | 'registrationDate'>, isSecret?: boolean, extraBatch?: 'extra-1' | 'extra-2') => Promise<void>;
   onNavigate: (view: string, role?: 'public' | 'participant' | 'reception' | 'organizer') => void;
   participantsCount?: number;
   participants?: Participant[];
   isSecretMode?: boolean;
   secretBatchCount?: number;
+  extraBatchId?: 'extra-1' | 'extra-2' | null;
+  extraBatchCount?: number;
 }
 
 export default function Cadastro({ 
@@ -28,7 +30,9 @@ export default function Cadastro({
   participantsCount = 0,
   participants = [],
   isSecretMode = false,
-  secretBatchCount = 0
+  secretBatchCount = 0,
+  extraBatchId = null,
+  extraBatchCount = 0
 }: CadastroProps) {
   const [formData, setFormData] = useState({
     name: '',
@@ -49,8 +53,8 @@ export default function Cadastro({
   const SECRET_BATCH_LIMIT = 11;
   const secretRemaining = Math.max(0, SECRET_BATCH_LIMIT - secretBatchCount);
 
-  // If accessed normally from public page (not via /secret), keep registration strictly CLOSED / SOLD OUT
-  if (!isSecretMode) {
+  // If accessed normally from public page (not via /secret or /extra-1 or /extra-2), keep registration strictly CLOSED / SOLD OUT
+  if (!isSecretMode && !extraBatchId) {
     return (
       <div className="min-h-screen bg-app-deep flex flex-col justify-center items-center px-4 py-20 relative overflow-hidden">
         {/* Immersive brand glow elements */}
@@ -204,16 +208,98 @@ export default function Cadastro({
     );
   }
 
+  // If accessed via /extra-1 or /extra-2, check if the single extra spot has already been used!
+  if (extraBatchId && (extraBatchCount || 0) >= 1) {
+    const linkNum = extraBatchId === 'extra-1' ? '1' : '2';
+    return (
+      <div className="min-h-screen bg-app-deep flex flex-col justify-center items-center px-4 py-20 relative overflow-hidden">
+        {/* Immersive brand glow elements */}
+        <div className="absolute top-0 right-0 w-[600px] h-[600px] rounded-full bg-app-medium/10 blur-[130px] -translate-y-1/2 translate-x-1/3" />
+        <div className="absolute bottom-0 left-0 w-[500px] h-[500px] rounded-full bg-app-gold/10 blur-[120px] translate-y-1/2 -translate-x-1/3" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] rounded-full bg-app-medium/5 blur-[100px] pointer-events-none" />
+
+        {/* Elegant geometric line grid */}
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#1e293b_1px,transparent_1px),linear-gradient(to_bottom,#1e293b_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)] opacity-20 pointer-events-none" />
+
+        {/* Back button */}
+        <button
+          onClick={() => onNavigate('landing')}
+          className="absolute top-6 left-6 text-slate-300 hover:text-white flex items-center space-x-2 text-sm font-medium font-mono cursor-pointer transition-colors z-20"
+        >
+          <ArrowLeft className="w-4 h-4 text-app-gold" />
+          <span>Voltar para Início</span>
+        </button>
+
+        {/* Card Form */}
+        <div className="relative z-10 w-full max-w-md">
+          <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 shadow-2xl overflow-hidden relative">
+            <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-emerald-500 via-amber-500 to-red-500" />
+            
+            <div className="text-center py-4">
+              <div className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-amber-50 text-amber-800 border border-amber-200 text-[11px] font-mono font-bold mb-4 uppercase">
+                <Lock className="w-3.5 h-3.5 text-amber-600" />
+                <span>Lote Adicional #{linkNum} • Encerrado</span>
+              </div>
+
+              <div className="w-16 h-16 rounded-full bg-red-50 border border-red-200 text-red-600 flex items-center justify-center mx-auto mb-4">
+                <AlertCircle className="w-10 h-10" />
+              </div>
+              
+              <h2 className="text-2xl font-black text-app-deep font-display tracking-tight">Vaga Já Preenchida!</h2>
+              
+              <p className="text-slate-600 text-sm mt-3 font-light leading-relaxed">
+                A <strong className="text-app-medium font-bold">única vaga exclusiva</strong> deste link adicional (Link {linkNum}) já foi utilizada com sucesso. Cada link permite apenas 1 inscrição e foi bloqueado automaticamente.
+              </p>
+              
+              <div className="bg-app-light p-4 rounded-2xl border border-slate-200 my-6 text-left space-y-2">
+                <div className="text-xs text-slate-500 font-mono flex justify-between">
+                  <span>VAGA DO LINK {linkNum}:</span>
+                  <span className="text-red-600 font-bold">1 / 1 PREENCHIDA</span>
+                </div>
+                <div className="text-xs text-slate-500 font-mono flex justify-between">
+                  <span>STATUS DO LINK:</span>
+                  <span className="text-red-600 font-bold">UTILIZADO / BLOQUEADO</span>
+                </div>
+                <div className="text-xs text-slate-500 font-mono flex justify-between">
+                  <span>TOTAL NO EVENTO:</span>
+                  <span className="text-app-deep font-bold">{participantsCount} Participantes</span>
+                </div>
+              </div>
+
+              <button
+                onClick={() => onNavigate('landing')}
+                className="w-full px-6 py-4 bg-app-medium hover:bg-app-dark text-white font-bold text-sm rounded-2xl cursor-pointer transition-all active:scale-95 shadow-md"
+              >
+                Voltar para Início
+              </button>
+            </div>
+            
+            <div className="mt-8 pt-4 border-t border-slate-100 text-center">
+              <span className="text-[10px] text-slate-400 font-mono uppercase tracking-widest block select-none">
+                #MissãoEmCadaCanção
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg('');
+
+    if (extraBatchId && (extraBatchCount || 0) >= 1) {
+      setErrorMsg('Desculpe, a vaga exclusiva deste link adicional já foi preenchida.');
+      return;
+    }
 
     if (isSecretMode && secretBatchCount >= SECRET_BATCH_LIMIT) {
       setErrorMsg('Desculpe, o limite de 11 vagas do lote secreto foi atingido.');
       return;
     }
 
-    if (!isSecretMode) {
+    if (!isSecretMode && !extraBatchId) {
       setErrorMsg('Desculpe, as inscrições gerais estão encerradas.');
       return;
     }
@@ -276,14 +362,16 @@ export default function Cadastro({
         phone: cleanPhone,
         password: cleanPassword,
         registrationType: initialType
-      }, isSecretMode);
+      }, isSecretMode, extraBatchId || undefined);
       recordAttempt('registration');
       setSuccess(true);
     } catch (err: any) {
       console.error('Registration failed:', err);
       recordAttempt('registration');
-      if (err?.message === 'SECRET_BATCH_FULL' || err?.message === 'CAPACITY_REACHED') {
-        setErrorMsg('Desculpe! O limite de vagas deste lote secreto foi atingido e não há mais vagas disponíveis.');
+      if (err?.message === 'EXTRA_BATCH_FULL') {
+        setErrorMsg('Desculpe! A vaga deste link já foi preenchida por outra pessoa.');
+      } else if (err?.message === 'SECRET_BATCH_FULL' || err?.message === 'CAPACITY_REACHED') {
+        setErrorMsg('Desculpe! O limite de vagas deste lote foi atingido e não há mais vagas disponíveis.');
       } else if (err?.message === 'EMAIL_EXISTS') {
         setErrorMsg('Já existe um cadastro realizado com este e-mail. Se você já possui uma inscrição, acesse a Área do Participante.');
       } else {
@@ -342,7 +430,32 @@ export default function Cadastro({
           {!success ? (
             <>
               <div className="mb-6 text-center">
-                {isSecretMode ? (
+                {extraBatchId ? (
+                  <>
+                    <div className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-800 border border-emerald-500/30 text-[11px] font-mono font-bold mb-3 uppercase tracking-wider">
+                      <Ticket className="w-3.5 h-3.5 text-emerald-600" />
+                      <span>✨ Link Exclusivo • Lote Adicional #{extraBatchId === 'extra-1' ? '1' : '2'}</span>
+                    </div>
+
+                    <h2 className="text-2xl font-black text-app-deep font-display tracking-tight">
+                      Inscrição Individual Adicional
+                    </h2>
+
+                    <p className="text-slate-600 text-xs mt-1.5 font-light leading-relaxed">
+                      Você acessou o link exclusivo para <strong>1 vaga adicional</strong> (Link {extraBatchId === 'extra-1' ? '1' : '2'}). Preencha seu cadastro para confirmar sua vaga!
+                    </p>
+
+                    <div className="mt-4 p-3 rounded-2xl bg-emerald-50/70 border border-emerald-200/80 text-left">
+                      <div className="flex items-center justify-between text-xs font-mono font-bold">
+                        <span className="text-emerald-900">VAGA DESTE LINK:</span>
+                        <span className="text-emerald-700">1 VAGA DISPONÍVEL</span>
+                      </div>
+                      <span className="text-[10px] text-emerald-800/80 block mt-1 font-mono">
+                        Atenção: Este link permite apenas 1 inscrição e será bloqueado após o envio.
+                      </span>
+                    </div>
+                  </>
+                ) : isSecretMode ? (
                   <>
                     <div className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-amber-500/10 text-amber-700 border border-amber-500/30 text-[11px] font-mono font-bold mb-3 uppercase tracking-wider">
                       <Lock className="w-3.5 h-3.5 text-amber-600" />
@@ -593,14 +706,19 @@ export default function Cadastro({
               </div>
               
               <h2 className="text-2xl font-black text-app-deep font-display">
-                {isSecretMode ? 'Vaga Secreta Confirmada!' : 'Inscrição Efetuada!'}
+                {extraBatchId 
+                  ? `Vaga Adicional #${extraBatchId === 'extra-1' ? '1' : '2'} Confirmada!` 
+                  : isSecretMode ? 'Vaga Secreta Confirmada!' : 'Inscrição Efetuada!'}
               </h2>
               
               <p className="text-slate-600 text-sm mt-3 font-light leading-relaxed">
-                {isSecretMode 
-                  ? <>Excelente! Sua vaga exclusiva do <strong>Lote Secreto</strong> para a <strong className="text-app-medium font-semibold">9ª Convenção Municipal de Quartetos</strong> foi reservada e computada com sucesso.</>
-                  : <>Excelente! Sua vaga para a <strong className="text-app-medium font-semibold">9ª Convenção Municipal de Quartetos</strong> está garantida com sucesso.</>
-                }
+                {extraBatchId ? (
+                  <>Excelente! Sua vaga individual exclusiva do <strong>Lote Adicional (Link {extraBatchId === 'extra-1' ? '1' : '2'})</strong> para a <strong className="text-app-medium font-semibold">9ª Convenção Municipal de Quartetos</strong> foi reservada e computada com sucesso.</>
+                ) : isSecretMode ? (
+                  <>Excelente! Sua vaga exclusiva do <strong>Lote Secreto</strong> para a <strong className="text-app-medium font-semibold">9ª Convenção Municipal de Quartetos</strong> foi reservada e computada com sucesso.</>
+                ) : (
+                  <>Excelente! Sua vaga para a <strong className="text-app-medium font-semibold">9ª Convenção Municipal de Quartetos</strong> está garantida com sucesso.</>
+                )}
               </p>
               
               <div className="bg-app-light p-4 rounded-2xl border border-slate-200 my-6 text-left space-y-2">
@@ -611,7 +729,9 @@ export default function Cadastro({
                 <div className="text-xs text-slate-500 font-mono flex justify-between">
                   <span>TIPO DE CADASTRO:</span>
                   <span className="text-app-medium font-bold uppercase">
-                    {isSecretMode ? `${initialType} (LOTE SECRETO)` : initialType}
+                    {extraBatchId 
+                      ? `${initialType} (LOTE ADICIONAL #${extraBatchId === 'extra-1' ? '1' : '2'})`
+                      : isSecretMode ? `${initialType} (LOTE SECRETO)` : initialType}
                   </span>
                 </div>
                 <div className="text-xs text-slate-500 font-mono flex justify-between">

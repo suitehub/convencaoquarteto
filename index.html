@@ -7,6 +7,20 @@
     <title>9ª Convenção Municipal de Quartetos</title>
     <meta name="description" content="O maior encontro de música vocal gospel harmônica de quartetos vocais do município." />
     
+    <!-- GitHub Pages SPA URL Router Support -->
+    <script>
+      (function(l) {
+        if (l.search[1] === '/') {
+          var decoded = l.search.slice(1).split('&').map(function(s) { 
+            return s.replace(/~and~/g, '&');
+          }).join('?');
+          window.history.replaceState(null, null,
+              l.pathname.slice(0, -1) + decoded + l.hash
+          );
+        }
+      }(window.location));
+    </script>
+    
     <!-- Favicon & Touch Icon -->
     <link rel="icon" href="/favicon.ico" sizes="any" />
     <link rel="icon" type="image/png" href="/cmq-icone.png" />

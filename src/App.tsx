@@ -23,6 +23,8 @@ import {
   getParticipantsCountSecure,
   getSecretBatchCountSecure,
   subscribeSecretBatchCount,
+  getExtraBatchCountSecure,
+  subscribeExtraBatchCount,
   checkDuplicateParticipantSecure,
   loginStaffSecure,
   loginParticipantSecure
@@ -69,15 +71,91 @@ export default function App() {
     );
   };
 
+  // Check if current URL points to one of the 2 individual extra batch links (/vaga1 or /vaga2)
+  const checkExtraBatchRoute = (): 'extra-1' | 'extra-2' | null => {
+    if (typeof window === 'undefined') return null;
+    const path = window.location.pathname.toLowerCase();
+    const hash = window.location.hash.toLowerCase();
+    const search = window.location.search.toLowerCase();
+    
+    // Check Link 1 (Vaga Oculta 1)
+    if (
+      // Query parameters (100% immune to GitHub Pages 404)
+      search.includes('vaga=1') || search.includes('vaga1') || 
+      search.includes('vagaoculta=1') || search.includes('vagaoculta1') ||
+      search.includes('lote=1') || search.includes('loteadicional=1') || search.includes('loteadicional1') ||
+      search.includes('extra=1') || search.includes('extra1') ||
+      // Hash routes (100% immune to GitHub Pages 404)
+      hash === '#/vaga1' || hash === '#vaga1' || hash === '#/vaga-1' || hash === '#vaga-1' ||
+      hash === '#/vagaoculta1' || hash === '#vagaoculta1' || hash === '#/vaga-oculta-1' || hash === '#vaga-oculta-1' ||
+      hash === '#/loteadicional1' || hash === '#loteadicional1' || hash === '#/lote-adicional-1' || hash === '#lote-adicional-1' ||
+      hash === '#/extra-1' || hash === '#extra-1' || hash === '#/extra1' || hash === '#extra1' ||
+      hash === '#/adicional-1' || hash === '#adicional-1' ||
+      hash.includes('vaga1') || hash.includes('vaga-1') || hash.includes('vagaoculta1') ||
+      hash.includes('loteadicional1') || hash.includes('loteadicional-1') || hash.includes('lote-adicional-1') ||
+      hash.includes('extra-1') || hash.includes('extra1') || hash.includes('adicional-1') ||
+      // Path routes
+      path === '/vaga1' || path === '/vaga1/' || path.endsWith('/vaga1') || path.endsWith('/vaga1/') ||
+      path === '/vaga-1' || path === '/vaga-1/' || path.endsWith('/vaga-1') || path.endsWith('/vaga-1/') ||
+      path === '/vagaoculta1' || path === '/vagaoculta1/' || path.endsWith('/vagaoculta1') || path.endsWith('/vagaoculta1/') ||
+      path === '/vaga-oculta-1' || path === '/vaga-oculta-1/' || path.endsWith('/vaga-oculta-1') || path.endsWith('/vaga-oculta-1/') ||
+      path === '/loteadicional1' || path === '/loteadicional1/' || path.endsWith('/loteadicional1') || path.endsWith('/loteadicional1/') ||
+      path === '/lote-adicional-1' || path === '/lote-adicional-1/' || path.endsWith('/lote-adicional-1') || path.endsWith('/lote-adicional-1/') ||
+      path === '/loteadicional-1' || path === '/loteadicional-1/' || path.endsWith('/loteadicional-1') || path.endsWith('/loteadicional-1/') ||
+      path === '/extra-1' || path === '/extra-1/' || path.endsWith('/extra-1') || path.endsWith('/extra-1/') ||
+      path === '/extra1' || path === '/extra1/' || path.endsWith('/extra1') || path.endsWith('/extra1/') ||
+      path === '/adicional-1' || path === '/adicional-1/' || path.endsWith('/adicional-1') || path.endsWith('/adicional-1/')
+    ) {
+      return 'extra-1';
+    }
+
+    // Check Link 2 (Vaga Oculta 2)
+    if (
+      // Query parameters (100% immune to GitHub Pages 404)
+      search.includes('vaga=2') || search.includes('vaga2') || 
+      search.includes('vagaoculta=2') || search.includes('vagaoculta2') ||
+      search.includes('lote=2') || search.includes('loteadicional=2') || search.includes('loteadicional2') ||
+      search.includes('extra=2') || search.includes('extra2') ||
+      // Hash routes (100% immune to GitHub Pages 404)
+      hash === '#/vaga2' || hash === '#vaga2' || hash === '#/vaga-2' || hash === '#vaga-2' ||
+      hash === '#/vagaoculta2' || hash === '#vagaoculta2' || hash === '#/vaga-oculta-2' || hash === '#vaga-oculta-2' ||
+      hash === '#/loteadicional2' || hash === '#loteadicional2' || hash === '#/lote-adicional-2' || hash === '#lote-adicional-2' ||
+      hash === '#/extra-2' || hash === '#extra-2' || hash === '#/extra2' || hash === '#extra2' ||
+      hash === '#/adicional-2' || hash === '#adicional-2' ||
+      hash.includes('vaga2') || hash.includes('vaga-2') || hash.includes('vagaoculta2') ||
+      hash.includes('loteadicional2') || hash.includes('loteadicional-2') || hash.includes('lote-adicional-2') ||
+      hash.includes('extra-2') || hash.includes('extra2') || hash.includes('adicional-2') ||
+      // Path routes
+      path === '/vaga2' || path === '/vaga2/' || path.endsWith('/vaga2') || path.endsWith('/vaga2/') ||
+      path === '/vaga-2' || path === '/vaga-2/' || path.endsWith('/vaga-2') || path.endsWith('/vaga-2/') ||
+      path === '/vagaoculta2' || path === '/vagaoculta2/' || path.endsWith('/vagaoculta2') || path.endsWith('/vagaoculta2/') ||
+      path === '/vaga-oculta-2' || path === '/vaga-oculta-2/' || path.endsWith('/vaga-oculta-2') || path.endsWith('/vaga-oculta-2/') ||
+      path === '/loteadicional2' || path === '/loteadicional2/' || path.endsWith('/loteadicional2') || path.endsWith('/loteadicional2/') ||
+      path === '/lote-adicional-2' || path === '/lote-adicional-2/' || path.endsWith('/lote-adicional-2') || path.endsWith('/lote-adicional-2/') ||
+      path === '/loteadicional-2' || path === '/loteadicional-2/' || path.endsWith('/loteadicional-2') || path.endsWith('/loteadicional-2/') ||
+      path === '/extra-2' || path === '/extra-2/' || path.endsWith('/extra-2') || path.endsWith('/extra-2/') ||
+      path === '/extra2' || path === '/extra2/' || path.endsWith('/extra2') || path.endsWith('/extra2/') ||
+      path === '/adicional-2' || path === '/adicional-2/' || path.endsWith('/adicional-2') || path.endsWith('/adicional-2/')
+    ) {
+      return 'extra-2';
+    }
+
+    return null;
+  };
+
   // Application states
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [eventConfig, setEventConfig] = useState<EventConfig>(INITIAL_EVENT_CONFIG);
   const [staffUsers, setStaffUsers] = useState<StaffUser[]>([]);
   const [secureCount, setSecureCount] = useState<number>(0);
   const [secretCount, setSecretCount] = useState<number>(0);
+  const [extra1Count, setExtra1Count] = useState<number>(0);
+  const [extra2Count, setExtra2Count] = useState<number>(0);
   
   // Navigation states - initialized dynamically based on the current URL route
-  const [splashCompleted, setSplashCompleted] = useState<boolean>(() => checkIsAdminRoute() || checkIsSecretRoute());
+  const [splashCompleted, setSplashCompleted] = useState<boolean>(() => (
+    checkIsAdminRoute() || checkIsSecretRoute() || checkExtraBatchRoute() !== null
+  ));
   const [currentRole, setCurrentRole] = useState<UserRole>(() => {
     if (checkIsAdminRoute()) {
       const isAuth = sessionStorage.getItem('admin_authenticated') === 'true';
@@ -92,6 +170,13 @@ export default function App() {
     }
     if (checkIsSecretRoute()) {
       return 'cadastro-secret';
+    }
+    const extraRoute = checkExtraBatchRoute();
+    if (extraRoute === 'extra-1') {
+      return 'cadastro-extra-1';
+    }
+    if (extraRoute === 'extra-2') {
+      return 'cadastro-extra-2';
     }
     return 'splash';
   });
@@ -117,15 +202,43 @@ export default function App() {
     }
   };
 
+  // Fetch extra batch counts securely
+  const fetchExtraCounts = async () => {
+    try {
+      const [c1, c2] = await Promise.all([
+        getExtraBatchCountSecure('extra-1'),
+        getExtraBatchCountSecure('extra-2')
+      ]);
+      setExtra1Count(c1);
+      setExtra2Count(c2);
+    } catch (err) {
+      console.error('Error fetching extra batch counts:', err);
+    }
+  };
+
   useEffect(() => {
     fetchParticipantsCount();
     fetchSecretCount();
+    fetchExtraCounts();
 
     // Setup listener for secret batch registrations
     const unsubSecret = subscribeSecretBatchCount((count) => {
       setSecretCount(count);
     });
-    return () => unsubSecret();
+
+    // Setup listeners for extra batch registrations
+    const unsubExtra1 = subscribeExtraBatchCount('extra-1', (count) => {
+      setExtra1Count(count);
+    });
+    const unsubExtra2 = subscribeExtraBatchCount('extra-2', (count) => {
+      setExtra2Count(count);
+    });
+
+    return () => {
+      unsubSecret();
+      unsubExtra1();
+      unsubExtra2();
+    };
   }, []);
 
   // Continuous Auth Guard: Ensure only authorized emails can retain organizer role
@@ -187,6 +300,7 @@ export default function App() {
   // Hash/Path routing listener for admin and secret batch
   useEffect(() => {
     const handleRouteUpdate = () => {
+      const extraRoute = checkExtraBatchRoute();
       if (checkIsAdminRoute()) {
         const isAuth = sessionStorage.getItem('admin_authenticated') === 'true';
         if (isAuth) {
@@ -201,6 +315,14 @@ export default function App() {
         setSplashCompleted(true);
         setCurrentRole('public');
         setCurrentView('cadastro-secret');
+      } else if (extraRoute === 'extra-1') {
+        setSplashCompleted(true);
+        setCurrentRole('public');
+        setCurrentView('cadastro-extra-1');
+      } else if (extraRoute === 'extra-2') {
+        setSplashCompleted(true);
+        setCurrentRole('public');
+        setCurrentView('cadastro-extra-2');
       } else {
         // If they navigate away from admin manually, go to landing
         if (currentView === 'admin-lock') {
@@ -237,9 +359,16 @@ export default function App() {
   // Helper action: Register new participant
   const handleAddParticipant = async (
     newPart: Omit<Participant, 'id' | 'status' | 'registrationDate'>,
-    isSecretBatch: boolean = false
+    isSecretBatch: boolean = false,
+    extraBatch?: 'extra-1' | 'extra-2'
   ) => {
-    if (isSecretBatch) {
+    if (extraBatch) {
+      // Check 1 registration limit for this specific extra batch link
+      const currentExtraCount = await getExtraBatchCountSecure(extraBatch);
+      if (currentExtraCount >= 1) {
+        throw new Error('EXTRA_BATCH_FULL');
+      }
+    } else if (isSecretBatch) {
       // Check secret batch limit: maximum 11 people
       const currentSecretCount = await getSecretBatchCountSecure();
       const peopleToAdd = 1 + (Array.isArray(newPart.dependents) ? newPart.dependents.length : 0);
@@ -263,12 +392,14 @@ export default function App() {
       status: 'Pendente',
       registrationDate: new Date().toLocaleDateString('pt-BR'),
       isSecretBatch: isSecretBatch ? true : false,
+      ...(extraBatch ? { extraBatch } : {}),
     };
     await addParticipantInFirestore(freshParticipant);
     
     // Refresh public registration count securely
     await fetchParticipantsCount();
     await fetchSecretCount();
+    await fetchExtraCounts();
   };
 
   // Helper action: Delete/Cancel participant registration
@@ -357,6 +488,22 @@ export default function App() {
       return;
     }
 
+    if (view === 'cadastro-extra-1' || view === 'extra-1') {
+      window.location.hash = '#/extra-1';
+      setSplashCompleted(true);
+      setCurrentRole('public');
+      setCurrentView('cadastro-extra-1');
+      return;
+    }
+
+    if (view === 'cadastro-extra-2' || view === 'extra-2') {
+      window.location.hash = '#/extra-2';
+      setSplashCompleted(true);
+      setCurrentRole('public');
+      setCurrentView('cadastro-extra-2');
+      return;
+    }
+
     if (view === 'login-reception') {
       setCurrentRole('public');
       setCurrentView('login-reception');
@@ -423,6 +570,34 @@ export default function App() {
               participants={[]}
               isSecretMode={true}
               secretBatchCount={secretCount}
+            />
+          );
+        }
+        if (currentView === 'cadastro-extra-1') {
+          return (
+            <Cadastro
+              initialType="Público"
+              onAddParticipant={handleAddParticipant}
+              onNavigate={handleNavigate}
+              participantsCount={secureCount}
+              participants={[]}
+              isSecretMode={false}
+              extraBatchId="extra-1"
+              extraBatchCount={extra1Count}
+            />
+          );
+        }
+        if (currentView === 'cadastro-extra-2') {
+          return (
+            <Cadastro
+              initialType="Público"
+              onAddParticipant={handleAddParticipant}
+              onNavigate={handleNavigate}
+              participantsCount={secureCount}
+              participants={[]}
+              isSecretMode={false}
+              extraBatchId="extra-2"
+              extraBatchCount={extra2Count}
             />
           );
         }

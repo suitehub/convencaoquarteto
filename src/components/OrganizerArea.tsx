@@ -13,7 +13,7 @@ import {
   LayoutDashboard, Users, BarChart3, Settings, Gift, Music, Search, 
   SlidersHorizontal, CheckCircle2, AlertCircle, Save, Calendar, Clock, 
   MapPin, Sliders, ArrowUpRight, Check, Menu, X, UserPlus, Key, Download, FileSpreadsheet,
-  Trash2, MessageSquare, Send, Baby
+  Trash2, MessageSquare, Send, Baby, Link as LinkIcon, Copy, ExternalLink
 } from 'lucide-react';
 import { Participant, EventConfig, StaffUser } from '../types';
 import Sorteio from './Sorteio';
@@ -59,6 +59,19 @@ export default function OrganizerArea({
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<'Todos' | 'Pendente' | 'Presente'>('Todos');
   const [cityFilter, setCityFilter] = useState('Todas');
+  const [copiedLink, setCopiedLink] = useState<string | null>(null);
+
+  // Extra batch participants lookup
+  const extra1Participant = participants.find((p) => p.extraBatch === 'extra-1');
+  const extra2Participant = participants.find((p) => p.extraBatch === 'extra-2');
+
+  const handleCopyLink = (text: string, key: string) => {
+    if (navigator?.clipboard?.writeText) {
+      navigator.clipboard.writeText(text);
+    }
+    setCopiedLink(key);
+    setTimeout(() => setCopiedLink(null), 2500);
+  };
 
   // Math stats based on parent state (Main adults + linked child dependents)
   const totalAdults = participants.length;
@@ -179,7 +192,7 @@ export default function OrganizerArea({
         p.city || 'Não informado',
         p.registrationType || 'Público',
         dependentsInfo,
-        p.isSecretBatch ? 'Lote Secreto (11 vagas)' : 'Geral',
+        p.extraBatch ? (p.extraBatch === 'extra-1' ? 'Lote Adicional (Link 1)' : 'Lote Adicional (Link 2)') : (p.isSecretBatch ? 'Lote Secreto (11 vagas)' : 'Geral'),
         p.status,
         p.registrationDate || ''
       ];
@@ -463,6 +476,154 @@ export default function OrganizerArea({
         {activeTab === 'participantes' && (
           <div className="space-y-6">
             
+            {/* Lotes Adicionais - Links de Inscrição Exclusivos */}
+            <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-emerald-950 p-5 sm:p-6 rounded-3xl border border-emerald-500/30 text-white shadow-xl relative overflow-hidden">
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-5 pb-4 border-b border-white/10">
+                <div>
+                  <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[11px] font-mono font-bold uppercase tracking-wider mb-2">
+                    <LinkIcon className="w-3.5 h-3.5 text-emerald-400" />
+                    <span>2 Vagas Ocultas • Links Exclusivos</span>
+                  </div>
+                  <h3 className="text-lg font-black font-display text-white">
+                    Links de Inscrição para Vagas Ocultas
+                  </h3>
+                  <p className="text-slate-300 text-xs mt-1 font-light max-w-2xl">
+                    Cada link abaixo permite <strong>apenas 1 única inscrição</strong> para uma pessoa diferente. Assim que a vaga é preenchida, o link correspondente é bloqueado automaticamente em tempo real.
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Card Link 1 */}
+                <div className="bg-white/5 border border-white/10 hover:border-emerald-500/40 rounded-2xl p-4 transition-all flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs font-mono font-bold text-emerald-400 uppercase tracking-wide">
+                        Vaga Oculta 1 (1 pessoa)
+                      </span>
+                      {extra1Participant ? (
+                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-red-500/20 text-red-300 border border-red-500/30">
+                          Preenchida (1/1)
+                        </span>
+                      ) : (
+                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 animate-pulse">
+                          Disponível (0/1)
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="bg-black/30 rounded-xl px-3 py-2 border border-white/10 text-xs font-mono text-emerald-300 select-all break-all mb-1 font-bold">
+                      https://convencaomunicipaldequartetos.com/?vaga=1
+                    </div>
+                    <div className="text-[10px] text-slate-400 font-mono mb-3 truncate">
+                      Alt: convencaomunicipaldequartetos.com/#/vaga1
+                    </div>
+
+                    {extra1Participant && (
+                      <div className="text-[11px] text-slate-300 mb-3 bg-white/5 p-2.5 rounded-xl border border-white/5">
+                        <span className="text-slate-400 block text-[10px] uppercase font-mono">Inscrito:</span>
+                        <strong className="text-white block">{extra1Participant.name}</strong>
+                        <span className="text-slate-400 text-[10px]">{extra1Participant.email}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex items-center space-x-2 pt-2 border-t border-white/10">
+                    <button
+                      type="button"
+                      onClick={() => handleCopyLink('https://convencaomunicipaldequartetos.com/?vaga=1', 'link1')}
+                      className="flex-1 py-2 px-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition-all flex items-center justify-center space-x-1.5 cursor-pointer shadow-sm active:scale-95"
+                    >
+                      {copiedLink === 'link1' ? (
+                        <>
+                          <Check className="w-3.5 h-3.5 text-white" />
+                          <span>Link 1 Copiado!</span>
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-3.5 h-3.5" />
+                          <span>Copiar Link Vaga 1</span>
+                        </>
+                      )}
+                    </button>
+                    <a
+                      href="https://convencaomunicipaldequartetos.com/?vaga=1"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="p-2 bg-white/10 hover:bg-white/20 text-slate-200 rounded-xl transition-all"
+                      title="Testar link"
+                    >
+                      <ExternalLink className="w-4 h-4" />
+                    </a>
+                  </div>
+                </div>
+
+                {/* Card Link 2 */}
+                <div className="bg-white/5 border border-white/10 hover:border-emerald-500/40 rounded-2xl p-4 transition-all flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs font-mono font-bold text-emerald-400 uppercase tracking-wide">
+                        Vaga Oculta 2 (1 pessoa)
+                      </span>
+                      {extra2Participant ? (
+                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-red-500/20 text-red-300 border border-red-500/30">
+                          Preenchida (1/1)
+                        </span>
+                      ) : (
+                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 animate-pulse">
+                          Disponível (0/1)
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="bg-black/30 rounded-xl px-3 py-2 border border-white/10 text-xs font-mono text-emerald-300 select-all break-all mb-1 font-bold">
+                      https://convencaomunicipaldequartetos.com/?vaga=2
+                    </div>
+                    <div className="text-[10px] text-slate-400 font-mono mb-3 truncate">
+                      Alt: convencaomunicipaldequartetos.com/#/vaga2
+                    </div>
+
+                    {extra2Participant && (
+                      <div className="text-[11px] text-slate-300 mb-3 bg-white/5 p-2.5 rounded-xl border border-white/5">
+                        <span className="text-slate-400 block text-[10px] uppercase font-mono">Inscrito:</span>
+                        <strong className="text-white block">{extra2Participant.name}</strong>
+                        <span className="text-slate-400 text-[10px]">{extra2Participant.email}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex items-center space-x-2 pt-2 border-t border-white/10">
+                    <button
+                      type="button"
+                      onClick={() => handleCopyLink('https://convencaomunicipaldequartetos.com/?vaga=2', 'link2')}
+                      className="flex-1 py-2 px-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition-all flex items-center justify-center space-x-1.5 cursor-pointer shadow-sm active:scale-95"
+                    >
+                      {copiedLink === 'link2' ? (
+                        <>
+                          <Check className="w-3.5 h-3.5 text-white" />
+                          <span>Link 2 Copiado!</span>
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-3.5 h-3.5" />
+                          <span>Copiar Link Vaga 2</span>
+                        </>
+                      )}
+                    </button>
+                    <a
+                      href="https://convencaomunicipaldequartetos.com/?vaga=2"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="p-2 bg-white/10 hover:bg-white/20 text-slate-200 rounded-xl transition-all"
+                      title="Testar link"
+                    >
+                      <ExternalLink className="w-4 h-4" />
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
             {/* Advanced Filters */}
             <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-xs flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
               
@@ -587,6 +748,11 @@ export default function OrganizerArea({
                                 {p.isSecretBatch && (
                                   <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[8px] font-bold bg-amber-100 text-amber-800 border border-amber-300">
                                     Lote Secreto
+                                  </span>
+                                )}
+                                {p.extraBatch && (
+                                  <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[8px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
+                                    Lote Adicional #{p.extraBatch === 'extra-1' ? '1' : '2'}
                                   </span>
                                 )}
                               </div>

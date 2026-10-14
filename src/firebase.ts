@@ -296,6 +296,35 @@ export function subscribeSecretBatchCount(callback: (count: number) => void) {
   });
 }
 
+/**
+ * Extra Batch 1 & 2 Counter:
+ * Calculates total registrations enrolled through a specific extra batch URL ('extra-1' or 'extra-2').
+ */
+export async function getExtraBatchCountSecure(batchId: 'extra-1' | 'extra-2'): Promise<number> {
+  try {
+    const coll = collection(db, 'participants');
+    const q = query(coll, where('extraBatch', '==', batchId));
+    const snapshot = await getDocs(q);
+    return snapshot.size;
+  } catch (error) {
+    console.error(`Error fetching extra batch count for ${batchId}:`, error);
+    return 0;
+  }
+}
+
+/**
+ * Real-time listener for extra batch registrations count ('extra-1' or 'extra-2').
+ */
+export function subscribeExtraBatchCount(batchId: 'extra-1' | 'extra-2', callback: (count: number) => void) {
+  const coll = collection(db, 'participants');
+  const q = query(coll, where('extraBatch', '==', batchId));
+  return onSnapshot(q, (snapshot) => {
+    callback(snapshot.size);
+  }, (error) => {
+    console.error(`Error in subscribeExtraBatchCount for ${batchId}:`, error);
+  });
+}
+
 export async function checkDuplicateParticipantSecure(email: string, phone: string): Promise<{ emailExists: boolean, phoneExists: boolean }> {
   try {
     const coll = collection(db, 'participants');
