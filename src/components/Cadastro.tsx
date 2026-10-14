@@ -13,13 +13,13 @@ import { PrivacyPolicyModal } from './PrivacyPolicyModal';
 
 interface CadastroProps {
   initialType?: 'Público' | 'Participante';
-  onAddParticipant: (newPart: Omit<Participant, 'id' | 'status' | 'registrationDate'>, isSecret?: boolean, extraBatch?: 'extra-1' | 'extra-2') => Promise<void>;
+  onAddParticipant: (newPart: Omit<Participant, 'id' | 'status' | 'registrationDate'>, isSecret?: boolean, extraBatch?: 'extra-1' | 'extra-2' | 'extra-3' | string) => Promise<void>;
   onNavigate: (view: string, role?: 'public' | 'participant' | 'reception' | 'organizer') => void;
   participantsCount?: number;
   participants?: Participant[];
   isSecretMode?: boolean;
   secretBatchCount?: number;
-  extraBatchId?: 'extra-1' | 'extra-2' | null;
+  extraBatchId?: 'extra-1' | 'extra-2' | 'extra-3' | string | null;
   extraBatchCount?: number;
   maxParticipants?: number;
 }
@@ -36,6 +36,12 @@ export default function Cadastro({
   extraBatchCount = 0,
   maxParticipants = 316
 }: CadastroProps) {
+  const getLinkNum = (id?: string | null) => {
+    if (id === 'extra-1') return '1';
+    if (id === 'extra-2') return '2';
+    if (id === 'extra-3') return '3';
+    return id ? id.replace('extra-', '') : '1';
+  };
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -212,9 +218,9 @@ export default function Cadastro({
     );
   }
 
-  // If accessed via /extra-1 or /extra-2, check if the single extra spot has already been used!
+  // If accessed via /extra-1, /extra-2, /extra-3, check if the single extra spot has already been used!
   if (extraBatchId && (extraBatchCount || 0) >= 1) {
-    const linkNum = extraBatchId === 'extra-1' ? '1' : '2';
+    const linkNum = getLinkNum(extraBatchId);
     return (
       <div className="min-h-screen bg-app-deep flex flex-col justify-center items-center px-4 py-20 relative overflow-hidden">
         {/* Immersive brand glow elements */}
@@ -438,7 +444,7 @@ export default function Cadastro({
                   <>
                     <div className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-800 border border-emerald-500/30 text-[11px] font-mono font-bold mb-3 uppercase tracking-wider">
                       <Ticket className="w-3.5 h-3.5 text-emerald-600" />
-                      <span>✨ Link Exclusivo • Lote Adicional #{extraBatchId === 'extra-1' ? '1' : '2'}</span>
+                      <span>✨ Link Exclusivo • Lote Adicional #{getLinkNum(extraBatchId)}</span>
                     </div>
 
                     <h2 className="text-2xl font-black text-app-deep font-display tracking-tight">
@@ -446,7 +452,7 @@ export default function Cadastro({
                     </h2>
 
                     <p className="text-slate-600 text-xs mt-1.5 font-light leading-relaxed">
-                      Você acessou o link exclusivo para <strong>1 vaga adicional</strong> (Link {extraBatchId === 'extra-1' ? '1' : '2'}). Preencha seu cadastro para confirmar sua vaga!
+                      Você acessou o link exclusivo para <strong>1 vaga adicional</strong> (Link {getLinkNum(extraBatchId)}). Preencha seu cadastro para confirmar sua vaga!
                     </p>
 
                     <div className="mt-4 p-3 rounded-2xl bg-emerald-50/70 border border-emerald-200/80 text-left">
@@ -711,13 +717,13 @@ export default function Cadastro({
               
               <h2 className="text-2xl font-black text-app-deep font-display">
                 {extraBatchId 
-                  ? `Vaga Adicional #${extraBatchId === 'extra-1' ? '1' : '2'} Confirmada!` 
+                  ? `Vaga Adicional #${getLinkNum(extraBatchId)} Confirmada!` 
                   : isSecretMode ? 'Vaga Secreta Confirmada!' : 'Inscrição Efetuada!'}
               </h2>
               
               <p className="text-slate-600 text-sm mt-3 font-light leading-relaxed">
                 {extraBatchId ? (
-                  <>Excelente! Sua vaga individual exclusiva do <strong>Lote Adicional (Link {extraBatchId === 'extra-1' ? '1' : '2'})</strong> para a <strong className="text-app-medium font-semibold">9ª Convenção Municipal de Quartetos</strong> foi reservada e computada com sucesso.</>
+                  <>Excelente! Sua vaga individual exclusiva do <strong>Lote Adicional (Link {getLinkNum(extraBatchId)})</strong> para a <strong className="text-app-medium font-semibold">9ª Convenção Municipal de Quartetos</strong> foi reservada e computada com sucesso.</>
                 ) : isSecretMode ? (
                   <>Excelente! Sua vaga exclusiva do <strong>Lote Secreto</strong> para a <strong className="text-app-medium font-semibold">9ª Convenção Municipal de Quartetos</strong> foi reservada e computada com sucesso.</>
                 ) : (
@@ -734,7 +740,7 @@ export default function Cadastro({
                   <span>TIPO DE CADASTRO:</span>
                   <span className="text-app-medium font-bold uppercase">
                     {extraBatchId 
-                      ? `${initialType} (LOTE ADICIONAL #${extraBatchId === 'extra-1' ? '1' : '2'})`
+                      ? `${initialType} (LOTE ADICIONAL #${getLinkNum(extraBatchId)})`
                       : isSecretMode ? `${initialType} (LOTE SECRETO)` : initialType}
                   </span>
                 </div>

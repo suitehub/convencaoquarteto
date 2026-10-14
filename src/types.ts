@@ -23,7 +23,7 @@ export interface Participant {
   registrationType: 'Público' | 'Participante';
   dependents?: Dependent[];
   isSecretBatch?: boolean;
-  extraBatch?: 'extra-1' | 'extra-2' | string;
+  extraBatch?: 'extra-1' | 'extra-2' | 'extra-3' | string;
 }
 
 export interface EventConfig {

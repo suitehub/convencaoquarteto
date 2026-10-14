@@ -297,10 +297,10 @@ export function subscribeSecretBatchCount(callback: (count: number) => void) {
 }
 
 /**
- * Extra Batch 1 & 2 Counter:
- * Calculates total registrations enrolled through a specific extra batch URL ('extra-1' or 'extra-2').
+ * Extra Batch Counter:
+ * Calculates total registrations enrolled through a specific extra batch URL ('extra-1', 'extra-2', 'extra-3').
  */
-export async function getExtraBatchCountSecure(batchId: 'extra-1' | 'extra-2'): Promise<number> {
+export async function getExtraBatchCountSecure(batchId: 'extra-1' | 'extra-2' | 'extra-3' | string): Promise<number> {
   try {
     const coll = collection(db, 'participants');
     const q = query(coll, where('extraBatch', '==', batchId));
@@ -313,9 +313,9 @@ export async function getExtraBatchCountSecure(batchId: 'extra-1' | 'extra-2'): 
 }
 
 /**
- * Real-time listener for extra batch registrations count ('extra-1' or 'extra-2').
+ * Real-time listener for extra batch registrations count ('extra-1', 'extra-2', 'extra-3').
  */
-export function subscribeExtraBatchCount(batchId: 'extra-1' | 'extra-2', callback: (count: number) => void) {
+export function subscribeExtraBatchCount(batchId: 'extra-1' | 'extra-2' | 'extra-3' | string, callback: (count: number) => void) {
   const coll = collection(db, 'participants');
   const q = query(coll, where('extraBatch', '==', batchId));
   return onSnapshot(q, (snapshot) => {

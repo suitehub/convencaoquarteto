@@ -209,7 +209,7 @@ export default function OrganizerArea({
         p.city || 'Não informado',
         p.registrationType || 'Público',
         dependentsInfo,
-        p.extraBatch ? (p.extraBatch === 'extra-1' ? 'Lote Adicional (Link 1)' : 'Lote Adicional (Link 2)') : (p.isSecretBatch ? 'Lote Secreto (11 vagas)' : 'Geral'),
+        p.extraBatch ? `Lote Adicional (Link ${p.extraBatch.replace('extra-', '')})` : (p.isSecretBatch ? 'Lote Secreto (11 vagas)' : 'Geral'),
         p.status,
         p.registrationDate || ''
       ];
@@ -621,7 +621,7 @@ export default function OrganizerArea({
                                 )}
                                 {p.extraBatch && (
                                   <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[8px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
-                                    Lote Adicional #{p.extraBatch === 'extra-1' ? '1' : '2'}
+                                    Lote Adicional #{p.extraBatch.replace('extra-', '')}
                                   </span>
                                 )}
                               </div>

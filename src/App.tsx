@@ -71,73 +71,63 @@ export default function App() {
     );
   };
 
-  // Check if current URL points to one of the 2 individual extra batch links (/vaga1 or /vaga2)
-  const checkExtraBatchRoute = (): 'extra-1' | 'extra-2' | null => {
+  // Check if current URL points to one of the individual extra batch links (/vaga1, /vaga2, /vaga3)
+  const checkExtraBatchRoute = (): 'extra-1' | 'extra-2' | 'extra-3' | null => {
     if (typeof window === 'undefined') return null;
     const path = window.location.pathname.toLowerCase();
     const hash = window.location.hash.toLowerCase();
     const search = window.location.search.toLowerCase();
+    const href = window.location.href.toLowerCase();
     
     // Check Link 1 (Vaga Oculta 1)
     if (
-      // Query parameters (100% immune to GitHub Pages 404)
       search.includes('vaga=1') || search.includes('vaga1') || 
       search.includes('vagaoculta=1') || search.includes('vagaoculta1') ||
       search.includes('lote=1') || search.includes('loteadicional=1') || search.includes('loteadicional1') ||
-      search.includes('extra=1') || search.includes('extra1') ||
-      // Hash routes (100% immune to GitHub Pages 404)
-      hash === '#/vaga1' || hash === '#vaga1' || hash === '#/vaga-1' || hash === '#vaga-1' ||
-      hash === '#/vagaoculta1' || hash === '#vagaoculta1' || hash === '#/vaga-oculta-1' || hash === '#vaga-oculta-1' ||
-      hash === '#/loteadicional1' || hash === '#loteadicional1' || hash === '#/lote-adicional-1' || hash === '#lote-adicional-1' ||
-      hash === '#/extra-1' || hash === '#extra-1' || hash === '#/extra1' || hash === '#extra1' ||
-      hash === '#/adicional-1' || hash === '#adicional-1' ||
+      search.includes('extra=1') || search.includes('extra1') || search.includes('extra-1') ||
       hash.includes('vaga1') || hash.includes('vaga-1') || hash.includes('vagaoculta1') ||
       hash.includes('loteadicional1') || hash.includes('loteadicional-1') || hash.includes('lote-adicional-1') ||
       hash.includes('extra-1') || hash.includes('extra1') || hash.includes('adicional-1') ||
-      // Path routes
-      path === '/vaga1' || path === '/vaga1/' || path.endsWith('/vaga1') || path.endsWith('/vaga1/') ||
-      path === '/vaga-1' || path === '/vaga-1/' || path.endsWith('/vaga-1') || path.endsWith('/vaga-1/') ||
-      path === '/vagaoculta1' || path === '/vagaoculta1/' || path.endsWith('/vagaoculta1') || path.endsWith('/vagaoculta1/') ||
-      path === '/vaga-oculta-1' || path === '/vaga-oculta-1/' || path.endsWith('/vaga-oculta-1') || path.endsWith('/vaga-oculta-1/') ||
-      path === '/loteadicional1' || path === '/loteadicional1/' || path.endsWith('/loteadicional1') || path.endsWith('/loteadicional1/') ||
-      path === '/lote-adicional-1' || path === '/lote-adicional-1/' || path.endsWith('/lote-adicional-1') || path.endsWith('/lote-adicional-1/') ||
-      path === '/loteadicional-1' || path === '/loteadicional-1/' || path.endsWith('/loteadicional-1') || path.endsWith('/loteadicional-1/') ||
-      path === '/extra-1' || path === '/extra-1/' || path.endsWith('/extra-1') || path.endsWith('/extra-1/') ||
-      path === '/extra1' || path === '/extra1/' || path.endsWith('/extra1') || path.endsWith('/extra1/') ||
-      path === '/adicional-1' || path === '/adicional-1/' || path.endsWith('/adicional-1') || path.endsWith('/adicional-1/')
+      path.includes('vaga1') || path.includes('vaga-1') || path.includes('vagaoculta1') ||
+      path.includes('loteadicional1') || path.includes('loteadicional-1') || path.includes('lote-adicional-1') ||
+      path.includes('extra-1') || path.includes('extra1') || path.includes('adicional-1') ||
+      href.includes('vaga=1') || href.includes('vaga1') || href.includes('extra-1') || href.includes('loteadicional1')
     ) {
       return 'extra-1';
     }
 
     // Check Link 2 (Vaga Oculta 2)
     if (
-      // Query parameters (100% immune to GitHub Pages 404)
       search.includes('vaga=2') || search.includes('vaga2') || 
       search.includes('vagaoculta=2') || search.includes('vagaoculta2') ||
       search.includes('lote=2') || search.includes('loteadicional=2') || search.includes('loteadicional2') ||
-      search.includes('extra=2') || search.includes('extra2') ||
-      // Hash routes (100% immune to GitHub Pages 404)
-      hash === '#/vaga2' || hash === '#vaga2' || hash === '#/vaga-2' || hash === '#vaga-2' ||
-      hash === '#/vagaoculta2' || hash === '#vagaoculta2' || hash === '#/vaga-oculta-2' || hash === '#vaga-oculta-2' ||
-      hash === '#/loteadicional2' || hash === '#loteadicional2' || hash === '#/lote-adicional-2' || hash === '#lote-adicional-2' ||
-      hash === '#/extra-2' || hash === '#extra-2' || hash === '#/extra2' || hash === '#extra2' ||
-      hash === '#/adicional-2' || hash === '#adicional-2' ||
+      search.includes('extra=2') || search.includes('extra2') || search.includes('extra-2') ||
       hash.includes('vaga2') || hash.includes('vaga-2') || hash.includes('vagaoculta2') ||
       hash.includes('loteadicional2') || hash.includes('loteadicional-2') || hash.includes('lote-adicional-2') ||
       hash.includes('extra-2') || hash.includes('extra2') || hash.includes('adicional-2') ||
-      // Path routes
-      path === '/vaga2' || path === '/vaga2/' || path.endsWith('/vaga2') || path.endsWith('/vaga2/') ||
-      path === '/vaga-2' || path === '/vaga-2/' || path.endsWith('/vaga-2') || path.endsWith('/vaga-2/') ||
-      path === '/vagaoculta2' || path === '/vagaoculta2/' || path.endsWith('/vagaoculta2') || path.endsWith('/vagaoculta2/') ||
-      path === '/vaga-oculta-2' || path === '/vaga-oculta-2/' || path.endsWith('/vaga-oculta-2') || path.endsWith('/vaga-oculta-2/') ||
-      path === '/loteadicional2' || path === '/loteadicional2/' || path.endsWith('/loteadicional2') || path.endsWith('/loteadicional2/') ||
-      path === '/lote-adicional-2' || path === '/lote-adicional-2/' || path.endsWith('/lote-adicional-2') || path.endsWith('/lote-adicional-2/') ||
-      path === '/loteadicional-2' || path === '/loteadicional-2/' || path.endsWith('/loteadicional-2') || path.endsWith('/loteadicional-2/') ||
-      path === '/extra-2' || path === '/extra-2/' || path.endsWith('/extra-2') || path.endsWith('/extra-2/') ||
-      path === '/extra2' || path === '/extra2/' || path.endsWith('/extra2') || path.endsWith('/extra2/') ||
-      path === '/adicional-2' || path === '/adicional-2/' || path.endsWith('/adicional-2') || path.endsWith('/adicional-2/')
+      path.includes('vaga2') || path.includes('vaga-2') || path.includes('vagaoculta2') ||
+      path.includes('loteadicional2') || path.includes('loteadicional-2') || path.includes('lote-adicional-2') ||
+      path.includes('extra-2') || path.includes('extra2') || path.includes('adicional-2') ||
+      href.includes('vaga=2') || href.includes('vaga2') || href.includes('extra-2') || href.includes('loteadicional2')
     ) {
       return 'extra-2';
+    }
+
+    // Check Link 3 (Vaga Oculta 3)
+    if (
+      search.includes('vaga=3') || search.includes('vaga3') || 
+      search.includes('vagaoculta=3') || search.includes('vagaoculta3') ||
+      search.includes('lote=3') || search.includes('loteadicional=3') || search.includes('loteadicional3') ||
+      search.includes('extra=3') || search.includes('extra3') || search.includes('extra-3') ||
+      hash.includes('vaga3') || hash.includes('vaga-3') || hash.includes('vagaoculta3') ||
+      hash.includes('loteadicional3') || hash.includes('loteadicional-3') || hash.includes('lote-adicional-3') ||
+      hash.includes('extra-3') || hash.includes('extra3') || hash.includes('adicional-3') ||
+      path.includes('vaga3') || path.includes('vaga-3') || path.includes('vagaoculta3') ||
+      path.includes('loteadicional3') || path.includes('loteadicional-3') || path.includes('lote-adicional-3') ||
+      path.includes('extra-3') || path.includes('extra3') || path.includes('adicional-3') ||
+      href.includes('vaga=3') || href.includes('vaga3') || href.includes('extra-3') || href.includes('loteadicional3')
+    ) {
+      return 'extra-3';
     }
 
     return null;
@@ -151,6 +141,7 @@ export default function App() {
   const [secretCount, setSecretCount] = useState<number>(0);
   const [extra1Count, setExtra1Count] = useState<number>(0);
   const [extra2Count, setExtra2Count] = useState<number>(0);
+  const [extra3Count, setExtra3Count] = useState<number>(0);
   
   // Navigation states - initialized dynamically based on the current URL route
   const [splashCompleted, setSplashCompleted] = useState<boolean>(() => (
@@ -177,6 +168,9 @@ export default function App() {
     }
     if (extraRoute === 'extra-2') {
       return 'cadastro-extra-2';
+    }
+    if (extraRoute === 'extra-3') {
+      return 'cadastro-extra-3';
     }
     return 'splash';
   });
@@ -205,12 +199,14 @@ export default function App() {
   // Fetch extra batch counts securely
   const fetchExtraCounts = async () => {
     try {
-      const [c1, c2] = await Promise.all([
+      const [c1, c2, c3] = await Promise.all([
         getExtraBatchCountSecure('extra-1'),
-        getExtraBatchCountSecure('extra-2')
+        getExtraBatchCountSecure('extra-2'),
+        getExtraBatchCountSecure('extra-3')
       ]);
       setExtra1Count(c1);
       setExtra2Count(c2);
+      setExtra3Count(c3);
     } catch (err) {
       console.error('Error fetching extra batch counts:', err);
     }
@@ -233,11 +229,15 @@ export default function App() {
     const unsubExtra2 = subscribeExtraBatchCount('extra-2', (count) => {
       setExtra2Count(count);
     });
+    const unsubExtra3 = subscribeExtraBatchCount('extra-3', (count) => {
+      setExtra3Count(count);
+    });
 
     return () => {
       unsubSecret();
       unsubExtra1();
       unsubExtra2();
+      unsubExtra3();
     };
   }, []);
 
@@ -323,6 +323,10 @@ export default function App() {
         setSplashCompleted(true);
         setCurrentRole('public');
         setCurrentView('cadastro-extra-2');
+      } else if (extraRoute === 'extra-3') {
+        setSplashCompleted(true);
+        setCurrentRole('public');
+        setCurrentView('cadastro-extra-3');
       } else {
         // If they navigate away from admin manually, go to landing
         if (currentView === 'admin-lock') {
@@ -360,7 +364,7 @@ export default function App() {
   const handleAddParticipant = async (
     newPart: Omit<Participant, 'id' | 'status' | 'registrationDate'>,
     isSecretBatch: boolean = false,
-    extraBatch?: 'extra-1' | 'extra-2'
+    extraBatch?: 'extra-1' | 'extra-2' | 'extra-3' | string
   ) => {
     if (extraBatch) {
       // Check 1 registration limit for this specific extra batch link
@@ -531,6 +535,14 @@ export default function App() {
       return;
     }
 
+    if (view === 'cadastro-extra-3' || view === 'extra-3') {
+      window.location.hash = '#/extra-3';
+      setSplashCompleted(true);
+      setCurrentRole('public');
+      setCurrentView('cadastro-extra-3');
+      return;
+    }
+
     if (view === 'login-reception') {
       setCurrentRole('public');
       setCurrentView('login-reception');
@@ -628,6 +640,21 @@ export default function App() {
               isSecretMode={false}
               extraBatchId="extra-2"
               extraBatchCount={extra2Count}
+            />
+          );
+        }
+        if (currentView === 'cadastro-extra-3') {
+          return (
+            <Cadastro
+              initialType="Público"
+              onAddParticipant={handleAddParticipant}
+              onNavigate={handleNavigate}
+              participantsCount={secureCount}
+              maxParticipants={eventConfig.maxParticipants}
+              participants={[]}
+              isSecretMode={false}
+              extraBatchId="extra-3"
+              extraBatchCount={extra3Count}
             />
           );
         }
