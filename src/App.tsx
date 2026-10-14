@@ -406,9 +406,13 @@ export default function App() {
   const handleDeleteParticipant = async (participantId: string) => {
     await deleteParticipantInFirestore(participantId);
     await fetchParticipantsCount();
-    setCurrentUser(null);
-    setCurrentRole('public');
-    setCurrentView('landing');
+    await fetchSecretCount();
+    await fetchExtraCounts();
+    if (currentUser && currentUser.id === participantId) {
+      setCurrentUser(null);
+      setCurrentRole('public');
+      setCurrentView('landing');
+    }
   };
 
   // Helper action: Check in/Credenciar participant
@@ -567,6 +571,7 @@ export default function App() {
               onAddParticipant={handleAddParticipant}
               onNavigate={handleNavigate}
               participantsCount={secureCount}
+              maxParticipants={eventConfig.maxParticipants}
               participants={[]}
               isSecretMode={true}
               secretBatchCount={secretCount}
@@ -580,6 +585,7 @@ export default function App() {
               onAddParticipant={handleAddParticipant}
               onNavigate={handleNavigate}
               participantsCount={secureCount}
+              maxParticipants={eventConfig.maxParticipants}
               participants={[]}
               isSecretMode={false}
               extraBatchId="extra-1"
@@ -594,6 +600,7 @@ export default function App() {
               onAddParticipant={handleAddParticipant}
               onNavigate={handleNavigate}
               participantsCount={secureCount}
+              maxParticipants={eventConfig.maxParticipants}
               participants={[]}
               isSecretMode={false}
               extraBatchId="extra-2"
@@ -608,6 +615,7 @@ export default function App() {
               onAddParticipant={handleAddParticipant}
               onNavigate={handleNavigate}
               participantsCount={secureCount}
+              maxParticipants={eventConfig.maxParticipants}
               participants={[]}
               isSecretMode={false}
               secretBatchCount={secretCount}
@@ -713,6 +721,7 @@ export default function App() {
             staffUsers={staffUsers}
             onAddStaffUser={handleAddStaffUser}
             onDeleteStaffUser={handleDeleteStaffUser}
+            onDeleteParticipant={handleDeleteParticipant}
             eventConfig={eventConfig}
             onUpdateConfig={updateConfigState}
             onCheckIn={handleCheckIn}

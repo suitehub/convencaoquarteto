@@ -20,6 +20,10 @@ export default function LandingPage({ eventConfig, onNavigate, participantsCount
   const [copied, setCopied] = useState(false);
   const [showPrivacyModal, setShowPrivacyModal] = useState(false);
 
+  const maxLimit = eventConfig.maxParticipants || 316;
+  const isSoldOut = participantsCount >= maxLimit;
+  const availableSpots = Math.max(0, maxLimit - participantsCount);
+
   const handleCopyPix = () => {
     navigator.clipboard.writeText('11995449821');
     setCopied(true);
@@ -76,14 +80,25 @@ export default function LandingPage({ eventConfig, onNavigate, participantsCount
               <LogIn className="w-4 h-4 text-app-gold shrink-0" />
               <span className="hidden sm:inline">LOGIN</span>
             </button>
-            <button
-              onClick={() => onNavigate('cadastro')}
-              className="px-3 py-2 sm:px-5 sm:py-2.5 text-xs font-bold font-mono bg-red-500/20 text-red-300 border border-red-500/40 hover:bg-red-500/30 rounded-xl transition-all cursor-pointer flex items-center space-x-1.5 sm:space-x-2 font-black shrink-0"
-              title="Inscrições Esgotadas"
-            >
-              <Ticket className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-red-400 shrink-0" />
-              <span>INSCRIÇÕES ESGOTADAS</span>
-            </button>
+            {isSoldOut ? (
+              <button
+                onClick={() => onNavigate('cadastro')}
+                className="px-3 py-2 sm:px-5 sm:py-2.5 text-xs font-bold font-mono bg-red-500/20 text-red-300 border border-red-500/40 hover:bg-red-500/30 rounded-xl transition-all cursor-pointer flex items-center space-x-1.5 sm:space-x-2 font-black shrink-0"
+                title="Inscrições Esgotadas"
+              >
+                <Ticket className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-red-400 shrink-0" />
+                <span>INSCRIÇÕES ESGOTADAS</span>
+              </button>
+            ) : (
+              <button
+                onClick={() => onNavigate('cadastro')}
+                className="px-3 py-2 sm:px-5 sm:py-2.5 text-xs font-bold font-mono bg-emerald-500/20 text-emerald-300 border border-emerald-500/50 hover:bg-emerald-500/30 rounded-xl transition-all cursor-pointer flex items-center space-x-1.5 sm:space-x-2 font-black shrink-0 animate-pulse"
+                title="Inscrição Aberta"
+              >
+                <Ticket className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-400 shrink-0" />
+                <span>INSCREVER-SE ({availableSpots} {availableSpots === 1 ? 'VAGA' : 'VAGAS'})</span>
+              </button>
+            )}
           </div>
         </div>
       </header>
@@ -168,21 +183,41 @@ export default function LandingPage({ eventConfig, onNavigate, participantsCount
               </div>
             </motion.div>
 
-            {/* Main CTA button: Kept sold out on main page as requested */}
+            {/* Main CTA button: Dynamic depending on available spots */}
             <div className="relative group mb-16 flex flex-col items-center">
-              <button
-                onClick={() => onNavigate('cadastro')}
-                className="relative w-full sm:w-auto px-10 py-5 text-base bg-red-600 hover:bg-red-700 text-white rounded-2xl shadow-2xl border border-red-500 transition-all flex items-center justify-center space-x-3.5 font-black uppercase tracking-wide cursor-pointer active:scale-98 shadow-red-600/30"
-              >
-                <Ticket className="w-6 h-6 text-white animate-bounce" />
-                <span>INSCRIÇÕES ENCERRADAS (LOTADO)</span>
-              </button>
-              <span className="mt-3 text-center text-xs font-mono text-slate-300 font-medium flex items-center space-x-2">
-                <span className="inline-block w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-                <span>
-                  Lotação máxima atingida • <strong className="text-app-gold font-bold">{participantsCount}</strong> inscrições confirmadas
-                </span>
-              </span>
+              {isSoldOut ? (
+                <>
+                  <button
+                    onClick={() => onNavigate('cadastro')}
+                    className="relative w-full sm:w-auto px-10 py-5 text-base bg-red-600 hover:bg-red-700 text-white rounded-2xl shadow-2xl border border-red-500 transition-all flex items-center justify-center space-x-3.5 font-black uppercase tracking-wide cursor-pointer active:scale-98 shadow-red-600/30"
+                  >
+                    <Ticket className="w-6 h-6 text-white animate-bounce" />
+                    <span>INSCRIÇÕES ENCERRADAS (LOTADO)</span>
+                  </button>
+                  <span className="mt-3 text-center text-xs font-mono text-slate-300 font-medium flex items-center space-x-2">
+                    <span className="inline-block w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+                    <span>
+                      Lotação máxima atingida • <strong className="text-app-gold font-bold">{participantsCount}</strong> inscrições confirmadas
+                    </span>
+                  </span>
+                </>
+              ) : (
+                <>
+                  <button
+                    onClick={() => onNavigate('cadastro')}
+                    className="relative w-full sm:w-auto px-10 py-5 text-base bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-2xl shadow-2xl border border-emerald-400/50 transition-all flex items-center justify-center space-x-3.5 font-black uppercase tracking-wide cursor-pointer active:scale-98 shadow-emerald-500/30 hover:scale-105"
+                  >
+                    <Ticket className="w-6 h-6 text-white animate-bounce" />
+                    <span>INSCREVA-SE AGORA • {availableSpots} {availableSpots === 1 ? 'VAGA DISPONÍVEL' : 'VAGAS DISPONÍVEIS'}</span>
+                  </button>
+                  <span className="mt-3 text-center text-xs font-mono text-emerald-300 font-medium flex items-center space-x-2">
+                    <span className="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+                    <span>
+                      Vaga liberada! <strong className="text-white font-bold">{availableSpots} {availableSpots === 1 ? 'vaga aberta' : 'vagas abertas'}</strong> no momento
+                    </span>
+                  </span>
+                </>
+              )}
             </div>
           </motion.div>
 

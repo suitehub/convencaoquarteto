@@ -13,7 +13,7 @@ import {
   LayoutDashboard, Users, BarChart3, Settings, Gift, Music, Search, 
   SlidersHorizontal, CheckCircle2, AlertCircle, Save, Calendar, Clock, 
   MapPin, Sliders, ArrowUpRight, Check, Menu, X, UserPlus, Key, Download, FileSpreadsheet,
-  Trash2, MessageSquare, Send, Baby, Link as LinkIcon, Copy, ExternalLink
+  Trash2, MessageSquare, Send, Baby
 } from 'lucide-react';
 import { Participant, EventConfig, StaffUser } from '../types';
 import Sorteio from './Sorteio';
@@ -25,6 +25,7 @@ interface OrganizerAreaProps {
   staffUsers?: StaffUser[];
   onAddStaffUser?: (newStaff: { name: string; username: string; password?: string }) => void;
   onDeleteStaffUser?: (id: string) => void;
+  onDeleteParticipant?: (id: string) => Promise<void> | void;
   eventConfig: EventConfig;
   onUpdateConfig: (newConfig: EventConfig) => void;
   onCheckIn: (id: string) => void;
@@ -36,6 +37,7 @@ export default function OrganizerArea({
   staffUsers = [],
   onAddStaffUser,
   onDeleteStaffUser,
+  onDeleteParticipant,
   eventConfig, 
   onUpdateConfig, 
   onCheckIn, 
@@ -59,18 +61,26 @@ export default function OrganizerArea({
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<'Todos' | 'Pendente' | 'Presente'>('Todos');
   const [cityFilter, setCityFilter] = useState('Todas');
-  const [copiedLink, setCopiedLink] = useState<string | null>(null);
 
-  // Extra batch participants lookup
-  const extra1Participant = participants.find((p) => p.extraBatch === 'extra-1');
-  const extra2Participant = participants.find((p) => p.extraBatch === 'extra-2');
+  // Participant cancellation states
+  const [participantToCancel, setParticipantToCancel] = useState<Participant | null>(null);
+  const [isCancelling, setIsCancelling] = useState(false);
+  const [cancelToast, setCancelToast] = useState<string | null>(null);
 
-  const handleCopyLink = (text: string, key: string) => {
-    if (navigator?.clipboard?.writeText) {
-      navigator.clipboard.writeText(text);
+  const handleConfirmCancel = async () => {
+    if (!participantToCancel || !onDeleteParticipant) return;
+    setIsCancelling(true);
+    try {
+      const name = participantToCancel.name;
+      await onDeleteParticipant(participantToCancel.id);
+      setParticipantToCancel(null);
+      setCancelToast(`Inscrição de "${name}" cancelada com sucesso! Os dados foram apagados do Firestore e a vaga foi liberada.`);
+      setTimeout(() => setCancelToast(null), 5000);
+    } catch (err) {
+      console.error('Erro ao cancelar participante:', err);
+    } finally {
+      setIsCancelling(false);
     }
-    setCopiedLink(key);
-    setTimeout(() => setCopiedLink(null), 2500);
   };
 
   // Math stats based on parent state (Main adults + linked child dependents)
@@ -476,154 +486,6 @@ export default function OrganizerArea({
         {activeTab === 'participantes' && (
           <div className="space-y-6">
             
-            {/* Lotes Adicionais - Links de Inscrição Exclusivos */}
-            <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-emerald-950 p-5 sm:p-6 rounded-3xl border border-emerald-500/30 text-white shadow-xl relative overflow-hidden">
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-5 pb-4 border-b border-white/10">
-                <div>
-                  <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[11px] font-mono font-bold uppercase tracking-wider mb-2">
-                    <LinkIcon className="w-3.5 h-3.5 text-emerald-400" />
-                    <span>2 Vagas Ocultas • Links Exclusivos</span>
-                  </div>
-                  <h3 className="text-lg font-black font-display text-white">
-                    Links de Inscrição para Vagas Ocultas
-                  </h3>
-                  <p className="text-slate-300 text-xs mt-1 font-light max-w-2xl">
-                    Cada link abaixo permite <strong>apenas 1 única inscrição</strong> para uma pessoa diferente. Assim que a vaga é preenchida, o link correspondente é bloqueado automaticamente em tempo real.
-                  </p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Card Link 1 */}
-                <div className="bg-white/5 border border-white/10 hover:border-emerald-500/40 rounded-2xl p-4 transition-all flex flex-col justify-between">
-                  <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs font-mono font-bold text-emerald-400 uppercase tracking-wide">
-                        Vaga Oculta 1 (1 pessoa)
-                      </span>
-                      {extra1Participant ? (
-                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-red-500/20 text-red-300 border border-red-500/30">
-                          Preenchida (1/1)
-                        </span>
-                      ) : (
-                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 animate-pulse">
-                          Disponível (0/1)
-                        </span>
-                      )}
-                    </div>
-
-                    <div className="bg-black/30 rounded-xl px-3 py-2 border border-white/10 text-xs font-mono text-emerald-300 select-all break-all mb-1 font-bold">
-                      https://convencaomunicipaldequartetos.com/?vaga=1
-                    </div>
-                    <div className="text-[10px] text-slate-400 font-mono mb-3 truncate">
-                      Alt: convencaomunicipaldequartetos.com/#/vaga1
-                    </div>
-
-                    {extra1Participant && (
-                      <div className="text-[11px] text-slate-300 mb-3 bg-white/5 p-2.5 rounded-xl border border-white/5">
-                        <span className="text-slate-400 block text-[10px] uppercase font-mono">Inscrito:</span>
-                        <strong className="text-white block">{extra1Participant.name}</strong>
-                        <span className="text-slate-400 text-[10px]">{extra1Participant.email}</span>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="flex items-center space-x-2 pt-2 border-t border-white/10">
-                    <button
-                      type="button"
-                      onClick={() => handleCopyLink('https://convencaomunicipaldequartetos.com/?vaga=1', 'link1')}
-                      className="flex-1 py-2 px-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition-all flex items-center justify-center space-x-1.5 cursor-pointer shadow-sm active:scale-95"
-                    >
-                      {copiedLink === 'link1' ? (
-                        <>
-                          <Check className="w-3.5 h-3.5 text-white" />
-                          <span>Link 1 Copiado!</span>
-                        </>
-                      ) : (
-                        <>
-                          <Copy className="w-3.5 h-3.5" />
-                          <span>Copiar Link Vaga 1</span>
-                        </>
-                      )}
-                    </button>
-                    <a
-                      href="https://convencaomunicipaldequartetos.com/?vaga=1"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="p-2 bg-white/10 hover:bg-white/20 text-slate-200 rounded-xl transition-all"
-                      title="Testar link"
-                    >
-                      <ExternalLink className="w-4 h-4" />
-                    </a>
-                  </div>
-                </div>
-
-                {/* Card Link 2 */}
-                <div className="bg-white/5 border border-white/10 hover:border-emerald-500/40 rounded-2xl p-4 transition-all flex flex-col justify-between">
-                  <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs font-mono font-bold text-emerald-400 uppercase tracking-wide">
-                        Vaga Oculta 2 (1 pessoa)
-                      </span>
-                      {extra2Participant ? (
-                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-red-500/20 text-red-300 border border-red-500/30">
-                          Preenchida (1/1)
-                        </span>
-                      ) : (
-                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 animate-pulse">
-                          Disponível (0/1)
-                        </span>
-                      )}
-                    </div>
-
-                    <div className="bg-black/30 rounded-xl px-3 py-2 border border-white/10 text-xs font-mono text-emerald-300 select-all break-all mb-1 font-bold">
-                      https://convencaomunicipaldequartetos.com/?vaga=2
-                    </div>
-                    <div className="text-[10px] text-slate-400 font-mono mb-3 truncate">
-                      Alt: convencaomunicipaldequartetos.com/#/vaga2
-                    </div>
-
-                    {extra2Participant && (
-                      <div className="text-[11px] text-slate-300 mb-3 bg-white/5 p-2.5 rounded-xl border border-white/5">
-                        <span className="text-slate-400 block text-[10px] uppercase font-mono">Inscrito:</span>
-                        <strong className="text-white block">{extra2Participant.name}</strong>
-                        <span className="text-slate-400 text-[10px]">{extra2Participant.email}</span>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="flex items-center space-x-2 pt-2 border-t border-white/10">
-                    <button
-                      type="button"
-                      onClick={() => handleCopyLink('https://convencaomunicipaldequartetos.com/?vaga=2', 'link2')}
-                      className="flex-1 py-2 px-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition-all flex items-center justify-center space-x-1.5 cursor-pointer shadow-sm active:scale-95"
-                    >
-                      {copiedLink === 'link2' ? (
-                        <>
-                          <Check className="w-3.5 h-3.5 text-white" />
-                          <span>Link 2 Copiado!</span>
-                        </>
-                      ) : (
-                        <>
-                          <Copy className="w-3.5 h-3.5" />
-                          <span>Copiar Link Vaga 2</span>
-                        </>
-                      )}
-                    </button>
-                    <a
-                      href="https://convencaomunicipaldequartetos.com/?vaga=2"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="p-2 bg-white/10 hover:bg-white/20 text-slate-200 rounded-xl transition-all"
-                      title="Testar link"
-                    >
-                      <ExternalLink className="w-4 h-4" />
-                    </a>
-                  </div>
-                </div>
-              </div>
-            </div>
-            
             {/* Advanced Filters */}
             <div className="bg-white p-5 rounded-3xl border border-slate-200/80 shadow-xs flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
               
@@ -778,18 +640,29 @@ export default function OrganizerArea({
                             </span>
                           </td>
                           <td className="py-4 px-6 text-right align-top">
-                            {p.status === 'Pendente' ? (
+                            <div className="flex items-center justify-end space-x-1.5">
+                              {p.status === 'Pendente' ? (
+                                <button
+                                  onClick={() => handleToggleParticipantStatus(p)}
+                                  className="px-2.5 py-1.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 font-bold text-[10px] rounded-lg transition-all cursor-pointer shadow-2xs"
+                                  title="Confirmar Presença / Credenciar"
+                                >
+                                  Credenciar
+                                </button>
+                              ) : (
+                                <span className="text-[10px] text-slate-400 font-mono italic pr-1">
+                                  {p.checkInTime || 'Presença Confirmada'}
+                                </span>
+                              )}
                               <button
-                                onClick={() => handleToggleParticipantStatus(p)}
-                                className="px-3 py-1.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 font-bold text-[10px] rounded-lg transition-all cursor-pointer"
+                                onClick={() => setParticipantToCancel(p)}
+                                className="px-2.5 py-1.5 bg-red-50 text-red-700 hover:bg-red-100 border border-red-200/80 font-bold text-[10px] rounded-lg transition-all cursor-pointer flex items-center space-x-1 shadow-2xs"
+                                title="Cancelar Inscrição e Liberar Vaga"
                               >
-                                Credenciar
+                                <Trash2 className="w-3 h-3 text-red-600" />
+                                <span>Cancelar</span>
                               </button>
-                            ) : (
-                              <span className="text-[10px] text-slate-400 font-mono italic pr-3">
-                                {p.checkInTime || 'Presença Confirmada'}
-                              </span>
-                            )}
+                            </div>
                           </td>
                         </tr>
                       ))
@@ -1215,6 +1088,91 @@ export default function OrganizerArea({
         )}
 
       </main>
+
+      {/* Modal de Confirmação para Cancelar Inscrição */}
+      {participantToCancel && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 sm:p-7 shadow-2xl border border-slate-100 text-left relative animate-in fade-in zoom-in-95 duration-200">
+            <div className="w-12 h-12 rounded-2xl bg-red-100 text-red-600 flex items-center justify-center mb-4">
+              <Trash2 className="w-6 h-6" />
+            </div>
+
+            <h3 className="text-lg font-black text-slate-900 font-display">
+              Cancelar Inscrição e Liberar Vaga?
+            </h3>
+            
+            <p className="text-xs sm:text-sm text-slate-600 mt-2 leading-relaxed">
+              Você está prestes a cancelar a inscrição de <strong className="text-slate-900">{participantToCancel.name}</strong>.
+            </p>
+
+            <div className="my-4 p-3.5 bg-slate-50 rounded-2xl border border-slate-200 text-xs space-y-1.5 text-slate-700 font-mono">
+              <div className="flex justify-between">
+                <span className="text-slate-500">E-mail:</span>
+                <span className="font-semibold text-slate-900 truncate max-w-[200px]">{participantToCancel.email}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-500">Telefone:</span>
+                <span className="font-semibold text-slate-900">{participantToCancel.phone}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-500">Tipo:</span>
+                <span className="font-semibold text-slate-900">{participantToCancel.registrationType || 'Público'}</span>
+              </div>
+              {participantToCancel.dependents && participantToCancel.dependents.length > 0 && (
+                <div className="flex justify-between text-amber-700 font-bold">
+                  <span>Dependentes:</span>
+                  <span>+{participantToCancel.dependents.length} incluído(s)</span>
+                </div>
+              )}
+            </div>
+
+            <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-800 mb-6 flex items-start gap-2">
+              <AlertCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
+              <p className="text-[11px] leading-relaxed">
+                Esta ação apagará este participante permanentemente do banco de dados <strong>Firestore</strong>. A vaga voltará a ficar disponível imediatamente para outra pessoa se inscrever.
+              </p>
+            </div>
+
+            <div className="flex items-center justify-end space-x-3">
+              <button
+                type="button"
+                onClick={() => setParticipantToCancel(null)}
+                disabled={isCancelling}
+                className="px-4 py-2.5 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer"
+              >
+                Voltar / Manter Inscrição
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmCancel}
+                disabled={isCancelling}
+                className="px-4 py-2.5 rounded-xl text-xs font-bold bg-red-600 hover:bg-red-700 text-white transition-all shadow-md flex items-center space-x-2 cursor-pointer disabled:opacity-50"
+              >
+                {isCancelling ? (
+                  <>
+                    <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    <span>Apagando do Firestore...</span>
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>Sim, Cancelar e Liberar Vaga</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Toast de Sucesso ao Cancelar Inscrição */}
+      {cancelToast && (
+        <div className="fixed bottom-6 right-6 z-50 bg-emerald-600 text-white px-5 py-3.5 rounded-2xl shadow-2xl flex items-center space-x-3 border border-emerald-400 animate-in slide-in-from-bottom duration-300">
+          <Check className="w-5 h-5 text-emerald-200 shrink-0" />
+          <span className="text-xs sm:text-sm font-bold">{cancelToast}</span>
+        </div>
+      )}
+
     </div>
   );
 }

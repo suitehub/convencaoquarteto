@@ -21,6 +21,7 @@ interface CadastroProps {
   secretBatchCount?: number;
   extraBatchId?: 'extra-1' | 'extra-2' | null;
   extraBatchCount?: number;
+  maxParticipants?: number;
 }
 
 export default function Cadastro({ 
@@ -32,7 +33,8 @@ export default function Cadastro({
   isSecretMode = false,
   secretBatchCount = 0,
   extraBatchId = null,
-  extraBatchCount = 0
+  extraBatchCount = 0,
+  maxParticipants = 316
 }: CadastroProps) {
   const [formData, setFormData] = useState({
     name: '',
@@ -52,9 +54,11 @@ export default function Cadastro({
 
   const SECRET_BATCH_LIMIT = 11;
   const secretRemaining = Math.max(0, SECRET_BATCH_LIMIT - secretBatchCount);
+  const maxLimit = maxParticipants > 0 ? maxParticipants : 316;
+  const isPublicSoldOut = !isSecretMode && !extraBatchId && (participantsCount >= maxLimit);
 
-  // If accessed normally from public page (not via /secret or /extra-1 or /extra-2), keep registration strictly CLOSED / SOLD OUT
-  if (!isSecretMode && !extraBatchId) {
+  // If public registration is at or over capacity, show sold out screen
+  if (isPublicSoldOut) {
     return (
       <div className="min-h-screen bg-app-deep flex flex-col justify-center items-center px-4 py-20 relative overflow-hidden">
         {/* Immersive brand glow elements */}
