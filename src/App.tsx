@@ -415,26 +415,49 @@ export default function App() {
     }
   };
 
-  // Helper action: Check in/Credenciar participant
+  // Helper action: Check in / Credenciar or Descredenciar participant (Toggle)
   const handleCheckIn = async (id: string) => {
-    const now = new Date();
-    const timeString = `${now.getDate()}/07 ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-    
-    await updateParticipantInFirestore(id, {
-      status: 'Presente',
-      checkInTime: timeString
-    });
+    const target = participants.find((p) => p.id === id);
+    const isCurrentlyPresent = target?.status === 'Presente';
 
-    // If current logged-in participant is the one checked in, update current user too!
-    if (currentUser && currentUser.id === id) {
-      setCurrentUser((prev) => {
-        if (!prev) return null;
-        return {
-          ...prev,
-          status: 'Presente',
-          checkInTime: timeString
-        };
+    if (isCurrentlyPresent) {
+      // Reverter credenciamento (Descredenciar) -> volta para Pendente
+      await updateParticipantInFirestore(id, {
+        status: 'Pendente',
+        checkInTime: ''
       });
+
+      if (currentUser && currentUser.id === id) {
+        setCurrentUser((prev) => {
+          if (!prev) return null;
+          return {
+            ...prev,
+            status: 'Pendente',
+            checkInTime: undefined
+          };
+        });
+      }
+    } else {
+      // Confirmar presença (Credenciar)
+      const now = new Date();
+      const timeString = `${now.getDate()}/07 ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+      
+      await updateParticipantInFirestore(id, {
+        status: 'Presente',
+        checkInTime: timeString
+      });
+
+      // If current logged-in participant is the one checked in, update current user too!
+      if (currentUser && currentUser.id === id) {
+        setCurrentUser((prev) => {
+          if (!prev) return null;
+          return {
+            ...prev,
+            status: 'Presente',
+            checkInTime: timeString
+          };
+        });
+      }
     }
   };
 

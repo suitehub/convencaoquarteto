@@ -66,19 +66,29 @@ export default function ReceptionArea({ participants, onCheckIn, onLogout }: Rec
   });
 
   const handleConfirmCheckIn = (p: Participant) => {
+    handleToggleCheckIn(p);
+  };
+
+  const handleToggleCheckIn = (p: Participant) => {
+    const isCurrentlyPresent = p.status === 'Presente' || participants.find((item) => item.id === p.id)?.status === 'Presente';
     onCheckIn(p.id);
-    playBeep();
-    
-    // Play virtual beep sound or show success toast
-    setSuccessToast(`Entrada de ${p.name.split(' ')[0]} confirmada!`);
+
+    if (isCurrentlyPresent) {
+      setSuccessToast(`Credenciamento de ${p.name.split(' ')[0]} foi desfeito (revertido para Pendente).`);
+      if (selectedPart && selectedPart.id === p.id) {
+        setSelectedPart({ ...selectedPart, status: 'Pendente', checkInTime: undefined });
+      }
+    } else {
+      playBeep();
+      setSuccessToast(`Entrada de ${p.name.split(' ')[0]} confirmada com sucesso!`);
+      if (selectedPart && selectedPart.id === p.id) {
+        setSelectedPart({ ...selectedPart, status: 'Presente', checkInTime: 'Agora' });
+      }
+    }
+
     setTimeout(() => {
       setSuccessToast(null);
     }, 3500);
-
-    // If selected, update local reference
-    if (selectedPart && selectedPart.id === p.id) {
-      setSelectedPart({ ...selectedPart, status: 'Presente', checkInTime: 'Agora' });
-    }
   };
 
   const handleScanResult = (scannedText: string) => {
@@ -302,15 +312,26 @@ export default function ReceptionArea({ participants, onCheckIn, onLogout }: Rec
                     ID: {selectedPart.id.toUpperCase()}
                   </span>
                   
-                  {/* Status interactive badge */}
+                  {/* Status interactive badge and toggle actions */}
                   {(selectedPart.status === 'Presente' || participants.find(p=>p.id === selectedPart.id)?.status === 'Presente') ? (
-                    <div className="mt-4 px-4 py-2 bg-app-gold/10 text-app-deep text-xs font-bold rounded-xl border border-app-gold/20 flex items-center space-x-1.5">
-                      <Check className="w-4 h-4" />
-                      <span>Credenciamento Confirmado</span>
+                    <div className="mt-4 w-full flex flex-col gap-2">
+                      <div className="w-full px-4 py-2.5 bg-emerald-50 text-emerald-800 text-xs font-bold rounded-xl border border-emerald-200 flex items-center justify-center space-x-1.5">
+                        <Check className="w-4 h-4 text-emerald-600" />
+                        <span>Presença Confirmada ({selectedPart.checkInTime || participants.find(p=>p.id === selectedPart.id)?.checkInTime || 'Presente'})</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleToggleCheckIn(selectedPart)}
+                        className="w-full py-2.5 bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200/90 font-bold text-xs rounded-xl cursor-pointer transition-all flex items-center justify-center space-x-1.5 uppercase tracking-wide active:scale-95 shadow-xs"
+                        title="Desfazer credenciamento e marcar como pendente"
+                      >
+                        <UserX className="w-3.5 h-3.5 text-amber-700" />
+                        <span>Descredenciar Participante</span>
+                      </button>
                     </div>
                   ) : (
                     <button
-                      onClick={() => handleConfirmCheckIn(selectedPart)}
+                      onClick={() => handleToggleCheckIn(selectedPart)}
                       className="mt-4 w-full py-3 bg-app-gold hover:bg-amber-400 text-app-deep font-bold text-xs rounded-xl cursor-pointer shadow-lg shadow-app-gold/10 active:scale-95 transition-all flex items-center justify-center space-x-1.5 uppercase tracking-wide"
                     >
                       <UserCheck className="w-4 h-4 text-app-deep" />
@@ -487,16 +508,23 @@ export default function ReceptionArea({ participants, onCheckIn, onLogout }: Rec
                             <div className="flex items-center justify-end space-x-2">
                               {part.status === 'Pendente' ? (
                                 <button
-                                  onClick={() => handleConfirmCheckIn(part)}
+                                  onClick={() => handleToggleCheckIn(part)}
                                   className="px-3 py-1.5 bg-app-gold hover:bg-amber-400 text-app-deep font-bold rounded-lg cursor-pointer transition-all active:scale-95 flex items-center space-x-1 hover:shadow-xs text-[11px]"
                                 >
                                   <Check className="w-3.5 h-3.5 text-app-deep" />
                                   <span>Confirmar Entrada</span>
                                 </button>
                               ) : (
-                                <span className="text-[10px] text-slate-400 font-mono italic pr-3">
-                                  {part.checkInTime || 'Credenciado'}
-                                </span>
+                                <div className="flex items-center space-x-2">
+                                  <button
+                                    onClick={() => handleToggleCheckIn(part)}
+                                    className="px-2.5 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200/90 font-bold rounded-lg cursor-pointer transition-all active:scale-95 flex items-center space-x-1 text-[10px] shadow-2xs"
+                                    title="Descredenciar e voltar status para Pendente"
+                                  >
+                                    <UserX className="w-3 h-3 text-amber-700" />
+                                    <span>Descredenciar</span>
+                                  </button>
+                                </div>
                               )}
                               <button
                                 onClick={() => setSelectedPart(part)}

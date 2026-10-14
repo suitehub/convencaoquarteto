@@ -13,7 +13,7 @@ import {
   LayoutDashboard, Users, BarChart3, Settings, Gift, Music, Search, 
   SlidersHorizontal, CheckCircle2, AlertCircle, Save, Calendar, Clock, 
   MapPin, Sliders, ArrowUpRight, Check, Menu, X, UserPlus, Key, Download, FileSpreadsheet,
-  Trash2, MessageSquare, Send, Baby
+  Trash2, MessageSquare, Send, Baby, RotateCcw, UserX
 } from 'lucide-react';
 import { Participant, EventConfig, StaffUser } from '../types';
 import Sorteio from './Sorteio';
@@ -187,6 +187,13 @@ export default function OrganizerArea({
 
   const handleToggleParticipantStatus = (p: Participant) => {
     onCheckIn(p.id);
+    if (p.status === 'Presente') {
+      setCancelToast(`Credenciamento de "${p.name}" foi desfeito (retornado para Pendente).`);
+      setTimeout(() => setCancelToast(null), 4000);
+    } else {
+      setCancelToast(`Presença de "${p.name}" confirmada com sucesso!`);
+      setTimeout(() => setCancelToast(null), 4000);
+    }
   };
 
   const handleExportLeads = () => {
@@ -638,6 +645,11 @@ export default function OrganizerArea({
                             }`}>
                               {p.status}
                             </span>
+                            {p.status === 'Presente' && p.checkInTime && (
+                              <span className="block text-[9px] text-slate-400 font-mono mt-0.5">
+                                {p.checkInTime}
+                              </span>
+                            )}
                           </td>
                           <td className="py-4 px-6 text-right align-top">
                             <div className="flex items-center justify-end space-x-1.5">
@@ -650,9 +662,14 @@ export default function OrganizerArea({
                                   Credenciar
                                 </button>
                               ) : (
-                                <span className="text-[10px] text-slate-400 font-mono italic pr-1">
-                                  {p.checkInTime || 'Presença Confirmada'}
-                                </span>
+                                <button
+                                  onClick={() => handleToggleParticipantStatus(p)}
+                                  className="px-2.5 py-1.5 bg-amber-50 text-amber-800 hover:bg-amber-100 border border-amber-200/90 font-bold text-[10px] rounded-lg transition-all cursor-pointer shadow-2xs flex items-center space-x-1"
+                                  title="Descredenciar (voltar status para Pendente)"
+                                >
+                                  <RotateCcw className="w-3 h-3 text-amber-700" />
+                                  <span>Descredenciar</span>
+                                </button>
                               )}
                               <button
                                 onClick={() => setParticipantToCancel(p)}
