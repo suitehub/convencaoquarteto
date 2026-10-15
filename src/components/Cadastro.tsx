@@ -314,8 +314,10 @@ export default function Cadastro({
     e.preventDefault();
     setErrorMsg('');
 
-    if (extraBatchId && (extraBatchCount || 0) >= 1) {
-      setErrorMsg('Desculpe, a vaga exclusiva deste link adicional já foi preenchida.');
+    if (extraBatchId && (extraBatchCount || 0) >= effectiveBatchLimit) {
+      setErrorMsg(is5SeatsBatch
+        ? 'Desculpe, o limite de 5 vagas deste lote especial já foi atingido.'
+        : 'Desculpe, a vaga exclusiva deste link adicional já foi preenchida.');
       return;
     }
 
@@ -394,7 +396,9 @@ export default function Cadastro({
       console.error('Registration failed:', err);
       recordAttempt('registration');
       if (err?.message === 'EXTRA_BATCH_FULL') {
-        setErrorMsg('Desculpe! A vaga deste link já foi preenchida por outra pessoa.');
+        setErrorMsg(is5SeatsBatch
+          ? 'Desculpe! O limite de 5 vagas deste lote especial já foi atingido.'
+          : 'Desculpe! A vaga deste link já foi preenchida por outra pessoa.');
       } else if (err?.message === 'SECRET_BATCH_FULL' || err?.message === 'CAPACITY_REACHED') {
         setErrorMsg('Desculpe! O limite de vagas deste lote foi atingido e não há mais vagas disponíveis.');
       } else if (err?.message === 'EMAIL_EXISTS') {
@@ -753,13 +757,17 @@ export default function Cadastro({
               </div>
               
               <h2 className="text-2xl font-black text-app-deep font-display">
-                {extraBatchId 
-                  ? `Vaga Adicional #${getLinkNum(extraBatchId)} Confirmada!` 
-                  : isSecretMode ? 'Vaga Secreta Confirmada!' : 'Inscrição Efetuada!'}
+                {is5SeatsBatch
+                  ? 'Vaga Confirmada (Lote de 5 Vagas)!'
+                  : extraBatchId 
+                    ? `Vaga Adicional #${getLinkNum(extraBatchId)} Confirmada!` 
+                    : isSecretMode ? 'Vaga Secreta Confirmada!' : 'Inscrição Efetuada!'}
               </h2>
               
               <p className="text-slate-600 text-sm mt-3 font-light leading-relaxed">
-                {extraBatchId ? (
+                {is5SeatsBatch ? (
+                  <>Excelente! Sua vaga do <strong>Lote Adicional (5 Vagas)</strong> para a <strong className="text-app-medium font-semibold">9ª Convenção Municipal de Quartetos</strong> foi reservada e computada com sucesso.</>
+                ) : extraBatchId ? (
                   <>Excelente! Sua vaga individual exclusiva do <strong>Lote Adicional (Link {getLinkNum(extraBatchId)})</strong> para a <strong className="text-app-medium font-semibold">9ª Convenção Municipal de Quartetos</strong> foi reservada e computada com sucesso.</>
                 ) : isSecretMode ? (
                   <>Excelente! Sua vaga exclusiva do <strong>Lote Secreto</strong> para a <strong className="text-app-medium font-semibold">9ª Convenção Municipal de Quartetos</strong> foi reservada e computada com sucesso.</>
@@ -776,9 +784,11 @@ export default function Cadastro({
                 <div className="text-xs text-slate-500 font-mono flex justify-between">
                   <span>TIPO DE CADASTRO:</span>
                   <span className="text-app-medium font-bold uppercase">
-                    {extraBatchId 
-                      ? `${initialType} (LOTE ADICIONAL #${getLinkNum(extraBatchId)})`
-                      : isSecretMode ? `${initialType} (LOTE SECRETO)` : initialType}
+                    {is5SeatsBatch
+                      ? `${initialType} (LOTE DE 5 VAGAS)`
+                      : extraBatchId 
+                        ? `${initialType} (LOTE ADICIONAL #${getLinkNum(extraBatchId)})`
+                        : isSecretMode ? `${initialType} (LOTE SECRETO)` : initialType}
                   </span>
                 </div>
                 <div className="text-xs text-slate-500 font-mono flex justify-between">

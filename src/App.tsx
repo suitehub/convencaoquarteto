@@ -79,6 +79,21 @@ export default function App() {
     const search = window.location.search.toLowerCase();
     const href = window.location.href.toLowerCase();
     
+    // Check Link 5 (Lote de 5 Inscrições / 5 Vagas) - Checked first
+    if (
+      search.includes('lote=5') || search.includes('lote5') || 
+      search.includes('vagas=5') || search.includes('5vagas') || search.includes('vagas5') ||
+      search.includes('extra=5') || search.includes('extra5') || search.includes('extra-5') ||
+      hash.includes('lote5') || hash.includes('lote-5') || hash.includes('5vagas') ||
+      hash.includes('vagas5') || hash.includes('extra-5') || hash.includes('extra5') ||
+      path.includes('lote5') || path.includes('lote-5') || path.includes('5vagas') ||
+      path.includes('vagas5') || path.includes('extra-5') || path.includes('extra5') ||
+      href.includes('lote=5') || href.includes('lote5') || href.includes('5vagas') ||
+      href.includes('extra-5') || href.includes('lote-5')
+    ) {
+      return 'lote-5';
+    }
+
     // Check Link 1 (Vaga Oculta 1)
     if (
       search.includes('vaga=1') || search.includes('vaga1') || 
@@ -128,21 +143,6 @@ export default function App() {
       href.includes('vaga=3') || href.includes('vaga3') || href.includes('extra-3') || href.includes('loteadicional3')
     ) {
       return 'extra-3';
-    }
-
-    // Check Link 5 (Lote de 5 Inscrições / 5 Vagas)
-    if (
-      search.includes('lote=5') || search.includes('lote5') || 
-      search.includes('vagas=5') || search.includes('5vagas') || search.includes('vagas5') ||
-      search.includes('extra=5') || search.includes('extra5') || search.includes('extra-5') ||
-      hash.includes('lote5') || hash.includes('lote-5') || hash.includes('5vagas') ||
-      hash.includes('vagas5') || hash.includes('extra-5') || hash.includes('extra5') ||
-      path.includes('lote5') || path.includes('lote-5') || path.includes('5vagas') ||
-      path.includes('vagas5') || path.includes('extra-5') || path.includes('extra5') ||
-      href.includes('lote=5') || href.includes('lote5') || href.includes('5vagas') ||
-      href.includes('extra-5') || href.includes('lote-5')
-    ) {
-      return 'lote-5';
     }
 
     return null;
