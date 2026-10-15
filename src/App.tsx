@@ -71,8 +71,8 @@ export default function App() {
     );
   };
 
-  // Check if current URL points to one of the individual extra batch links (/vaga1, /vaga2, /vaga3)
-  const checkExtraBatchRoute = (): 'extra-1' | 'extra-2' | 'extra-3' | null => {
+  // Check if current URL points to one of the individual extra batch links (/vaga1, /vaga2, /vaga3, /lote5, etc.)
+  const checkExtraBatchRoute = (): 'extra-1' | 'extra-2' | 'extra-3' | 'lote-5' | null => {
     if (typeof window === 'undefined') return null;
     const path = window.location.pathname.toLowerCase();
     const hash = window.location.hash.toLowerCase();
@@ -130,6 +130,21 @@ export default function App() {
       return 'extra-3';
     }
 
+    // Check Link 5 (Lote de 5 Inscrições / 5 Vagas)
+    if (
+      search.includes('lote=5') || search.includes('lote5') || 
+      search.includes('vagas=5') || search.includes('5vagas') || search.includes('vagas5') ||
+      search.includes('extra=5') || search.includes('extra5') || search.includes('extra-5') ||
+      hash.includes('lote5') || hash.includes('lote-5') || hash.includes('5vagas') ||
+      hash.includes('vagas5') || hash.includes('extra-5') || hash.includes('extra5') ||
+      path.includes('lote5') || path.includes('lote-5') || path.includes('5vagas') ||
+      path.includes('vagas5') || path.includes('extra-5') || path.includes('extra5') ||
+      href.includes('lote=5') || href.includes('lote5') || href.includes('5vagas') ||
+      href.includes('extra-5') || href.includes('lote-5')
+    ) {
+      return 'lote-5';
+    }
+
     return null;
   };
 
@@ -142,6 +157,7 @@ export default function App() {
   const [extra1Count, setExtra1Count] = useState<number>(0);
   const [extra2Count, setExtra2Count] = useState<number>(0);
   const [extra3Count, setExtra3Count] = useState<number>(0);
+  const [extra5Count, setExtra5Count] = useState<number>(0);
   
   // Navigation states - initialized dynamically based on the current URL route
   const [splashCompleted, setSplashCompleted] = useState<boolean>(() => (
@@ -172,6 +188,9 @@ export default function App() {
     if (extraRoute === 'extra-3') {
       return 'cadastro-extra-3';
     }
+    if (extraRoute === 'lote-5') {
+      return 'cadastro-lote-5';
+    }
     return 'splash';
   });
   const [currentUser, setCurrentUser] = useState<Participant | null>(null);
@@ -199,14 +218,16 @@ export default function App() {
   // Fetch extra batch counts securely
   const fetchExtraCounts = async () => {
     try {
-      const [c1, c2, c3] = await Promise.all([
+      const [c1, c2, c3, c5] = await Promise.all([
         getExtraBatchCountSecure('extra-1'),
         getExtraBatchCountSecure('extra-2'),
-        getExtraBatchCountSecure('extra-3')
+        getExtraBatchCountSecure('extra-3'),
+        getExtraBatchCountSecure('lote-5')
       ]);
       setExtra1Count(c1);
       setExtra2Count(c2);
       setExtra3Count(c3);
+      setExtra5Count(c5);
     } catch (err) {
       console.error('Error fetching extra batch counts:', err);
     }
@@ -232,12 +253,16 @@ export default function App() {
     const unsubExtra3 = subscribeExtraBatchCount('extra-3', (count) => {
       setExtra3Count(count);
     });
+    const unsubExtra5 = subscribeExtraBatchCount('lote-5', (count) => {
+      setExtra5Count(count);
+    });
 
     return () => {
       unsubSecret();
       unsubExtra1();
       unsubExtra2();
       unsubExtra3();
+      unsubExtra5();
     };
   }, []);
 
@@ -327,6 +352,10 @@ export default function App() {
         setSplashCompleted(true);
         setCurrentRole('public');
         setCurrentView('cadastro-extra-3');
+      } else if (extraRoute === 'lote-5') {
+        setSplashCompleted(true);
+        setCurrentRole('public');
+        setCurrentView('cadastro-lote-5');
       } else {
         // If they navigate away from admin manually, go to landing
         if (currentView === 'admin-lock') {
@@ -364,12 +393,13 @@ export default function App() {
   const handleAddParticipant = async (
     newPart: Omit<Participant, 'id' | 'status' | 'registrationDate'>,
     isSecretBatch: boolean = false,
-    extraBatch?: 'extra-1' | 'extra-2' | 'extra-3' | string
+    extraBatch?: 'extra-1' | 'extra-2' | 'extra-3' | 'lote-5' | string
   ) => {
     if (extraBatch) {
-      // Check 1 registration limit for this specific extra batch link
+      // Check limit for this specific extra batch (5 registrations for lote-5, 1 for individual extra links)
+      const limitForBatch = (extraBatch === 'lote-5' || extraBatch === 'extra-5' || extraBatch === '5vagas') ? 5 : 1;
       const currentExtraCount = await getExtraBatchCountSecure(extraBatch);
-      if (currentExtraCount >= 1) {
+      if (currentExtraCount >= limitForBatch) {
         throw new Error('EXTRA_BATCH_FULL');
       }
     } else if (isSecretBatch) {
@@ -655,6 +685,22 @@ export default function App() {
               isSecretMode={false}
               extraBatchId="extra-3"
               extraBatchCount={extra3Count}
+            />
+          );
+        }
+        if (currentView === 'cadastro-lote-5' || currentView === 'cadastro-extra-5') {
+          return (
+            <Cadastro
+              initialType="Público"
+              onAddParticipant={handleAddParticipant}
+              onNavigate={handleNavigate}
+              participantsCount={secureCount}
+              maxParticipants={eventConfig.maxParticipants}
+              participants={[]}
+              isSecretMode={false}
+              extraBatchId="lote-5"
+              extraBatchCount={extra5Count}
+              batchLimit={5}
             />
           );
         }

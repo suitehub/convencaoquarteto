@@ -298,11 +298,16 @@ export function subscribeSecretBatchCount(callback: (count: number) => void) {
 
 /**
  * Extra Batch Counter:
- * Calculates total registrations enrolled through a specific extra batch URL ('extra-1', 'extra-2', 'extra-3').
+ * Calculates total registrations enrolled through a specific extra batch URL ('extra-1', 'extra-2', 'extra-3', 'lote-5', etc.).
  */
-export async function getExtraBatchCountSecure(batchId: 'extra-1' | 'extra-2' | 'extra-3' | string): Promise<number> {
+export async function getExtraBatchCountSecure(batchId: 'extra-1' | 'extra-2' | 'extra-3' | 'lote-5' | string): Promise<number> {
   try {
     const coll = collection(db, 'participants');
+    if (batchId === 'lote-5' || batchId === 'extra-5' || batchId === '5vagas') {
+      const q = query(coll, where('extraBatch', 'in', ['lote-5', 'extra-5', '5vagas']));
+      const snapshot = await getDocs(q);
+      return snapshot.size;
+    }
     const q = query(coll, where('extraBatch', '==', batchId));
     const snapshot = await getDocs(q);
     return snapshot.size;
@@ -313,11 +318,13 @@ export async function getExtraBatchCountSecure(batchId: 'extra-1' | 'extra-2' | 
 }
 
 /**
- * Real-time listener for extra batch registrations count ('extra-1', 'extra-2', 'extra-3').
+ * Real-time listener for extra batch registrations count ('extra-1', 'extra-2', 'extra-3', 'lote-5').
  */
-export function subscribeExtraBatchCount(batchId: 'extra-1' | 'extra-2' | 'extra-3' | string, callback: (count: number) => void) {
+export function subscribeExtraBatchCount(batchId: 'extra-1' | 'extra-2' | 'extra-3' | 'lote-5' | string, callback: (count: number) => void) {
   const coll = collection(db, 'participants');
-  const q = query(coll, where('extraBatch', '==', batchId));
+  const q = (batchId === 'lote-5' || batchId === 'extra-5' || batchId === '5vagas')
+    ? query(coll, where('extraBatch', 'in', ['lote-5', 'extra-5', '5vagas']))
+    : query(coll, where('extraBatch', '==', batchId));
   return onSnapshot(q, (snapshot) => {
     callback(snapshot.size);
   }, (error) => {

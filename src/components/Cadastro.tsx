@@ -13,14 +13,15 @@ import { PrivacyPolicyModal } from './PrivacyPolicyModal';
 
 interface CadastroProps {
   initialType?: 'Público' | 'Participante';
-  onAddParticipant: (newPart: Omit<Participant, 'id' | 'status' | 'registrationDate'>, isSecret?: boolean, extraBatch?: 'extra-1' | 'extra-2' | 'extra-3' | string) => Promise<void>;
+  onAddParticipant: (newPart: Omit<Participant, 'id' | 'status' | 'registrationDate'>, isSecret?: boolean, extraBatch?: 'extra-1' | 'extra-2' | 'extra-3' | 'lote-5' | string) => Promise<void>;
   onNavigate: (view: string, role?: 'public' | 'participant' | 'reception' | 'organizer') => void;
   participantsCount?: number;
   participants?: Participant[];
   isSecretMode?: boolean;
   secretBatchCount?: number;
-  extraBatchId?: 'extra-1' | 'extra-2' | 'extra-3' | string | null;
+  extraBatchId?: 'extra-1' | 'extra-2' | 'extra-3' | 'lote-5' | string | null;
   extraBatchCount?: number;
+  batchLimit?: number;
   maxParticipants?: number;
 }
 
@@ -34,12 +35,16 @@ export default function Cadastro({
   secretBatchCount = 0,
   extraBatchId = null,
   extraBatchCount = 0,
+  batchLimit,
   maxParticipants = 316
 }: CadastroProps) {
+  const is5SeatsBatch = extraBatchId === 'lote-5' || extraBatchId === 'extra-5' || batchLimit === 5;
+  const effectiveBatchLimit = batchLimit || (is5SeatsBatch ? 5 : 1);
   const getLinkNum = (id?: string | null) => {
     if (id === 'extra-1') return '1';
     if (id === 'extra-2') return '2';
     if (id === 'extra-3') return '3';
+    if (id === 'lote-5' || id === 'extra-5') return '5 Vagas';
     return id ? id.replace('extra-', '') : '1';
   };
   const [formData, setFormData] = useState({
@@ -218,8 +223,8 @@ export default function Cadastro({
     );
   }
 
-  // If accessed via /extra-1, /extra-2, /extra-3, check if the single extra spot has already been used!
-  if (extraBatchId && (extraBatchCount || 0) >= 1) {
+  // If accessed via extra batch links (/extra-1, /extra-2, /extra-3, /lote-5), check if batch capacity is reached!
+  if (extraBatchId && (extraBatchCount || 0) >= effectiveBatchLimit) {
     const linkNum = getLinkNum(extraBatchId);
     return (
       <div className="min-h-screen bg-app-deep flex flex-col justify-center items-center px-4 py-20 relative overflow-hidden">
@@ -248,27 +253,37 @@ export default function Cadastro({
             <div className="text-center py-4">
               <div className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-amber-50 text-amber-800 border border-amber-200 text-[11px] font-mono font-bold mb-4 uppercase">
                 <Lock className="w-3.5 h-3.5 text-amber-600" />
-                <span>Lote Adicional #{linkNum} • Encerrado</span>
+                <span>{is5SeatsBatch ? 'Lote de 5 Vagas • Encerrado' : `Lote Adicional #${linkNum} • Encerrado`}</span>
               </div>
 
               <div className="w-16 h-16 rounded-full bg-red-50 border border-red-200 text-red-600 flex items-center justify-center mx-auto mb-4">
                 <AlertCircle className="w-10 h-10" />
               </div>
               
-              <h2 className="text-2xl font-black text-app-deep font-display tracking-tight">Vaga Já Preenchida!</h2>
+              <h2 className="text-2xl font-black text-app-deep font-display tracking-tight">
+                {is5SeatsBatch ? 'Vagas Esgotadas!' : 'Vaga Já Preenchida!'}
+              </h2>
               
               <p className="text-slate-600 text-sm mt-3 font-light leading-relaxed">
-                A <strong className="text-app-medium font-bold">única vaga exclusiva</strong> deste link adicional (Link {linkNum}) já foi utilizada com sucesso. Cada link permite apenas 1 inscrição e foi bloqueado automaticamente.
+                {is5SeatsBatch ? (
+                  <>
+                    Todas as <strong className="text-app-medium font-bold">5 vagas exclusivas</strong> deste lote adicional foram preenchidas com sucesso. O sistema bloqueou novas inscrições automaticamente.
+                  </>
+                ) : (
+                  <>
+                    A <strong className="text-app-medium font-bold">única vaga exclusiva</strong> deste link adicional (Link {linkNum}) já foi utilizada com sucesso. Cada link permite apenas 1 inscrição e foi bloqueado automaticamente.
+                  </>
+                )}
               </p>
               
               <div className="bg-app-light p-4 rounded-2xl border border-slate-200 my-6 text-left space-y-2">
                 <div className="text-xs text-slate-500 font-mono flex justify-between">
-                  <span>VAGA DO LINK {linkNum}:</span>
-                  <span className="text-red-600 font-bold">1 / 1 PREENCHIDA</span>
+                  <span>{is5SeatsBatch ? 'VAGAS DESTE LOTE:' : `VAGA DO LINK ${linkNum}:`}</span>
+                  <span className="text-red-600 font-bold">{effectiveBatchLimit} / {effectiveBatchLimit} PREENCHIDAS</span>
                 </div>
                 <div className="text-xs text-slate-500 font-mono flex justify-between">
                   <span>STATUS DO LINK:</span>
-                  <span className="text-red-600 font-bold">UTILIZADO / BLOQUEADO</span>
+                  <span className="text-red-600 font-bold">ENCERRADO / BLOQUEADO</span>
                 </div>
                 <div className="text-xs text-slate-500 font-mono flex justify-between">
                   <span>TOTAL NO EVENTO:</span>
@@ -444,24 +459,46 @@ export default function Cadastro({
                   <>
                     <div className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-800 border border-emerald-500/30 text-[11px] font-mono font-bold mb-3 uppercase tracking-wider">
                       <Ticket className="w-3.5 h-3.5 text-emerald-600" />
-                      <span>✨ Link Exclusivo • Lote Adicional #{getLinkNum(extraBatchId)}</span>
+                      <span>{is5SeatsBatch ? '✨ Link Exclusivo • Lote de 5 Vagas' : `✨ Link Exclusivo • Lote Adicional #${getLinkNum(extraBatchId)}`}</span>
                     </div>
 
                     <h2 className="text-2xl font-black text-app-deep font-display tracking-tight">
-                      Inscrição Individual Adicional
+                      {is5SeatsBatch ? 'Inscrição - Lote Adicional (5 Vagas)' : 'Inscrição Individual Adicional'}
                     </h2>
 
                     <p className="text-slate-600 text-xs mt-1.5 font-light leading-relaxed">
-                      Você acessou o link exclusivo para <strong>1 vaga adicional</strong> (Link {getLinkNum(extraBatchId)}). Preencha seu cadastro para confirmar sua vaga!
+                      {is5SeatsBatch ? (
+                        <>
+                          Você acessou o link exclusivo com limite de <strong>5 vagas adicionais</strong>. Preencha seu cadastro para confirmar sua vaga!
+                        </>
+                      ) : (
+                        <>
+                          Você acessou o link exclusivo para <strong>1 vaga adicional</strong> (Link {getLinkNum(extraBatchId)}). Preencha seu cadastro para confirmar sua vaga!
+                        </>
+                      )}
                     </p>
 
                     <div className="mt-4 p-3 rounded-2xl bg-emerald-50/70 border border-emerald-200/80 text-left">
                       <div className="flex items-center justify-between text-xs font-mono font-bold">
-                        <span className="text-emerald-900">VAGA DESTE LINK:</span>
-                        <span className="text-emerald-700">1 VAGA DISPONÍVEL</span>
+                        <span className="text-emerald-900">VAGAS NESTE LOTE:</span>
+                        <span className="text-emerald-700">
+                          {is5SeatsBatch 
+                            ? `${effectiveBatchLimit - (extraBatchCount || 0)} de ${effectiveBatchLimit} restantes` 
+                            : '1 VAGA DISPONÍVEL'}
+                        </span>
                       </div>
+                      {is5SeatsBatch && (
+                        <div className="w-full bg-emerald-200/60 rounded-full h-2 mt-2 overflow-hidden">
+                          <div 
+                            className="bg-gradient-to-r from-emerald-500 to-app-gold h-2 rounded-full transition-all duration-500"
+                            style={{ width: `${Math.min(100, Math.round(((extraBatchCount || 0) / effectiveBatchLimit) * 100))}%` }}
+                          />
+                        </div>
+                      )}
                       <span className="text-[10px] text-emerald-800/80 block mt-1 font-mono">
-                        Atenção: Este link permite apenas 1 inscrição e será bloqueado após o envio.
+                        {is5SeatsBatch 
+                          ? `${extraBatchCount || 0} de ${effectiveBatchLimit} vaga(s) preenchida(s). O link será bloqueado automaticamente ao atingir 5 inscrições.`
+                          : 'Atenção: Este link permite apenas 1 inscrição e será bloqueado após o envio.'}
                       </span>
                     </div>
                   </>
