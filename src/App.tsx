@@ -39,7 +39,6 @@ import ParticipantArea from './components/ParticipantArea';
 import ReceptionArea from './components/ReceptionArea';
 import OrganizerArea from './components/OrganizerArea';
 import AdminLock from './components/AdminLock';
-import { ErrorBoundary } from './components/ErrorBoundary';
 
 export default function App() {
   // Check if the current URL points to the admin panel
@@ -838,11 +837,9 @@ export default function App() {
   };
 
   return (
-    <ErrorBoundary>
-      <div className="min-h-screen bg-slate-50 relative font-sans">
-        {/* Primary Workspace View Area */}
-        {renderActiveView()}
-      </div>
-    </ErrorBoundary>
+    <div className="min-h-screen bg-slate-50 relative font-sans">
+      {/* Primary Workspace View Area */}
+      {renderActiveView()}
+    </div>
   );
 }
