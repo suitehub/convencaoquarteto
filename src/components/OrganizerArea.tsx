@@ -102,14 +102,36 @@ export default function OrganizerArea({
     ...Array.from(new Set(participants.map((p) => p.city ? p.city.split(' - ')[0] : '').filter(Boolean)))
   ];
 
+  // Helper for accent-insensitive text normalization
+  const normalizeText = (txt?: string | null): string => {
+    if (!txt) return '';
+    return String(txt)
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .trim();
+  };
+
   // Filter list
-  const filteredParts = participants.filter((p) => {
-    const matchesSearch = p.name.toLowerCase().includes(search.toLowerCase()) || 
-                          p.email.toLowerCase().includes(search.toLowerCase()) ||
-                          p.phone.includes(search) ||
-                          Boolean(p.dependents && p.dependents.some((d) => d.name.toLowerCase().includes(search.toLowerCase())));
+  const cleanSearch = normalizeText(search);
+  const searchDigits = (search || '').replace(/\D/g, '');
+
+  const filteredParts = (participants || []).filter((p) => {
+    if (!p) return false;
+
+    const normName = normalizeText(p.name);
+    const normEmail = normalizeText(p.email);
+    const rawPhone = String(p.phone || '');
+    const phoneDigits = rawPhone.replace(/\D/g, '');
+
+    const matchesSearch = !cleanSearch ||
+                          normName.includes(cleanSearch) || 
+                          normEmail.includes(cleanSearch) ||
+                          rawPhone.toLowerCase().includes(cleanSearch) ||
+                          (searchDigits.length > 0 && phoneDigits.includes(searchDigits)) ||
+                          Boolean(p.dependents && Array.isArray(p.dependents) && p.dependents.some((d) => d && normalizeText(d.name).includes(cleanSearch)));
     const matchesStatus = statusFilter === 'Todos' || p.status === statusFilter;
-    const matchesCity = cityFilter === 'Todas' || (p.city && p.city.startsWith(cityFilter));
+    const matchesCity = cityFilter === 'Todas' || (p.city && String(p.city).startsWith(cityFilter));
     return matchesSearch && matchesStatus && matchesCity;
   });
 

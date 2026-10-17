@@ -45,24 +45,71 @@ export default function ReceptionArea({ participants, onCheckIn, onLogout }: Rec
     }
   };
 
+  // Helper for accent-insensitive and null-safe text normalization
+  const normalizeText = (txt?: string | null): string => {
+    if (!txt) return '';
+    return String(txt)
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .trim();
+  };
+
+  // Safe list of participants
+  const safeList = (participants || []).filter(Boolean);
+
   // Compute stats in real time including dependents count!
-  const totalInscritos = participants.length;
-  const totalDependentes = participants.reduce((acc, p) => acc + (p.dependents?.length || 0), 0);
+  const totalInscritos = safeList.length;
+  const totalDependentes = safeList.reduce((acc, p) => acc + (p?.dependents?.length || 0), 0);
   const totalIngressos = totalInscritos + totalDependentes;
 
-  const presentesInscritos = participants.filter((p) => p.status === 'Presente');
+  const presentesInscritos = safeList.filter((p) => p?.status === 'Presente');
   const presentesCount = presentesInscritos.length;
-  const presentesIngressos = presentesInscritos.reduce((acc, p) => acc + 1 + (p.dependents?.length || 0), 0);
-  const ausentesIngressos = totalIngressos - presentesIngressos;
+  const presentesIngressos = presentesInscritos.reduce((acc, p) => acc + 1 + (p?.dependents?.length || 0), 0);
+  const ausentesIngressos = Math.max(0, totalIngressos - presentesIngressos);
   const taxaPresenca = totalIngressos > 0 ? Math.round((presentesIngressos / totalIngressos) * 100) : 0;
 
-  // Filter participants
-  const filteredParticipants = participants.filter((p) => {
-    const searchString = searchTerm.toLowerCase();
-    return p.name.toLowerCase().includes(searchString) || 
-           (p.city && p.city.toLowerCase().includes(searchString)) || 
-           p.phone.includes(searchTerm) ||
-           p.email.toLowerCase().includes(searchString);
+  // Safe and crash-proof filter for participants
+  const normalizedSearch = normalizeText(searchTerm);
+  const searchDigits = (searchTerm || '').replace(/\D/g, '');
+
+  const filteredParticipants = safeList.filter((p) => {
+    if (!p) return false;
+    if (!normalizedSearch) return true;
+
+    const normName = normalizeText(p.name);
+    const normCity = normalizeText(p.city);
+    const normEmail = normalizeText(p.email);
+    const normId = normalizeText(p.id);
+    const rawPhone = String(p.phone || '');
+    const phoneDigits = rawPhone.replace(/\D/g, '');
+
+    // Search by name (accent-insensitive)
+    if (normName.includes(normalizedSearch)) return true;
+
+    // Search by city
+    if (normCity.includes(normalizedSearch)) return true;
+
+    // Search by email
+    if (normEmail.includes(normalizedSearch)) return true;
+
+    // Search by registration ID
+    if (normId.includes(normalizedSearch)) return true;
+
+    // Search by phone raw or digits
+    if (rawPhone.toLowerCase().includes(normalizedSearch)) return true;
+    if (searchDigits.length > 0 && phoneDigits.includes(searchDigits)) return true;
+
+    // Search by dependents' names
+    if (p.dependents && Array.isArray(p.dependents)) {
+      const matchDep = p.dependents.some((dep) => {
+        if (!dep) return false;
+        return normalizeText(dep.name).includes(normalizedSearch);
+      });
+      if (matchDep) return true;
+    }
+
+    return false;
   });
 
   const handleConfirmCheckIn = (p: Participant) => {
@@ -70,17 +117,20 @@ export default function ReceptionArea({ participants, onCheckIn, onLogout }: Rec
   };
 
   const handleToggleCheckIn = (p: Participant) => {
-    const isCurrentlyPresent = p.status === 'Presente' || participants.find((item) => item.id === p.id)?.status === 'Presente';
+    if (!p || !p.id) return;
+    const isCurrentlyPresent = p.status === 'Presente' || safeList.find((item) => item.id === p.id)?.status === 'Presente';
     onCheckIn(p.id);
 
+    const displayName = (p.name || 'Participante').split(' ')[0];
+
     if (isCurrentlyPresent) {
-      setSuccessToast(`Credenciamento de ${p.name.split(' ')[0]} foi desfeito (revertido para Pendente).`);
+      setSuccessToast(`Credenciamento de ${displayName} foi desfeito (revertido para Pendente).`);
       if (selectedPart && selectedPart.id === p.id) {
         setSelectedPart({ ...selectedPart, status: 'Pendente', checkInTime: undefined });
       }
     } else {
       playBeep();
-      setSuccessToast(`Entrada de ${p.name.split(' ')[0]} confirmada com sucesso!`);
+      setSuccessToast(`Entrada de ${displayName} confirmada com sucesso!`);
       if (selectedPart && selectedPart.id === p.id) {
         setSelectedPart({ ...selectedPart, status: 'Presente', checkInTime: 'Agora' });
       }
@@ -93,26 +143,38 @@ export default function ReceptionArea({ participants, onCheckIn, onLogout }: Rec
 
   const handleScanResult = (scannedText: string) => {
     setIsScannerOpen(false);
-    const cleanText = scannedText.trim();
+    const cleanText = (scannedText || '').trim();
+    if (!cleanText) return;
+    const cleanTextLower = cleanText.toLowerCase();
+    const cleanDigits = cleanText.replace(/\D/g, '');
 
     // Search for matching participant by ID, email, or substring
-    const matchedPart = participants.find(
-      (p) =>
-        p.id.toLowerCase() === cleanText.toLowerCase() ||
-        p.email.toLowerCase() === cleanText.toLowerCase() ||
-        p.phone === cleanText ||
-        cleanText.toLowerCase().includes(p.id.toLowerCase())
+    const matchedPart = safeList.find(
+      (p) => {
+        if (!p) return false;
+        const pId = (p.id || '').toLowerCase();
+        const pEmail = (p.email || '').toLowerCase();
+        const pPhone = String(p.phone || '').replace(/\D/g, '');
+
+        return (
+          pId === cleanTextLower ||
+          pEmail === cleanTextLower ||
+          (cleanDigits.length > 0 && pPhone === cleanDigits) ||
+          (pId.length > 0 && cleanTextLower.includes(pId))
+        );
+      }
     );
 
     if (matchedPart) {
       playBeep();
       setSelectedPart(matchedPart);
       const isAlreadyPresent = matchedPart.status === 'Presente';
+      const partName = matchedPart.name || 'Participante';
       if (!isAlreadyPresent) {
         onCheckIn(matchedPart.id);
-        setSuccessToast(`QR CODE VÁLIDO! Credenciamento de ${matchedPart.name} realizado com sucesso!`);
+        setSuccessToast(`QR CODE VÁLIDO! Credenciamento de ${partName} realizado com sucesso!`);
       } else {
-        setSuccessToast(`QR CODE VÁLIDO! ${matchedPart.name} já credenciado(a).`);
+        setSuccessToast(`QR CODE VÁLIDO! ${partName} já credenciado(a).`);
       }
       setTimeout(() => setSuccessToast(null), 4000);
     } else {
@@ -462,12 +524,12 @@ export default function ReceptionArea({ participants, onCheckIn, onLogout }: Rec
                           <td className="py-4 px-6">
                             <div className="flex items-center space-x-3">
                               <div className="w-8 h-8 rounded-full bg-slate-100 text-slate-600 font-bold flex items-center justify-center font-display shrink-0">
-                                {part.name.charAt(0)}
+                                {(part.name || '?').charAt(0).toUpperCase()}
                               </div>
                               <div>
-                                <span className="font-semibold text-slate-800 block group-hover:text-app-medium transition-colors">{part.name}</span>
+                                <span className="font-semibold text-slate-800 block group-hover:text-app-medium transition-colors">{part.name || 'Participante'}</span>
                                 <div className="flex items-center gap-1.5 mt-0.5">
-                                  <span className="text-slate-400 text-[10px]">{part.email}</span>
+                                  <span className="text-slate-400 text-[10px]">{part.email || 'Sem e-mail'}</span>
                                   {part.dependents && part.dependents.length > 0 && (
                                     <span className="inline-flex items-center space-x-1 px-1.5 py-0.5 rounded bg-amber-100/80 text-amber-900 text-[9px] font-mono font-bold">
                                       <Baby className="w-2.5 h-2.5 text-amber-700" />
@@ -478,7 +540,7 @@ export default function ReceptionArea({ participants, onCheckIn, onLogout }: Rec
                               </div>
                             </div>
                           </td>
-                          <td className="py-4 px-6 text-slate-600 font-mono font-medium">{part.phone}</td>
+                          <td className="py-4 px-6 text-slate-600 font-mono font-medium">{part.phone || '—'}</td>
                           <td className="py-4 px-6 text-slate-500">{part.city || 'Não informado'}</td>
                           <td className="py-4 px-6">
                             <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold ${
@@ -501,7 +563,7 @@ export default function ReceptionArea({ participants, onCheckIn, onLogout }: Rec
                                 : 'bg-amber-50 text-amber-700 border border-amber-100'
                             }`}>
                               <span className={`w-1.5 h-1.5 rounded-full mr-1.5 ${part.status === 'Presente' ? 'bg-app-gold' : 'bg-amber-500'}`} />
-                              {part.status}
+                              {part.status || 'Pendente'}
                             </span>
                           </td>
                           <td className="py-4 px-6 text-right" onClick={(e) => e.stopPropagation()}>
@@ -561,11 +623,11 @@ export default function ReceptionArea({ participants, onCheckIn, onLogout }: Rec
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex items-center space-x-3 min-w-0">
                           <div className="w-9 h-9 rounded-full bg-slate-100 text-slate-600 font-bold flex items-center justify-center font-display shrink-0 border border-slate-200">
-                            {part.name.charAt(0)}
+                            {(part.name || '?').charAt(0).toUpperCase()}
                           </div>
                           <div className="min-w-0">
-                            <span className="font-bold text-slate-800 block text-xs truncate">{part.name}</span>
-                            <span className="text-slate-400 text-[10px] block truncate">{part.email}</span>
+                            <span className="font-bold text-slate-800 block text-xs truncate">{part.name || 'Participante'}</span>
+                            <span className="text-slate-400 text-[10px] block truncate">{part.email || 'Sem e-mail'}</span>
                           </div>
                         </div>
 
@@ -576,7 +638,7 @@ export default function ReceptionArea({ participants, onCheckIn, onLogout }: Rec
                             : 'bg-amber-50 text-amber-700 border border-amber-100'
                         }`}>
                           <span className={`w-1.5 h-1.5 rounded-full mr-1 ${part.status === 'Presente' ? 'bg-app-gold' : 'bg-amber-500'}`} />
-                          {part.status}
+                          {part.status || 'Pendente'}
                         </span>
                       </div>
 
@@ -584,7 +646,7 @@ export default function ReceptionArea({ participants, onCheckIn, onLogout }: Rec
                       <div className="grid grid-cols-2 gap-y-2 gap-x-4 bg-slate-50 p-2.5 rounded-xl border border-slate-100 text-[10px] text-slate-500">
                         <div>
                           <span className="text-slate-400 block font-mono text-[8px] uppercase tracking-wider mb-0.5">WhatsApp / Celular</span>
-                          <span className="font-mono font-medium text-slate-700">{part.phone}</span>
+                          <span className="font-mono font-medium text-slate-700">{part.phone || '—'}</span>
                         </div>
                         <div>
                           <span className="text-slate-400 block font-mono text-[8px] uppercase tracking-wider mb-0.5">Cidade</span>
