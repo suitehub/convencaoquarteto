@@ -196,9 +196,9 @@ export default function App() {
   const [currentUser, setCurrentUser] = useState<Participant | null>(null);
 
   // Fetch count securely on mount and update whenever participants are added
-  const fetchParticipantsCount = async () => {
+  const fetchParticipantsCount = async (force = false) => {
     try {
-      const count = await getParticipantsCountSecure();
+      const count = await getParticipantsCountSecure(force);
       setSecureCount(count);
     } catch (err) {
       console.error('Error fetching participant count securely:', err);
@@ -206,65 +206,70 @@ export default function App() {
   };
 
   // Fetch secret batch count securely
-  const fetchSecretCount = async () => {
+  const fetchSecretCount = async (force = false) => {
     try {
-      const count = await getSecretBatchCountSecure();
+      const count = await getSecretBatchCountSecure(force);
       setSecretCount(count);
     } catch (err) {
       console.error('Error fetching secret count securely:', err);
     }
   };
 
-  // Fetch extra batch counts securely
-  const fetchExtraCounts = async () => {
+  // Refresh active batch count on mutation
+  const refreshBatchCount = async (batchId?: string) => {
+    if (!batchId) return;
     try {
-      const [c1, c2, c3, c5] = await Promise.all([
-        getExtraBatchCountSecure('extra-1'),
-        getExtraBatchCountSecure('extra-2'),
-        getExtraBatchCountSecure('extra-3'),
-        getExtraBatchCountSecure('lote-5')
-      ]);
-      setExtra1Count(c1);
-      setExtra2Count(c2);
-      setExtra3Count(c3);
-      setExtra5Count(c5);
+      const count = await getExtraBatchCountSecure(batchId, true);
+      if (batchId === 'extra-1') setExtra1Count(count);
+      else if (batchId === 'extra-2') setExtra2Count(count);
+      else if (batchId === 'extra-3') setExtra3Count(count);
+      else if (batchId === 'lote-5' || batchId === 'extra-5' || batchId === '5vagas') setExtra5Count(count);
     } catch (err) {
-      console.error('Error fetching extra batch counts:', err);
+      console.error('Error refreshing batch count:', err);
     }
   };
 
+  // Fetch counts selectively only for the active registration batch / view
   useEffect(() => {
-    fetchParticipantsCount();
-    fetchSecretCount();
-    fetchExtraCounts();
+    // 1. General participant count (needed for landing and general registration forms)
+    if (currentView === 'landing' || currentView === 'cadastro' || currentView === 'cadastro-quarteto' || currentView === 'splash') {
+      fetchParticipantsCount();
+    }
 
-    // Setup listener for secret batch registrations
-    const unsubSecret = subscribeSecretBatchCount((count) => {
-      setSecretCount(count);
-    });
+    // 2. Selective listeners and initial fetches only for the ACTIVE batch view
+    let unsubBatch = () => {};
 
-    // Setup listeners for extra batch registrations
-    const unsubExtra1 = subscribeExtraBatchCount('extra-1', (count) => {
-      setExtra1Count(count);
-    });
-    const unsubExtra2 = subscribeExtraBatchCount('extra-2', (count) => {
-      setExtra2Count(count);
-    });
-    const unsubExtra3 = subscribeExtraBatchCount('extra-3', (count) => {
-      setExtra3Count(count);
-    });
-    const unsubExtra5 = subscribeExtraBatchCount('lote-5', (count) => {
-      setExtra5Count(count);
-    });
+    if (currentView === 'cadastro-lote-5' || currentView === 'cadastro-extra-5') {
+      getExtraBatchCountSecure('lote-5').then(setExtra5Count);
+      unsubBatch = subscribeExtraBatchCount('lote-5', (count) => {
+        setExtra5Count(count);
+      });
+    } else if (currentView === 'cadastro-extra-1') {
+      getExtraBatchCountSecure('extra-1').then(setExtra1Count);
+      unsubBatch = subscribeExtraBatchCount('extra-1', (count) => {
+        setExtra1Count(count);
+      });
+    } else if (currentView === 'cadastro-extra-2') {
+      getExtraBatchCountSecure('extra-2').then(setExtra2Count);
+      unsubBatch = subscribeExtraBatchCount('extra-2', (count) => {
+        setExtra2Count(count);
+      });
+    } else if (currentView === 'cadastro-extra-3') {
+      getExtraBatchCountSecure('extra-3').then(setExtra3Count);
+      unsubBatch = subscribeExtraBatchCount('extra-3', (count) => {
+        setExtra3Count(count);
+      });
+    } else if (currentView === 'cadastro-secret') {
+      getSecretBatchCountSecure().then(setSecretCount);
+      unsubBatch = subscribeSecretBatchCount((count) => {
+        setSecretCount(count);
+      });
+    }
 
     return () => {
-      unsubSecret();
-      unsubExtra1();
-      unsubExtra2();
-      unsubExtra3();
-      unsubExtra5();
+      unsubBatch();
     };
-  }, []);
+  }, [currentView]);
 
   // Continuous Auth Guard: Ensure only authorized emails can retain organizer role
   useEffect(() => {
@@ -289,8 +294,10 @@ export default function App() {
 
   // Initialize and subscribe to Firestore collections securely based on the user role
   useEffect(() => {
-    // Seed default configuration and default staff user on first run
-    seedInitialDataIfNeeded();
+    // Seed default configuration only when organizer logs in (not on public traffic)
+    if (currentRole === 'organizer') {
+      seedInitialDataIfNeeded();
+    }
 
     // Setup real-time listener for the event config (public info)
     const unsubConfig = subscribeEventConfig((config) => {
@@ -431,17 +438,16 @@ export default function App() {
     await addParticipantInFirestore(freshParticipant);
     
     // Refresh public registration count securely
-    await fetchParticipantsCount();
-    await fetchSecretCount();
-    await fetchExtraCounts();
+    await fetchParticipantsCount(true);
+    if (isSecretBatch) await fetchSecretCount(true);
+    if (extraBatch) await refreshBatchCount(extraBatch);
   };
 
   // Helper action: Delete/Cancel participant registration
   const handleDeleteParticipant = async (participantId: string) => {
     await deleteParticipantInFirestore(participantId);
-    await fetchParticipantsCount();
-    await fetchSecretCount();
-    await fetchExtraCounts();
+    await fetchParticipantsCount(true);
+    await fetchSecretCount(true);
     if (currentUser && currentUser.id === participantId) {
       setCurrentUser(null);
       setCurrentRole('public');
@@ -769,7 +775,7 @@ export default function App() {
           <LandingPage
             eventConfig={eventConfig}
             onNavigate={handleNavigate}
-            participantsCount={participants.length}
+            participantsCount={secureCount || participants.length}
           />
         );
 
@@ -830,7 +836,7 @@ export default function App() {
           <LandingPage
             eventConfig={eventConfig}
             onNavigate={handleNavigate}
-            participantsCount={participants.length}
+            participantsCount={secureCount || participants.length}
           />
         );
     }

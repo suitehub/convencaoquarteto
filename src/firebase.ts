@@ -89,8 +89,8 @@ export function handleFirestoreError(error: unknown, operationType: OperationTyp
   }
 }
 
-// Validate connection to Firestore on boot as requested by instructions
-async function testConnection() {
+// Connection check helper (only called if explicitly needed, not on startup)
+export async function testConnection() {
   try {
     await getDocFromServer(doc(db, 'test', 'connection'));
   } catch (error) {
@@ -99,7 +99,6 @@ async function testConnection() {
     }
   }
 }
-testConnection();
 
 // Initial database seeding helper
 export async function seedInitialDataIfNeeded() {
@@ -196,6 +195,7 @@ export async function addParticipantInFirestore(participant: Participant) {
       dataToSave.password = await hashPassword(dataToSave.password);
     }
     await setDoc(doc(db, 'participants', participant.id), dataToSave);
+    invalidateCountersCache();
   } catch (error) {
     handleFirestoreError(error, OperationType.WRITE, path);
   }
@@ -209,6 +209,7 @@ export async function updateParticipantInFirestore(id: string, updates: Partial<
       dataToSave.password = await hashPassword(dataToSave.password);
     }
     await setDoc(doc(db, 'participants', id), dataToSave, { merge: true });
+    invalidateCountersCache();
   } catch (error) {
     handleFirestoreError(error, OperationType.WRITE, path);
   }
@@ -218,6 +219,7 @@ export async function deleteParticipantInFirestore(id: string) {
   const path = `participants/${id}`;
   try {
     await deleteDoc(doc(db, 'participants', id));
+    invalidateCountersCache();
   } catch (error) {
     handleFirestoreError(error, OperationType.DELETE, path);
   }
@@ -232,55 +234,73 @@ export async function deleteStaffUserInFirestore(id: string) {
   }
 }
 
-export async function getParticipantsCountSecure(): Promise<number> {
+// Memory cache for counters to drastically cut down repeated Firestore reads
+let cachedParticipantsCount: { count: number; timestamp: number } | null = null;
+let cachedSecretCount: { count: number; timestamp: number } | null = null;
+const extraBatchCache: Record<string, { count: number; timestamp: number }> = {};
+const COUNTER_CACHE_TTL_MS = 60 * 1000; // 60s cache
+
+export function invalidateCountersCache() {
+  cachedParticipantsCount = null;
+  cachedSecretCount = null;
+  for (const k in extraBatchCache) {
+    delete extraBatchCache[k];
+  }
+}
+
+/**
+ * Optimized Participant Counter:
+ * Uses getCountFromServer (1 server aggregation read instead of N document reads!)
+ * Includes 60s memory caching to protect against burst re-renders.
+ */
+export async function getParticipantsCountSecure(forceRefresh = false): Promise<number> {
+  const now = Date.now();
+  if (!forceRefresh && cachedParticipantsCount && (now - cachedParticipantsCount.timestamp < COUNTER_CACHE_TTL_MS)) {
+    return cachedParticipantsCount.count;
+  }
+
   try {
     const coll = collection(db, 'participants');
-    const snapshot = await getDocs(coll);
-    let total = 0;
-    snapshot.forEach((docSnap) => {
-      const data = docSnap.data();
-      total += 1;
-      if (Array.isArray(data.dependents)) {
-        total += data.dependents.length;
-      }
-    });
-    return total;
+    const snapshot = await getCountFromServer(coll);
+    const count = snapshot.data().count;
+    cachedParticipantsCount = { count, timestamp: now };
+    return count;
   } catch (error) {
     console.error('Error fetching participant count securely:', error);
-    return 0;
+    return cachedParticipantsCount ? cachedParticipantsCount.count : 0;
   }
 }
 
 /**
  * Secret Batch Counter:
- * Calculates total people (main registrants + dependents) enrolled through the secret batch URL.
+ * Uses server aggregation count instead of downloading full collection documents.
  */
-export async function getSecretBatchCountSecure(): Promise<number> {
+export async function getSecretBatchCountSecure(forceRefresh = false): Promise<number> {
+  const now = Date.now();
+  if (!forceRefresh && cachedSecretCount && (now - cachedSecretCount.timestamp < COUNTER_CACHE_TTL_MS)) {
+    return cachedSecretCount.count;
+  }
+
   try {
     const coll = collection(db, 'participants');
     const q = query(coll, where('isSecretBatch', '==', true));
-    const snapshot = await getDocs(q);
-    let total = 0;
-    snapshot.forEach((docSnap) => {
-      const data = docSnap.data();
-      total += 1;
-      if (Array.isArray(data.dependents)) {
-        total += data.dependents.length;
-      }
-    });
-    return total;
+    const snapshot = await getCountFromServer(q);
+    const count = snapshot.data().count;
+    cachedSecretCount = { count, timestamp: now };
+    return count;
   } catch (error) {
     console.error('Error fetching secret batch count securely:', error);
-    return 0;
+    return cachedSecretCount ? cachedSecretCount.count : 0;
   }
 }
 
 /**
  * Real-time listener for secret batch registrations count.
+ * Uses query limit(15) to prevent unbounded document reading.
  */
 export function subscribeSecretBatchCount(callback: (count: number) => void) {
   const coll = collection(db, 'participants');
-  const q = query(coll, where('isSecretBatch', '==', true));
+  const q = query(coll, where('isSecretBatch', '==', true), limit(15));
   return onSnapshot(q, (snapshot) => {
     let total = 0;
     snapshot.forEach((docSnap) => {
@@ -290,6 +310,7 @@ export function subscribeSecretBatchCount(callback: (count: number) => void) {
         total += data.dependents.length;
       }
     });
+    cachedSecretCount = { count: total, timestamp: Date.now() };
     callback(total);
   }, (error) => {
     console.error('Error in subscribeSecretBatchCount:', error);
@@ -298,35 +319,55 @@ export function subscribeSecretBatchCount(callback: (count: number) => void) {
 
 /**
  * Extra Batch Counter:
- * Calculates total registrations enrolled through a specific extra batch URL ('extra-1', 'extra-2', 'extra-3', 'lote-5', etc.).
+ * Uses server aggregation getCountFromServer (1 read total per call).
  */
-export async function getExtraBatchCountSecure(batchId: 'extra-1' | 'extra-2' | 'extra-3' | 'lote-5' | string): Promise<number> {
+export async function getExtraBatchCountSecure(
+  batchId: 'extra-1' | 'extra-2' | 'extra-3' | 'lote-5' | string,
+  forceRefresh = false
+): Promise<number> {
+  const now = Date.now();
+  const cached = extraBatchCache[batchId];
+  if (!forceRefresh && cached && (now - cached.timestamp < COUNTER_CACHE_TTL_MS)) {
+    return cached.count;
+  }
+
   try {
     const coll = collection(db, 'participants');
-    if (batchId === 'lote-5' || batchId === 'extra-5' || batchId === '5vagas') {
-      const q = query(coll, where('extraBatch', 'in', ['lote-5', 'extra-5', '5vagas']));
-      const snapshot = await getDocs(q);
-      return snapshot.size;
-    }
-    const q = query(coll, where('extraBatch', '==', batchId));
-    const snapshot = await getDocs(q);
-    return snapshot.size;
+    const is5 = batchId === 'lote-5' || batchId === 'extra-5' || batchId === '5vagas';
+    const q = is5
+      ? query(coll, where('extraBatch', 'in', ['lote-5', 'extra-5', '5vagas']))
+      : query(coll, where('extraBatch', '==', batchId));
+
+    const snapshot = await getCountFromServer(q);
+    const count = snapshot.data().count;
+    extraBatchCache[batchId] = { count, timestamp: now };
+    return count;
   } catch (error) {
     console.error(`Error fetching extra batch count for ${batchId}:`, error);
-    return 0;
+    return cached ? cached.count : 0;
   }
 }
 
 /**
  * Real-time listener for extra batch registrations count ('extra-1', 'extra-2', 'extra-3', 'lote-5').
+ * Limits documents read to at most 6 for lote-5, and 2 for 1-seat links.
  */
-export function subscribeExtraBatchCount(batchId: 'extra-1' | 'extra-2' | 'extra-3' | 'lote-5' | string, callback: (count: number) => void) {
+export function subscribeExtraBatchCount(
+  batchId: 'extra-1' | 'extra-2' | 'extra-3' | 'lote-5' | string,
+  callback: (count: number) => void
+) {
   const coll = collection(db, 'participants');
-  const q = (batchId === 'lote-5' || batchId === 'extra-5' || batchId === '5vagas')
-    ? query(coll, where('extraBatch', 'in', ['lote-5', 'extra-5', '5vagas']))
-    : query(coll, where('extraBatch', '==', batchId));
+  const is5 = batchId === 'lote-5' || batchId === 'extra-5' || batchId === '5vagas';
+  const queryLimit = is5 ? 6 : 2;
+
+  const q = is5
+    ? query(coll, where('extraBatch', 'in', ['lote-5', 'extra-5', '5vagas']), limit(queryLimit))
+    : query(coll, where('extraBatch', '==', batchId), limit(queryLimit));
+
   return onSnapshot(q, (snapshot) => {
-    callback(snapshot.size);
+    const count = snapshot.size;
+    extraBatchCache[batchId] = { count, timestamp: Date.now() };
+    callback(count);
   }, (error) => {
     console.error(`Error in subscribeExtraBatchCount for ${batchId}:`, error);
   });
